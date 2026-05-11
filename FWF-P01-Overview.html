@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html><head>
+<script src="/auth.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FWF Phase 1 — CFW Backbone Phase 1</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{--bg:#1a1a2e;--panel:#16213e;--text:#e0e0e0;--accent:#00d4ff;--border:#2a2a4a}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;height:100vh;display:flex;flex-direction:column}
+#header{background:var(--panel);padding:10px 20px;font-size:18px;font-weight:700;border-bottom:2px solid var(--accent);display:flex;align-items:center;justify-content:space-between}
+#header .sub{font-size:12px;font-weight:400;color:#999;margin-left:12px}
+#header a{color:var(--accent);text-decoration:none;font-size:13px}
+#wrap{flex:1;display:flex;position:relative}
+#map{flex:1}
+#panel{width:280px;background:var(--panel);border-left:1px solid var(--border);overflow-y:auto;padding:10px}
+#panel h3{color:var(--accent);font-size:13px;margin-bottom:6px;border-bottom:1px solid var(--border);padding-bottom:4px}
+.stats{font-size:12px;margin-bottom:10px;line-height:1.6}
+.stats b{color:var(--accent)}
+.leg-item:hover{background:rgba(0,212,255,0.1)}
+.info-box{background:rgba(0,0,0,0.3);border-radius:6px;padding:8px;margin-bottom:10px;font-size:11px;line-height:1.5}
+
+  #auth-gate {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: #1a1a2e; z-index: 99999;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+  }
+  #auth-gate.hidden { display: none; }
+  .auth-box {
+    background: #16213e; border-radius: 12px; padding: 40px;
+    text-align: center; max-width: 420px; width: 90%;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    border: 1px solid #2a2a4a;
+  }
+  .auth-box h1 { color: #00d4ff; font-size: 22px; margin: 0 0 8px; }
+  .auth-box .sub { color: #8888aa; font-size: 13px; margin-bottom: 24px; }
+  .auth-box .logo { font-size: 40px; margin-bottom: 16px; }
+  .auth-box .error { color: #ef4444; font-size: 13px; margin-top: 12px; display: none; }
+  .auth-box .domains { color: #6b7280; font-size: 11px; margin-top: 16px; }
+  #g_id_onload, .g_id_signin { display: inline-block; margin-top: 8px; }
+  .auth-user { color: #10b981; font-size: 12px; position: fixed; top: 4px; right: 8px; z-index: 99998; }
+</style>
+</head><body>
+
+<div id="auth-gate">
+  <div class="auth-box">
+    <div class="logo">🔒</div>
+    <h1>Sprocket Networks</h1>
+    <div class="sub">Fiber Construction Maps — Sign in to continue</div>
+    <div id="g_id_onload"
+      data-client_id="432178814016-q4hdj3rncd53n4tklia21g7b66k872t2.apps.googleusercontent.com"
+      data-callback="handleCredentialResponse"
+      data-auto_prompt="true">
+    </div>
+    <div class="g_id_signin"
+      data-type="standard"
+      data-size="large"
+      data-theme="filled_blue"
+      data-text="sign_in_with"
+      data-shape="rectangular"
+      data-logo_alignment="left">
+    </div>
+    <div id="auth-error" class="error"></div>
+    <div class="domains">Authorized: sprocketnetworks.com, lassobroadband.com, digitalalpha.ai</div>
+  </div>
+</div>
+<div class="auth-user" id="auth-user"></div>
+
+<div id="header">FWF Phase 1 — CFW Backbone Phase 1<span class="sub">HLD Route Overview (Plan Only)</span>
+<a href="FWF-Phase-Overview.html">← Phase Overview</a></div>
+<div id="wrap">
+<div id="map"></div>
+<div id="panel">
+<h3>Phase 1 Summary</h3>
+<div class="info-box">
+<div><b>Status:</b> Plan Only (No As-Built Data)</div>
+<div><b>Total Footage:</b> 83,181 ft (15.8 mi)</div>
+<div><b>Backbone:</b> 44,751 ft</div>
+<div><b>Laterals:</b> 38,430 ft</div>
+<div><b>Routes:</b> 4 backbone, 17 lateral</div>
+<div><b>Source:</b> HLD KMZ Design</div>
+</div>
+<h3>Routes</h3>
+<div style="font-weight:700;margin-top:8px;color:var(--text)">CP01</div>
+<div class="leg-item" data-route="P01CP01BB01 (14016FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#e74c3c;font-weight:700">━━</span> 14016FT <span style="color:#999">(14,016 ft)</span></div>
+<div class="leg-item" data-route="P01CP01LA01 (FIRE STATION #30 - 10637FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#3498db;font-weight:700">──</span> FIRE STATION #30 <span style="color:#999">(10,637 ft)</span></div>
+<div class="leg-item" data-route="P01CP01LA02 (PD - CACU - 424FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#3498db;font-weight:700">──</span> PD - CACU <span style="color:#999">(424 ft)</span></div>
+<div class="leg-item" data-route="P01CP01LA03 (PARD - RD EVANS CC - 3281FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#3498db;font-weight:700">──</span> PARD - RD EVANS CC <span style="color:#999">(3,281 ft)</span></div>
+<div class="leg-item" data-route="P01CP01LA04 (PD - WEST DIVISION - 1385FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#3498db;font-weight:700">──</span> PD - WEST DIVISION <span style="color:#999">(1,385 ft)</span></div>
+<div class="leg-item" data-route="P01CP01LA05 (MEDSTAR MOBILE HEALTHCARE - 428FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#3498db;font-weight:700">──</span> MEDSTAR MOBILE HEALTHCARE <span style="color:#999">(428 ft)</span></div>
+<div class="leg-item" data-route="P01CP01LA06 (PARD - WEST DISTRICT/Z BOAZ - 1426FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#3498db;font-weight:700">──</span> PARD - WEST DISTRICT/Z BOAZ <span style="color:#999">(1,426 ft)</span></div>
+<div class="leg-item" data-route="P01CP01LA07 (LVT RISE CC - 340FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#3498db;font-weight:700">──</span> LVT RISE CC <span style="color:#999">(340 ft)</span></div>
+<div class="leg-item" data-route="P01CP01LA08 (WATER RIDGLEA TOWER - 220FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#3498db;font-weight:700">──</span> WATER RIDGLEA TOWER <span style="color:#999">(220 ft)</span></div>
+<div style="font-weight:700;margin-top:8px;color:var(--text)">CP02</div>
+<div class="leg-item" data-route="P01CP02BB02 (11671FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#e74c3c;font-weight:700">━━</span> 11671FT <span style="color:#999">(11,671 ft)</span></div>
+<div class="leg-item" data-route="P01CP02LA01 (PARD - COMO CC - 5991FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#3498db;font-weight:700">──</span> PARD - COMO CC <span style="color:#999">(5,991 ft)</span></div>
+<div class="leg-item" data-route="P01CP02LA02 (FIRE STATION #16 - 370FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#3498db;font-weight:700">──</span> FIRE STATION #16 <span style="color:#999">(370 ft)</span></div>
+<div class="leg-item" data-route="P01CP02LA03 (WATER WESTSIDE PUMP STATION - 346FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#3498db;font-weight:700">──</span> WATER WESTSIDE PUMP STATION <span style="color:#999">(346 ft)</span></div>
+<div class="leg-item" data-route="P01CP02LA04 (LIBRARY - RIDGLEA- 841FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#3498db;font-weight:700">──</span> LIBRARY - RIDGLEA <span style="color:#999">(841 ft)</span></div>
+<div style="font-weight:700;margin-top:8px;color:var(--text)">CP03</div>
+<div class="leg-item" data-route="P01CP03BB03 (5622FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#e74c3c;font-weight:700">━━</span> 5622FT <span style="color:#999">(5,622 ft)</span></div>
+<div style="font-weight:700;margin-top:8px;color:var(--text)">CP04</div>
+<div class="leg-item" data-route="P01CP04BB04 (13442FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#e74c3c;font-weight:700">━━</span> 13442FT <span style="color:#999">(13,442 ft)</span></div>
+<div class="leg-item" data-route="P01CP04LA01 (WILL ROGERS MEMORIAL CENTER - 531FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#3498db;font-weight:700">──</span> WILL ROGERS MEMORIAL CENTER <span style="color:#999">(531 ft)</span></div>
+<div class="leg-item" data-route="P01CP04LA02 (FIRE STATION #18 - 113FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#3498db;font-weight:700">──</span> FIRE STATION #18 <span style="color:#999">(113 ft)</span></div>
+<div class="leg-item" data-route="P01CP04LA03 (PARD - THOMAS PLACE CC - 267FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#3498db;font-weight:700">──</span> PARD - THOMAS PLACE CC <span style="color:#999">(267 ft)</span></div>
+<div style="font-weight:700;margin-top:8px;color:var(--text)">CP05</div>
+<div class="leg-item" data-route="P01CP05LA01 (PD - 7TH BIKE SF - 429FT))" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#3498db;font-weight:700">──</span> PD - 7TH BIKE SF - 429FT) <span style="color:#999">(0 ft)</span></div>
+<div class="leg-item" data-route="P01CP05LA08 (11830FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#3498db;font-weight:700">──</span> 11830FT <span style="color:#999">(11,830 ft)</span></div>
+</div>
+</div>
+<script>
+const routes = [
+  {name:"P01CP01BB01 (14016FT)",desc:"14016FT",footage:14016,cp:"CP01",is_backbone:true,coords:[[32.73415841644909, -97.43043346570143], [32.73407862978981, -97.4341492355523], [32.73403076716497, -97.43586863025966], [32.733918728669, -97.44148791954366], [32.73381217200902, -97.44492420643466], [32.7338433879064, -97.44778470680356], [32.73386388977956, -97.45086564571123], [32.73385842384573, -97.45157733445572], [32.73362505661506, -97.45265090693678], [32.7334763794659, -97.45398603124085], [32.7335290483588, -97.45515029433894], [32.73379360624488, -97.4563596439105], [32.73460350170065, -97.45866468540679], [32.73443390642967, -97.45885703549095], [32.7340840829244, -97.45943630738742], [32.73400447564472, -97.45990233324494], [32.73403019529831, -97.46232081457742], [32.73402976265392, -97.46361958068249], [32.73401368523271, -97.46415777165292], [32.73395003988496, -97.4643718701032], [32.73352593350331, -97.46520928911833], [32.73321847358174, -97.46575901767795], [32.73313892057501, -97.46600459469192], [32.73310162580679, -97.46659027950521], [32.73014210862299, -97.46665730553175], [32.72997257774384, -97.46666981471053], [32.72981361242071, -97.46676419815469], [32.72972879162224, -97.46692159518044], [32.72966517530194, -97.46704121754424], [32.72947964130287, -97.46734970622724], [32.72935246313828, -97.46743780796176], [32.72917757209656, -97.46761405194725], [32.72897080793257, -97.46801699497139], [32.72860469346132, -97.46947787696912], [32.72724056777389, -97.46929025891342]]},
+  {name:"P01CP01LA01 (FIRE STATION #30 - 10637FT)",desc:"FIRE STATION #30",footage:10637,cp:"CP01",is_backbone:false,coords:[[32.73386909345853, -97.44062911196252], [32.73045465288199, -97.44067173938764], [32.72212810573226, -97.44094739117205], [32.7219889956359, -97.43953422296454], [32.71868285718228, -97.43960423677329], [32.71753367555836, -97.44192797859401], [32.71535875963781, -97.44264400854897], [32.7117669878139, -97.44102824663531], [32.70820159170544, -97.43768212559543]]},
+  {name:"P01CP01LA02 (PD - CACU - 424FT)",desc:"PD - CACU",footage:424,cp:"CP01",is_backbone:false,coords:[[32.71901320154416, -97.4429132266739], [32.71897080408598, -97.44284272411656], [32.71922763220628, -97.4426749296364], [32.71967566891158, -97.44244113213792], [32.71992542643441, -97.4423759777156], [32.71997590828039, -97.44237582710034]]},
+  {name:"P01CP01LA03 (PARD - RD EVANS CC - 3281FT)",desc:"PARD - RD EVANS CC",footage:3281,cp:"CP01",is_backbone:false,coords:[[32.72197773196868, -97.43948384969578], [32.72156564881291, -97.4347779020361], [32.72165430443662, -97.43414645907161], [32.72411577883046, -97.4347401922172], [32.72607999875014, -97.43472793930611]]},
+  {name:"P01CP01LA04 (PD - WEST DIVISION - 1385FT)",desc:"PD - WEST DIVISION",footage:1385,cp:"CP01",is_backbone:false,coords:[[32.72209719413308, -97.44091493802489], [32.72222386976595, -97.44231276986228], [32.71997046436133, -97.44222947896984], [32.71997333362336, -97.44265741114054]]},
+  {name:"P01CP01LA05 (MEDSTAR MOBILE HEALTHCARE - 428FT)",desc:"MEDSTAR MOBILE HEALTHCARE",footage:428,cp:"CP01",is_backbone:false,coords:[[32.73214645607619, -97.4419222653579], [32.7320401791367, -97.44192154201568], [32.7320083496728, -97.4406526293531]]},
+  {name:"P01CP01LA06 (PARD - WEST DISTRICT/Z BOAZ - 1426FT)",desc:"PARD - WEST DISTRICT/Z BOAZ",footage:1426,cp:"CP01",is_backbone:false,coords:[[32.7304038639023, -97.43941736895447], [32.73040291376508, -97.43948629121601], [32.73039983172986, -97.43989345937648], [32.73390742243733, -97.43992357442836]]},
+  {name:"P01CP01LA07 (LVT RISE CC - 340FT)",desc:"LVT RISE CC",footage:340,cp:"CP01",is_backbone:false,coords:[[32.73431440202704, -97.45778919918163], [32.73361801585153, -97.45778235686502], [32.73358309082444, -97.45750484093065]]},
+  {name:"P01CP01LA08 (WATER RIDGLEA TOWER - 220FT)",desc:"WATER RIDGLEA TOWER",footage:220,cp:"CP01",is_backbone:false,coords:[[32.73415492959629, -97.43045035759194], [32.73434643319251, -97.43044499943377], [32.73435278305658, -97.43018121726682], [32.7345403110859, -97.43022172402837]]},
+  {name:"P01CP02BB02 (11671FT)",desc:"11671FT",footage:11671,cp:"CP02",is_backbone:true,coords:[[32.73416102903743, -97.43042440212807], [32.73335576585836, -97.43043690454562], [32.73201013661092, -97.43044935582166], [32.7308711168853, -97.43047443651733], [32.72950428028109, -97.43048061599835], [32.72589160264245, -97.43052467644956], [32.72513401243305, -97.43051831517317], [32.72476845869069, -97.43051828631742], [32.72426153903189, -97.43027507994304], [32.7235887450178, -97.42991606645867], [32.72267566990585, -97.42943393268665], [32.73165123010255, -97.40807672150514], [32.73162776991822, -97.4078037666816]]},
+  {name:"P01CP02LA01 (PARD - COMO CC - 5991FT)",desc:"PARD - COMO CC",footage:5991,cp:"CP02",is_backbone:false,coords:[[32.72940265103049, -97.41343919088287], [32.71788259368745, -97.41351754509502], [32.71787119611599, -97.40992945594718], [32.71598915592632, -97.40985939016605]]},
+  {name:"P01CP02LA02 (FIRE STATION #16 - 370FT)",desc:"FIRE STATION #16",footage:370,cp:"CP02",is_backbone:false,coords:[[32.73110682324304, -97.40936674980308], [32.73110322570651, -97.4083609252125], [32.73093719294032, -97.40833898504478], [32.7309371975138, -97.40834072186891]]},
+  {name:"P01CP02LA03 (WATER WESTSIDE PUMP STATION - 346FT)",desc:"WATER WESTSIDE PUMP STATION",footage:346,cp:"CP02",is_backbone:false,coords:[[32.71991327824753, -97.41350295898586], [32.71989932114042, -97.41247958874382], [32.71998542391499, -97.41247833020844]]},
+  {name:"P01CP02LA04 (LIBRARY - RIDGLEA- 841FT)",desc:"LIBRARY - RIDGLEA",footage:841,cp:"CP02",is_backbone:false,coords:[[32.72664203343014, -97.41987016744116], [32.72449981532811, -97.41886024171052]]},
+  {name:"P01CP03BB03 (5622FT)",desc:"5622FT",footage:5622,cp:"CP03",is_backbone:true,coords:[[32.73163492642591, -97.40779992335737], [32.73207983022922, -97.40677958723137], [32.7320161829369, -97.40612462164002], [32.7320105448878, -97.40347327179305], [32.73200483008564, -97.40073376580743], [32.73196748278276, -97.39919710584194], [32.7319566710971, -97.39801939121874], [32.73190763072883, -97.39147143890105], [32.73346873743168, -97.39141648002355]]},
+  {name:"P01CP04BB04 (13442FT)",desc:"13442FT",footage:13442,cp:"CP04",is_backbone:true,coords:[[32.73342276282501, -97.39145204062731], [32.73378300876824, -97.39146451588192], [32.73373972338557, -97.38780544602935], [32.73473040619518, -97.38779876470501], [32.7386594006709, -97.38772170171089], [32.7392050844488, -97.38773408135704], [32.74010630579735, -97.38768339267583], [32.74237956820335, -97.38236630453537], [32.7413276489062, -97.38240711408493], [32.74130644965054, -97.38105212259359], [32.74128481997349, -97.37845797816429], [32.74400881614991, -97.37841785364262], [32.74414227399969, -97.3781143179848], [32.74629156536196, -97.37300571977286], [32.74747274901195, -97.37029802796413], [32.74768026236577, -97.36969622103162], [32.74761789292449, -97.369593920457], [32.74759659914127, -97.36834472408121], [32.74755414630504, -97.3662274276285], [32.74755685361838, -97.36562750565561], [32.74751945374724, -97.3617318139686]]},
+  {name:"P01CP04LA01 (WILL ROGERS MEMORIAL CENTER - 531FT)",desc:"WILL ROGERS MEMORIAL CENTER",footage:531,cp:"CP04",is_backbone:false,coords:[[32.7475567462142, -97.36653982651241], [32.74610611188565, -97.36669678588906]]},
+  {name:"P01CP04LA02 (FIRE STATION #18 - 113FT)",desc:"FIRE STATION #18",footage:113,cp:"CP04",is_backbone:false,coords:[[32.7412117871863, -97.38518216339094], [32.74103576594746, -97.38517969339337], [32.74101885890639, -97.38533690440853]]},
+  {name:"P01CP04LA03 (PARD - THOMAS PLACE CC - 267FT)",desc:"PARD - THOMAS PLACE CC",footage:267,cp:"CP04",is_backbone:false,coords:[[32.74128139861885, -97.37923546485236], [32.7409521062115, -97.379219668835], [32.74096830900319, -97.3796963108464]]},
+  {name:"P01CP05LA01 (PD - 7TH BIKE SF - 429FT))",desc:"PD - 7TH BIKE SF - 429FT)",footage:0,cp:"CP05",is_backbone:false,coords:[[32.75299100543239, -97.36111186390119], [32.75297642525727, -97.35980099954521], [32.75290449659825, -97.35978909230724]]},
+  {name:"P01CP05LA08 (11830FT)",desc:"11830FT",footage:11830,cp:"CP05",is_backbone:false,coords:[[32.7475164990531, -97.36176004680088], [32.74860873604851, -97.3617946028468], [32.74970110763878, -97.3617762350242], [32.75003352599392, -97.36178659941243], [32.7503510507998, -97.36168051760664], [32.75057357593441, -97.36152156347299], [32.75100379701524, -97.36122130560224], [32.75132429271887, -97.36101994281931], [32.75151725387177, -97.36110803736865], [32.75204287372375, -97.36110768597038], [32.75385784188984, -97.36110143985941], [32.75607227973843, -97.36102230484953], [32.75698969421361, -97.36103227331878], [32.75626113353955, -97.35928347172222], [32.75671509414188, -97.35900081969884], [32.75714841220422, -97.35898992976578], [32.75715659727786, -97.3575500040377], [32.75711393731093, -97.35538659532618], [32.75704303653811, -97.3505182678231], [32.75705439957915, -97.34962026380403], [32.75687611259485, -97.34925336991543], [32.7568402038005, -97.34874166396573], [32.75685076315509, -97.34649351624851], [32.75682926918308, -97.34529212043088], [32.7568915179877, -97.34516148544135], [32.75700123736753, -97.34500257539399], [32.75725352854032, -97.34502353466624], [32.75788568051612, -97.34497358104339], [32.75886012496291, -97.34497275097475], [32.75883860412427, -97.34375371313308], [32.75880355292378, -97.34328811523987], [32.75680791478866, -97.34074950689316], [32.75500248440876, -97.33942752337228]]},
+];
+const map = L.map('map',{zoomControl:true}).setView([32.73353085833418,-97.40445270017071],12);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',{
+  maxZoom:19,attribution:'&copy; CARTO'
+}).addTo(map);
+
+const bbGroup = L.layerGroup().addTo(map);
+const laGroup = L.layerGroup().addTo(map);
+
+routes.forEach(r => {
+  const color = r.is_backbone ? '#e74c3c' : '#3498db';
+  const weight = r.is_backbone ? 4 : 3;
+  const opacity = r.is_backbone ? 0.9 : 0.7;
+  const line = L.polyline(r.coords, {color, weight, opacity});
+  
+  // Add endpoint markers
+  if (r.coords.length > 0) {
+    const last = r.coords[r.coords.length - 1];
+    if (!r.is_backbone) {
+      L.circleMarker(last, {radius:5, color:'#fff', fillColor:color, fillOpacity:1, weight:2})
+        .bindPopup('<b>' + r.desc + '</b><br>' + r.footage.toLocaleString() + ' ft<br>' + r.cp)
+        .addTo(r.is_backbone ? bbGroup : laGroup);
+    }
+  }
+  
+  line.bindPopup('<b>' + r.desc + '</b><br>' + r.footage.toLocaleString() + ' ft<br>' + r.cp);
+  line.addTo(r.is_backbone ? bbGroup : laGroup);
+});
+
+L.control.layers({}, {'Backbone': bbGroup, 'Laterals': laGroup}, {collapsed:false}).addTo(map);
+
+// Legend click interaction
+document.querySelectorAll('.leg-item').forEach(el => {
+  el.addEventListener('click', () => {
+    const name = el.dataset.route;
+    const r = routes.find(x => x.name === name);
+    if (r && r.coords.length > 0) {
+      const bounds = L.latLngBounds(r.coords);
+      map.fitBounds(bounds, {padding:[50,50]});
+    }
+  });
+});
+</script>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+const ALLOWED_DOMAINS = ["sprocketnetworks.com", "lassobroadband.com", "digitalalpha.ai", "ntxcom.com"];
+
+function parseJwt(token) {
+  const base64Url = token.split('.')[1];
+  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+  const jsonPayload = decodeURIComponent(atob(base64).split('').map(c =>
+    '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+  ).join(''));
+  return JSON.parse(jsonPayload);
+}
+
+function handleCredentialResponse(response) {
+  const payload = parseJwt(response.credential);
+  const email = payload.email || '';
+  const domain = email.split('@')[1] || '';
+  
+  if (ALLOWED_DOMAINS.includes(domain)) {
+    // Auth success
+    document.getElementById('auth-gate').classList.add('hidden');
+    document.getElementById('auth-user').textContent = email;
+    try { localStorage.setItem('fwf_auth', JSON.stringify({email: email, exp: payload.exp, token: response.credential})); } catch(e) {}
+  } else {
+    const errEl = document.getElementById('auth-error');
+    errEl.style.display = 'block';
+    errEl.textContent = 'Access denied: ' + domain + ' is not an authorized domain.';
+  }
+}
+
+// Check for existing valid auth
+(function() {
+  try {
+    const stored = JSON.parse(localStorage.getItem('fwf_auth') || '{}');
+    if (stored.email && stored.exp && (stored.exp * 1000) > Date.now()) {
+      document.getElementById('auth-gate').classList.add('hidden');
+      document.getElementById('auth-user').textContent = stored.email;
+    }
+  } catch(e) {}
+})();
+</script>
+</body></html>

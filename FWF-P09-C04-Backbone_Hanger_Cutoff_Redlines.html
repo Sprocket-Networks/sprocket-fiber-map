@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="/auth.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<title>FWF-P09-C04-Backbone_Hanger_Cutoff_Redlines</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
+  #map { position: absolute; top: 50px; bottom: 0; width: 100%; }
+  #header { height: 50px; background: #1a1a2e; color: white; display: flex; align-items: center; padding: 0 20px; font-size: 15px; font-weight: 600; }
+  #header .sub { color: #8888aa; margin-left: 12px; font-weight: 400; font-size: 12px; }
+
+  /* Custom layer panel */
+  .layer-panel {
+    background: white; padding: 0; border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2); font-size: 11px; width: 260px;
+    max-height: 80vh; overflow-y: auto;
+  }
+  .lp-section { border-bottom: 1px solid #e5e7eb; }
+  .lp-section:last-child { border-bottom: none; }
+  .lp-header {
+    padding: 8px 12px; cursor: pointer; display: flex; align-items: center;
+    font-weight: 600; font-size: 12px; user-select: none;
+  }
+  .lp-header input { margin-right: 8px; }
+  .lp-header.hld { background: #fdf2f8; color: #9d174d; }
+  .lp-header.planned { background: #dbeafe; color: #1e40af; }
+  .lp-header.asbuilt { background: #d1fae5; color: #065f46; }
+  .lp-header.other { background: #f3f4f6; color: #374151; }
+  .lp-children { padding: 2px 12px 6px 32px; }
+  .lp-child { display: flex; align-items: center; margin: 2px 0; cursor: pointer; }
+  .lp-child input { margin-right: 6px; }
+  .lp-child label { cursor: pointer; }
+
+  /* Popups */
+  .pop { font-size: 12px; line-height: 1.6; min-width: 280px; max-width: 360px; }
+  .pop .hdr { font-size: 14px; font-weight: 700; color: #1a1a2e; margin-bottom: 2px; }
+  .pop .tier { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding: 2px 6px; border-radius: 3px; display: inline-block; margin-bottom: 6px; }
+  .pop .tier-hld { background: #fce7f3; color: #9d174d; }
+  .pop .tier-plan { background: #dbeafe; color: #1e40af; }
+  .pop .tier-ab { background: #d1fae5; color: #065f46; }
+  .pop .row { display: flex; margin: 1px 0; }
+  .pop .lbl { color: #6b7280; width: 90px; flex-shrink: 0; font-size: 11px; }
+  .pop .val { font-weight: 500; font-size: 11px; }
+  .pop hr { border: none; border-top: 1px solid #e5e7eb; margin: 6px 0; }
+  .pop .src { font-size: 10px; color: #9ca3af; font-family: monospace; margin-top: 4px; background: #f9fafb; padding: 4px 6px; border-radius: 3px; line-height: 1.5; }
+
+  .legend { background: white; padding: 10px 14px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); font-size: 11px; max-width: 260px; line-height: 20px; }
+  .legend h4 { margin: 0 0 4px 0; font-size: 12px; color: #1a1a2e; }
+  .legend-item { display: flex; align-items: center; margin: 2px 0; }
+  .legend-line { width: 20px; height: 4px; margin-right: 6px; border-radius: 2px; }
+  .legend-circle { width: 10px; height: 10px; margin-right: 6px; border-radius: 50%; border: 2px solid white; box-shadow: 0 1px 2px rgba(0,0,0,0.3); flex-shrink:0; }
+
+  .info { background: white; padding: 10px 14px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); font-size: 11px; max-width: 300px; }
+  .info h4 { margin: 0 0 4px 0; color: #1a1a2e; font-size: 13px; }
+  .info .stat { display: flex; justify-content: space-between; margin: 2px 0; }
+  .info .stat-val { font-weight: 600; }
+  .info .src-box { background: #f9fafb; padding: 4px 6px; border-radius: 3px; margin-top: 6px; font-size: 10px; font-family: monospace; color: #374151; line-height: 1.5; }
+
+  .cfw-icon { background: none !important; border: none !important; }
+  .cfw-icon svg { filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.3)); }
+  .cfw-popup { font-size: 12px; line-height: 1.5; min-width: 220px; }
+  .cfw-popup .cfw-header { font-size: 14px; font-weight: 700; color: #1a1a2e; margin-bottom: 2px; }
+  .cfw-popup .cfw-cat { font-size: 11px; font-weight: 600; margin-bottom: 6px; }
+  .cfw-popup .cfw-row { display: flex; margin: 2px 0; }
+  .cfw-popup .cfw-label { color: #888; width: 60px; flex-shrink: 0; }
+  .cfw-popup .cfw-value { font-weight: 500; }
+  .cfw-popup .cfw-notes { margin-top: 4px; padding-top: 4px; border-top: 1px solid #eee; color: #666; font-style: italic; font-size: 11px; }
+
+  .page-marker-icon { background: none !important; border: none !important; }
+  .page-marker {
+    background: #f59e0b; color: #000; font-size: 10px; font-weight: 700;
+    padding: 2px 4px; border-radius: 3px; text-align: center;
+    border: 1px solid #d97706; box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    white-space: nowrap; cursor: pointer;
+  }
+  .page-marker.page-interp {
+    background: #fbbf24; border-color: #f59e0b; font-style: italic;
+  }
+
+  #auth-gate {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: #1a1a2e; z-index: 99999;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+  }
+  #auth-gate.hidden { display: none; }
+  .auth-box {
+    background: #16213e; border-radius: 12px; padding: 40px;
+    text-align: center; max-width: 420px; width: 90%;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    border: 1px solid #2a2a4a;
+  }
+  .auth-box h1 { color: #00d4ff; font-size: 22px; margin: 0 0 8px; }
+  .auth-box .sub { color: #8888aa; font-size: 13px; margin-bottom: 24px; }
+  .auth-box .logo { font-size: 40px; margin-bottom: 16px; }
+  .auth-box .error { color: #ef4444; font-size: 13px; margin-top: 12px; display: none; }
+  .auth-box .domains { color: #6b7280; font-size: 11px; margin-top: 16px; }
+  #g_id_onload, .g_id_signin { display: inline-block; margin-top: 8px; }
+  .auth-user { color: #10b981; font-size: 12px; position: fixed; top: 4px; right: 8px; z-index: 99998; }
+</style>
+</head>
+<body>
+
+<div id="auth-gate">
+  <div class="auth-box">
+    <div class="logo">🔒</div>
+    <h1>Sprocket Networks</h1>
+    <div class="sub">Fiber Construction Maps — Sign in to continue</div>
+    <div id="g_id_onload"
+      data-client_id="432178814016-q4hdj3rncd53n4tklia21g7b66k872t2.apps.googleusercontent.com"
+      data-callback="handleCredentialResponse"
+      data-auto_prompt="true">
+    </div>
+    <div class="g_id_signin"
+      data-type="standard"
+      data-size="large"
+      data-theme="filled_blue"
+      data-text="sign_in_with"
+      data-shape="rectangular"
+      data-logo_alignment="left">
+    </div>
+    <div id="auth-error" class="error"></div>
+    <div class="domains">Authorized: sprocketnetworks.com, lassobroadband.com, digitalalpha.ai</div>
+  </div>
+</div>
+<div class="auth-user" id="auth-user"></div>
+
+<div id="header">FWF-P09-C04 — Backbone Hanger Cutoff<span class="sub">HLD / Planned / As-Built</span><a href="https://sprocket-fiber-map-will-gibsons-projects-9b8c18c8.vercel.app" onclick="try{if(window!==window.top){window.top.closeDetail();return false;}}catch(e){}" style="color:#8888cc;text-decoration:none;margin-right:16px;font-size:13px">← Sprocket Fiber Map</a>
+  FWF-P09-C02 — Backbone Silver Creek-Confederate Redlines
+  <span class="sub">HLD / Planned / As-Built</span>
+</div>
+<div id="map"></div>
+<script>
+// ============================================================
+// SOURCE DATA
+// ============================================================
+const SRC = {
+  pkg:"P09-CP04-BACKBONE",
+  filename:"P09-CP04-BACKBONE - HANGER CUTOFF REDLINES.pdf",
+  designDate:"2025-09-15",
+  constDate:"2026-02-01",
+  hldFile:"Srpocket Networks DFW Overview 20260225.kmz",
+  hldDate:"2026-02-25",
+  permit:"#36",
+  designCo:"Byers Engineering",
+  designPM:"TBD",
+  constructor:"MasTec",
+  constMgr:"TBD"
+};
+
+// Route geometry from KMZ (9 points following actual road, not straight GPS connections)
+const route = [[32.85629004199931, -97.51289059098002], [32.86705406963896, -97.51072004874928], [32.8667444959409, -97.5079222905622], [32.8659430007319, -97.50571601779285], [32.86584709409405, -97.50438140175814], [32.87047493819908, -97.49574294773048], [32.86997139380863, -97.49529205219811], [32.86874005492898, -97.49460662648842], [32.86812507985991, -97.493655507671], [32.86734447351795, -97.49057052722976], [32.86658925750588, -97.48981926373216], [32.86570860030091, -97.48855108462107], [32.86501134381405, -97.4859830010574]];
+const gpsData = [{"lat":32.856556,"lon":-97.512701,"page":16,"sta_range":"STA 4+15 to 4+00"}];
+const plannedHH = [{"size":"36\"X24\"X36\"","station":"16+00","station_feet":1600,"boc":null,"page":18},{"size":"36\"X24\"X36\"","station":"28+00","station_feet":2800,"boc":null,"page":20},{"size":"36\"X24\"X36\"","station":"38+50","station_feet":3850,"boc":null,"page":22},{"size":"36\"X24\"X36\"","station":"58+00","station_feet":5800,"boc":null,"page":26},{"size":"36\"X24\"X36\"","station":"86+24","station_feet":8624,"boc":null,"page":30},{"size":"36\"X24\"X36\"","station":"98+50","station_feet":9850,"boc":null,"page":32},{"size":"36\"X24\"X36\"","station":"111+58","station_feet":11158,"boc":null,"page":35},{"size":"36\"X24\"X36\"","station":"128+31","station_feet":12831,"boc":null,"page":38}];
+const asbuiltStations = [{"sta":"0+00","feet":0,"page":16,"depth":"4\'0\"","boc":"3\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 0+00 | D 4\' | BOC 3\'"},{"sta":"0+50","feet":50,"page":16,"depth":"4\'0\"","boc":"4\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 0+50 | D 4\' | BOC 4\'"},{"sta":"1+00","feet":100,"page":16,"depth":"4\'0\"","boc":"5\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 1+00 | D 4\' | BOC 5\'"},{"sta":"1+50","feet":150,"page":16,"depth":"4\'0\"","boc":"5\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 1+50 | D 4\' | BOC 5\'"},{"sta":"2+00","feet":200,"page":16,"depth":"4\'0\"","boc":"5\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 2+00 | D 4\' | BOC 5\'"},{"sta":"2+50","feet":250,"page":16,"depth":"4\'0\"","boc":"5\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 2+50 | D 4\' | BOC 5\'"},{"sta":"3+00","feet":300,"page":16,"depth":"4\'0\"","boc":"8\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 3+00 | D 4\' | BOC 8\'"},{"sta":"3+50","feet":350,"page":16,"depth":"4\'0\"","boc":"8\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 3+50 | D 4\' | BOC 8\'"},{"sta":"4+00","feet":400,"page":16,"depth":"4\'0\"","boc":"8\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 4+00 | D 4\' | BOC 8\'"},{"sta":"4+50","feet":450,"page":17,"depth":"4\'0\"","boc":"8\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 4+50 | D 4\' | BOC 8\'"},{"sta":"5+00","feet":500,"page":17,"depth":"4\'0\"","boc":"8\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 5+00 | D 4\' | BOC 8\'"},{"sta":"5+50","feet":550,"page":17,"depth":"4\'0\"","boc":"8\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 5+50 | D 4\' | BOC 8\'"},{"sta":"6+00","feet":600,"page":17,"depth":"4\'0\"","boc":"6\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 6+00 | D 4\' | BOC 6\'"},{"sta":"6+50","feet":650,"page":17,"depth":"4\'0\"","boc":"5\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 6+50 | D 4\' | BOC 5\'"},{"sta":"7+00","feet":700,"page":17,"depth":"4\'0\"","boc":"5\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 7+00 | D 4\' | BOC 5\'"},{"sta":"7+50","feet":750,"page":17,"depth":"6\'0\"","boc":"5\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 7+50 | D 6\' | BOC 5\'"},{"sta":"8+00","feet":800,"page":17,"depth":"4\'0\"","boc":"5\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 8+00 | D 4\' | BOC 5\'"},{"sta":"8+50","feet":850,"page":17,"depth":"4\'0\"","boc":"5\"","hh_placed":false,"hh_not_placed":false,"raw":"STA 8+50 | D 4\' | BOC 5\""},{"sta":"9+00","feet":900,"page":17,"depth":"7\'6\"","boc":"5\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 9+00 | D 7\'6\" | BOC 5\'"},{"sta":"9+50","feet":950,"page":17,"depth":"8\'0\"","boc":"5\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 9+50 | D 8\' | BOC 5\'"},{"sta":"10+00","feet":1000,"page":17,"depth":"7\'0\"","boc":null,"hh_placed":false,"hh_not_placed":false,"raw":"STA 10+00 | D 7\' | BOC 5"},{"sta":"10+50","feet":1050,"page":18,"depth":"5\'0\"","boc":"5\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 10+50 | D 5\' | BOC 5\'"},{"sta":"11+50","feet":1150,"page":18,"depth":"4\'0\"","boc":"5\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 11+50 | D 4\' | BOC 5\'"},{"sta":"12+00","feet":1200,"page":18,"depth":"4\'0\"","boc":"6\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 12+00 | D 4\' | BOC 6\'"},{"sta":"12+50","feet":1250,"page":18,"depth":"4\'0\"","boc":"6\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 12+50 | D 4\' | BOC 6\'"},{"sta":"13+00","feet":1300,"page":18,"depth":"4\'0\"","boc":"6\'","hh_placed":true,"hh_not_placed":false,"raw":"STA 13+00 | D 4\' | BOC 6\' | PLACED HH"},{"sta":"13+50","feet":1350,"page":18,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 13+50 | D 4\' | BOC 11\'"},{"sta":"14+00","feet":1400,"page":18,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 14+00 | D 4\' | BOC 11\'"},{"sta":"14+50","feet":1450,"page":18,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 14+50 | D 4\' | BOC 11\'"},{"sta":"15+00","feet":1500,"page":18,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 15+00 | D 4\' | BOC 11\'"},{"sta":"15+50","feet":1550,"page":18,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 15+50 | D 4\' | BOC 11\'"},{"sta":"16+00","feet":1600,"page":18,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 16+00 | D 4\' | BOC 11\'"},{"sta":"16+50","feet":1650,"page":19,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 16+50 | D 4\' | BOC 11\'"},{"sta":"17+00","feet":1700,"page":19,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 17+00 | D 4\' | BOC 11\'"},{"sta":"17+50","feet":1750,"page":19,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 17+50 | D 4\' | BOC 11\'"},{"sta":"18+00","feet":1800,"page":19,"depth":null,"boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 18+00 | D 4 | BOC 11\'"},{"sta":"18+50","feet":1850,"page":19,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 18+50 | D 4\' | BOC 11\'"},{"sta":"19+00","feet":1900,"page":19,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 19+00 | D 4\' | BOC 11\'"},{"sta":"19+50","feet":1950,"page":19,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 19+50 | D 4\' | BOC 11\'"},{"sta":"20+00","feet":2000,"page":19,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 20+00 | D 4\' | BOC 11\'"},{"sta":"20+50","feet":2050,"page":19,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 20+50 | D 4\' | BOC 11\'"},{"sta":"21+00","feet":2100,"page":19,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 21+00 | D 4\' | BOC 11\'"},{"sta":"21+50","feet":2150,"page":19,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 21+50 | D 4\' | BOC 11\'"},{"sta":"22+00","feet":2200,"page":19,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 22+00 | D 4\' | BOC 11\'"},{"sta":"22+50","feet":2250,"page":20,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 22+50 | D 4\' | BOC 11\'"},{"sta":"23+00","feet":2300,"page":20,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 23+00 | D 4\' | BOC 11\'"},{"sta":"23+50","feet":2350,"page":20,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 23+50 | D 4\' | BOC 11\'"},{"sta":"24+00","feet":2400,"page":20,"depth":"4\"","boc":"11\'","hh_placed":true,"hh_not_placed":false,"raw":"STA 24+00 | D 4\" | BOC 11\' | PLACED HH"},{"sta":"24+50","feet":2450,"page":20,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 24+50 | D 4\' | BOC 11\'"},{"sta":"25+00","feet":2500,"page":20,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 25+00 | D 4\' | BOC 11\'"},{"sta":"25+50","feet":2550,"page":20,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 25+50 | D 4\' | BOC 11\'"},{"sta":"26+00","feet":2600,"page":20,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 26+00 | D 4\' | BOC 11\'"},{"sta":"26+50","feet":2650,"page":20,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 26+50 | D 4\' | BOC 11\'"},{"sta":"27+00","feet":2700,"page":20,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 27+00 | D 4\' | BOC 11\'"},{"sta":"27+50","feet":2750,"page":20,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 27+50 | D 4\' | BOC 11\'"},{"sta":"28+00","feet":2800,"page":20,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 28+00 | D 4\' | BOC 11\'"},{"sta":"28+50","feet":2850,"page":21,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 28+50 | D 4\' | BOC 11\'"},{"sta":"29+00","feet":2900,"page":21,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 29+00 | D 4\' | BOC 11\'"},{"sta":"29+50","feet":2950,"page":21,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 29+50 | D 4\' | BOC 11\'"},{"sta":"30+00","feet":3000,"page":21,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 30+00 | D 4\' | BOC 11\'"},{"sta":"30+50","feet":3050,"page":21,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 30+50 | D 4\' | BOC 11\'"},{"sta":"31+00","feet":3100,"page":21,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 31+00 | D 4\' | BOC 11\'"},{"sta":"31+50","feet":3150,"page":21,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 31+50 | D 4\' | BOC 11\'"},{"sta":"32+00","feet":3200,"page":21,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 32+00 | D 4\' | BOC 11\'"},{"sta":"32+50","feet":3250,"page":21,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 32+50 | D 4\' | BOC 11\'"},{"sta":"33+00","feet":3300,"page":21,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 33+00 | D 4\' | BOC 11\'"},{"sta":"33+50","feet":3350,"page":21,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 33+50 | D 4\' | BOC 11\'"},{"sta":"34+00","feet":3400,"page":21,"depth":"4\'0\"","boc":null,"hh_placed":false,"hh_not_placed":false,"raw":"STA 34+00 | D 4\' | BOC 11,"},{"sta":"34+50","feet":3450,"page":22,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 34+50 | D 4\' | BOC 11\'"},{"sta":"35+00","feet":3500,"page":22,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 35+00 | D 4\' | BOC 11\'"},{"sta":"35+50","feet":3550,"page":22,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 35+50 | D 4\' | BOC 11\'"},{"sta":"36+00","feet":3600,"page":22,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 36+00 | D 4\' | BOC 11\'"},{"sta":"36+50","feet":3650,"page":22,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 36+50 | D 4\' | BOC 11\'"},{"sta":"37+00","feet":3700,"page":22,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 37+00 | D 4\' | BOC 11\'"},{"sta":"37+70","feet":3770,"page":22,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 37+70 | D 4\' | BOC 11\'"},{"sta":"38+00","feet":3800,"page":22,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 38+00 | D 4\' | BOC 11\'"},{"sta":"38+50","feet":3850,"page":22,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 38+50 | D 4\' | BOC 11\'"},{"sta":"39+00","feet":3900,"page":22,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 39+00 | D 4\' | BOC 11\'"},{"sta":"39+50","feet":3950,"page":23,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 39+50 | D 4\' | BOC 11\'"},{"sta":"40+00","feet":4000,"page":23,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 40+00 | D 4\' | BOC 11\'"},{"sta":"40+50","feet":4050,"page":23,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 40+50 | D 4\' | BOC 11\'"},{"sta":"41+00","feet":4100,"page":23,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 41+00 | D 4\' | BOC 11\'"},{"sta":"41+50","feet":4150,"page":23,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 41+50 | D 4\' | BOC 11\'"},{"sta":"42+00","feet":4200,"page":23,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 42+00 | D 4\' | BOC 11\'"},{"sta":"42+50","feet":4250,"page":23,"depth":"3\'5\"","boc":"8\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 42+50 | D 3\'5\" | BOC 8\'"},{"sta":"43+00","feet":4300,"page":23,"depth":"3\'0\"","boc":"8\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 43+00 | D 3\'5 | BOC 8\'"},{"sta":"43+50","feet":4350,"page":23,"depth":"3\'5\"","boc":"8\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 43+50 | D 3\'5\" | BOC 8\'"},{"sta":"44+00","feet":4400,"page":23,"depth":"3\'5\"","boc":"8\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 44+00 | D 3\'5\" | BOC 8\'"},{"sta":"44+50","feet":4450,"page":23,"depth":"3\'5\"","boc":"8\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 44+50 | D 3\'5\" | BOC 8\'"},{"sta":"45+00","feet":4500,"page":23,"depth":"3\'5\"","boc":"8\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 45+00 | D 3\'5\" | BOC 8\'"},{"sta":"45+50","feet":4550,"page":24,"depth":"3\'5\"","boc":"8\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 45+50 | D 3\'5\" | BOC 8\'"},{"sta":"46+00","feet":4600,"page":24,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 46+00 | D 4\' | BOC 11\'"},{"sta":"46+50","feet":4650,"page":24,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 46+50 | D 4\' | BOC 11\'"},{"sta":"47+00","feet":4700,"page":24,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 47+00 | D 4\' | BOC 11\'"},{"sta":"47+50","feet":4750,"page":24,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 47+50 | D 4\' | BOC 11\'"},{"sta":"48+00","feet":4800,"page":24,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 48+00 | D 4\' | BOC 11\'"},{"sta":"48+50","feet":4850,"page":24,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 48+50 | D 4\' | BOC 11\'"},{"sta":"49+00","feet":4900,"page":24,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 49+00 | D 4\' | BOC 11\'"},{"sta":"49+50","feet":4950,"page":24,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 49+50 | D 4\' | BOC 11\'"},{"sta":"50+00","feet":5000,"page":24,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 50+00 | D 4\' | BOC 11\'"},{"sta":"50+50","feet":5050,"page":24,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 50+50 | D 4\' | BOC 11\'"},{"sta":"51+00","feet":5100,"page":25,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 51+00 | D 4\' | BOC 11\'"},{"sta":"51+50","feet":5150,"page":25,"depth":"4\'0\"","boc":"11\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 51+50 | D 4\' | BOC 11\'"},{"sta":"52+00","feet":5200,"page":25,"depth":"3\'5\"","boc":"8\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 52+00 | D 3\'5\" | BOC 8\'"},{"sta":"52+50","feet":5250,"page":25,"depth":"3\'0\"","boc":"8\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 52+50 | D 3\' | BOC 8\'"},{"sta":"53+00","feet":5300,"page":25,"depth":"3\'0\"","boc":"8\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 53+00 | D 3\' | BOC 8\'"},{"sta":"53+50","feet":5350,"page":25,"depth":"3\'0\"","boc":"8\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 53+50 | D 3\' | BOC 8\'"},{"sta":"54+00","feet":5400,"page":25,"depth":"3\'2\"","boc":"8\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 54+00 | D 3\'2\" | BOC 8\'"},{"sta":"54+50","feet":5450,"page":25,"depth":"3\'0\"","boc":"8\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 54+50 | D 3\'4 | BOC 8\'"},{"sta":"55+00","feet":5500,"page":25,"depth":"3\'3\"","boc":"8\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 55+00 | D 3\'3\" | BOC 8\'"},{"sta":"55+50","feet":5550,"page":26,"depth":"3\'2\"","boc":"8\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 55+50 | D 3\'2\" | BOC 8\'"},{"sta":"56+00","feet":5600,"page":26,"depth":"3\'2\"","boc":"8\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 56+00 | D 3\'2\" | BOC 8\'"},{"sta":"56+50","feet":5650,"page":26,"depth":"3\'3\"","boc":"8\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 56+50 | D 3\'3\" | BOC 8\'"},{"sta":"57+00","feet":5700,"page":26,"depth":"3\'2\"","boc":"8\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 57+00 | D 3\'2\" | BOC 8\'"},{"sta":"57+50","feet":5750,"page":26,"depth":"3\'2\"","boc":"8\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 57+50 | D 3\'2\" | BOC 8\'"},{"sta":"58+00","feet":5800,"page":26,"depth":"3\'0\"","boc":"8\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 58+00 | D 3\' | BOC 8\'"},{"sta":"97+50","feet":9750,"page":32,"depth":"3\'1\"","boc":"21\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 97+50 | D 3\'1\" | BOC 21\'"},{"sta":"98+00","feet":9800,"page":32,"depth":"3\'3\"","boc":"21\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 98+00 | D 3\'3\" | BOC 21\'"},{"sta":"98+50","feet":9850,"page":32,"depth":"3\'3\"","boc":"21\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 98+50 | D 3\'3\" | BOC 21\'"},{"sta":"99+00","feet":9900,"page":33,"depth":"3\'3\"","boc":"10\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 99+00 | D 3\'3\" | BOC 10\'"},{"sta":"99+50","feet":9950,"page":33,"depth":"3\'2\"","boc":"10\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 99+50 | D 3\'2\" | BOC 10\'"},{"sta":"100+00","feet":10000,"page":33,"depth":"3\'2\"","boc":"10\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 100+00 | D 3\'2\" | BOC 10\'"},{"sta":"100+50","feet":10050,"page":33,"depth":"3\'3\"","boc":"10\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 100+50 | D 3\'3\" | BOC 10\'"},{"sta":"101+00","feet":10100,"page":33,"depth":"3\'3\"","boc":"10\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 101+00 | D 3\'3\" | BOC 10\'"},{"sta":"101+50","feet":10150,"page":33,"depth":"3\'2\"","boc":"10\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 101+50 | D 3\'2\" | BOC 10\'"},{"sta":"102+00","feet":10200,"page":33,"depth":"3\'2\"","boc":"10\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 102+00 | D 3\'2\" | BOC 10\'"},{"sta":"102+50","feet":10250,"page":33,"depth":"3\'2\"","boc":"10\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 102+50 | D 3\'2\" | BOC 10\'"},{"sta":"103+00","feet":10300,"page":33,"depth":"3\'3\"","boc":"10\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 103+00 | D 3\'3\" | BOC 10\'"},{"sta":"103+50","feet":10350,"page":33,"depth":"3\'2\"","boc":"10\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 103+50 | D 3\'2\" | BOC 10\'"},{"sta":"104+00","feet":10400,"page":33,"depth":"3\'2\"","boc":"10\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 104+00 | D 3\'2\" | BOC 10\'"},{"sta":"104+50","feet":10450,"page":34,"depth":"3\'0\"","boc":"10\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 104+50 | D 3\' | BOC 10\'"},{"sta":"105+00","feet":10500,"page":34,"depth":"3\'0\"","boc":"10\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 105+00 | D 3\' | BOC 10\'"},{"sta":"105+50","feet":10550,"page":34,"depth":"3\'0\"","boc":"10\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 105+50 | D 3\' | BOC 10\'"},{"sta":"106+00","feet":10600,"page":34,"depth":"3\'1\"","boc":"10\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 106+00 | D 3\'1\" | BOC 10\'"},{"sta":"106+50","feet":10650,"page":34,"depth":"3\'1\"","boc":"10\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 106+50 | D 3\'1\" | BOC 10\'"},{"sta":"107+00","feet":10700,"page":34,"depth":"3\'2\"","boc":"10\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 107+00 | D 3\'2\" | BOC 10\'"},{"sta":"107+50","feet":10750,"page":34,"depth":"3\'0\"","boc":"10\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 107+50 | D 3\' | BOC 10\'"},{"sta":"108+00","feet":10800,"page":34,"depth":"3\'0\"","boc":"10\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 108+00 | D 3\' | BOC 10\'"},{"sta":"108+50","feet":10850,"page":34,"depth":"3\'0\"","boc":"10\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 108+50 | D 3\' | BOC 10\'"},{"sta":"109+00","feet":10900,"page":34,"depth":"3\'0\"","boc":"10\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 109+00 | D 3\' | BOC 10\'"},{"sta":"109+50","feet":10950,"page":34,"depth":"3\'0\"","boc":"10\'","hh_placed":false,"hh_not_placed":false,"raw":"STA 109+50 | D 3\' | BOC 10\'"}];
+const asbuiltHH = [{"sta":"13+00","feet":1300,"page":18,"depth":"4\'0\"","boc":"6\'","hh_placed":true,"hh_not_placed":false,"raw":"STA 13+00 | D 4\' | BOC 6\' | PLACED HH"},{"sta":"24+00","feet":2400,"page":20,"depth":"4\"","boc":"11\'","hh_placed":true,"hh_not_placed":false,"raw":"STA 24+00 | D 4\" | BOC 11\' | PLACED HH"}];
+const hldRoutes = [{"name":"P09CP01BB01 (PERMIT 33 - 21165FT)","coords":[[32.77543634523057, -97.48698444323779], [32.77575630131638, -97.48700017590436], [32.78614612726307, -97.48691253272857], [32.7869329477365, -97.48715537008063], [32.78792450943544, -97.48945569973608], [32.78844146978704, -97.4899066128623], [32.79029736198466, -97.49107662769154], [32.79253869874804, -97.49224732202782], [32.79362343710307, -97.49362471822526], [32.79418367808277, -97.49400080546589], [32.7982487335663, -97.49379888881964], [32.79929925302883, -97.49446765104678], [32.80052503981281, -97.49509504238131], [32.80111910138053, -97.49659698056671], [32.8012208674593, -97.49959917126021], [32.80112467269898, -97.50029788467012], [32.80168785016203, -97.50074593748141], [32.80242685742492, -97.50080680284736], [32.80725354352123, -97.5007152768494], [32.80779203036658, -97.50118877373545], [32.80800423876879, -97.50167860285994], [32.80831570319686, -97.50469787923124], [32.80851473210458, -97.50519023141902], [32.80885669139117, -97.5053944198528], [32.81354164221498, -97.50668244485485], [32.81520789687153, -97.50723813692922], [32.81523520376187, -97.5072544439841], [32.81695622747706, -97.50772899042296], [32.81810328299316, -97.50830012011983], [32.81904512328335, -97.50909856042321], [32.81961905183699, -97.509067082075], [32.82332178154108, -97.5090764517271]]},{"name":"P09CP01LA01 (PD - POLICE MOUNTED PATROL - 6611FT)","coords":[[32.77443130296625, -97.47596683200229], [32.77715043712596, -97.47437794586202], [32.77974902460308, -97.47246556592064], [32.78116911067136, -97.47084316669995], [32.78175708384833, -97.47015427553379], [32.78239827304497, -97.46967413234788], [32.7832453835434, -97.46923959211382], [32.78445167717558, -97.46799790486665], [32.78756908776627, -97.46810508588851], [32.78792326415565, -97.46789494628496], [32.78792648548539, -97.46789112184074], [32.78834185272025, -97.46762745564743], [32.78916391545226, -97.46759521576192], [32.78936478193036, -97.46756005135826], [32.7893759868074, -97.46869053230073]]},{"name":"P09CP02BB01 (PERMIT 34 - 9486FT)","coords":[[32.82332178154108, -97.5090764517271], [32.82326614626806, -97.50862509562297], [32.82314152876107, -97.50713743461401], [32.82306205586735, -97.50309300248033], [32.82298442747882, -97.48970056182233], [32.82306334544506, -97.48695850349714], [32.82428206246499, -97.48391681262451], [32.82623576546502, -97.4802432358969], [32.82674310300713, -97.47940016769557]]},{"name":"P09CP02LA01 (MARSHAL LAKE PATROL - 9936FT)","coords":[[32.82676956248961, -97.4794017487153], [32.825715176806, -97.47779363561625], [32.82530975818194, -97.47661081512473], [32.82293261379377, -97.47070744391858], [32.82057901648194, -97.46453392625686], [32.82045463394099, -97.46406669350466], [32.82038983968397, -97.46343594647459], [32.82050855907099, -97.46255730060528], [32.82130149467382, -97.45923927115496], [32.82203211421376, -97.45647252039693], [32.81879977070617, -97.45640039909452], [32.81847195869937, -97.45615041373256], [32.81827340446308, -97.45540839576014], [32.81851570481596, -97.45504449581703], [32.81877029573687, -97.45440042043812], [32.81874306506458, -97.45401116282652], [32.81843766803954, -97.45378318732197], [32.81826061794564, -97.45354503528554]]},{"name":"P09CP03BB01 (PERMIT 35 - 14973FT)","coords":[[32.82674310300713, -97.47940016769557], [32.83127186369789, -97.48384291786537], [32.84440485079271, -97.49691588984116], [32.8484376911496, -97.50117231349114], [32.85042393275007, -97.50410206292095], [32.85404716757845, -97.50842880911738], [32.85629004199931, -97.51289059098002]]},{"name":"P09CP03LA01 (PARD - NATURE CENTER HARDWICK- 9082FT)","coords":[[32.82673394944027, -97.47943809018753], [32.82721707937907, -97.47897116415912], [32.82788215531151, -97.47882049453058], [32.82827370295083, -97.47902959910866], [32.82828364771301, -97.4790414529099], [32.82832344016416, -97.47914804938425], [32.82860147192876, -97.47950458118072], [32.82866080630917, -97.47955277404134], [32.82912917346481, -97.47974149062287], [32.83000486201636, -97.47975621869216], [32.8304927447653, -97.47970048061215], [32.83551575474199, -97.48072866146495], [32.84165673462088, -97.48108678554996], [32.84170982083705, -97.47856993091251], [32.84387070402227, -97.47848825879585], [32.84384711011295, -97.47771718714347], [32.84481092773193, -97.47726927213876], [32.84534899403874, -97.47686473753072], [32.84568636048019, -97.4761746797514], [32.84587200923986, -97.47556446631228], [32.84750678994497, -97.4758745479113]]},{"name":"P09CP03LA02 (PARD - NATURE CENTER REFUGE - 2585FT)","coords":[[32.83009641456528, -97.47975879790141], [32.83052791662925, -97.47887836030004], [32.83059889518363, -97.47801580746103], [32.83089556015032, -97.47706583664579], [32.83131864740648, -97.47629359950264], [32.8317418147222, -97.47590028286054], [32.83215887777889, -97.4755661933345], [32.83260448625345, -97.47532382193631], [32.83342605983316, -97.47496408412232], [32.83368054519786, -97.47461960155673], [32.83386808134991, -97.47399731068558], [32.83396813204981, -97.47377000204963], [32.833704763154, -97.47356815137039]]},{"name":"P09CP03LA03 (FIRE BOMB DISPOSAL - 371FT)","coords":[[32.84309545053789, -97.49418686747333], [32.84298610708522, -97.49420361478057], [32.84293764425235, -97.49454349134375], [32.84286266274092, -97.4947063751353], [32.84278655234927, -97.49479478025079], [32.84246397149686, -97.49497004715136]]},{"name":"P09CP03LA04 (PARD - NATURE CENTER GATE - 37FT)","coords":[[32.82868468126175, -97.47942027890923], [32.82863486698647, -97.4795269070702]]},{"name":"P09CP04BB01 (PERMIT 36 - 12905FT)","coords":[[32.85629004199931, -97.51289059098002], [32.86705406963896, -97.51072004874928], [32.8667444959409, -97.5079222905622], [32.8659430007319, -97.50571601779285], [32.86584709409405, -97.50438140175814], [32.87047493819908, -97.49574294773048], [32.86997139380863, -97.49529205219811], [32.86874005492898, -97.49460662648842], [32.86812507985991, -97.493655507671], [32.86734447351795, -97.49057052722976], [32.86658925750588, -97.48981926373216], [32.86570860030091, -97.48855108462107], [32.86501134381405, -97.4859830010574]]},{"name":"P09CP04LA01 (WATER - EAGLE MOUNTAIN PUMP - 1825FT)","coords":[[32.86501526081843, -97.48591756730951], [32.86552325956044, -97.48595029366565], [32.86657804914928, -97.48605766702647], [32.86873121396772, -97.48580059330479], [32.86861649830121, -97.48499770370891], [32.86834417660815, -97.48498535317373], [32.86815117131813, -97.48495108274862], [32.86811387134866, -97.48481441822724]]},{"name":"P09CP04LA02 (TARRANT REGIONAL WATER DISTRICT (TRWD) EAGLE MOUNTAIN DAM - 8430FT)","coords":[[32.86874773177475, -97.48579950362073], [32.86975698220828, -97.48527635438877], [32.87034522306994, -97.48435736626956], [32.87077369983562, -97.483590194143], [32.87083147263036, -97.48325580892266], [32.87061494400464, -97.48267781770129], [32.87049414995694, -97.48213036155245], [32.87045669999726, -97.48120294951364], [32.87057859499448, -97.48055699319431], [32.87114150493063, -97.47936429580555], [32.87163347424454, -97.47895444217413], [32.87281869722165, -97.47854555907652], [32.87326968096988, -97.4783562023065], [32.87552437544773, -97.47765712574731], [32.87567343694953, -97.47497518022634], [32.87585971075679, -97.47451012467623], [32.87397855411978, -97.46384528662185]]}];
+const bgRedlines = {"P09-CP01": [[32.823353, -97.509235]], "P09-CP02-L1": [[32.826291, -97.480316], [32.824616, -97.477648], [32.823626, -97.475235], [32.822347, -97.471649], [32.821348, -97.46941], [32.819934, -97.465404], [32.819449, -97.463125], [32.820998, -97.45676]], "P09-CP03": [[32.826291, -97.480316], [32.829035, -97.481515], [32.828375, -97.482388], [32.831325, -97.483943], [32.834057, -97.486842], [32.836392, -97.48932], [32.838264, -97.491306], [32.841903, -97.495197], [32.8446, -97.498065], [32.846628, -97.500222], [32.848818, -97.502553], [32.85112, -97.504986], [32.852408, -97.506549], [32.8553, -97.510888], [32.856556, -97.512701]], "P09-CP04": [[32.856556, -97.512701]], "P09-CP03-L1": [[32.829035, -97.481515], [32.827001, -97.479357]]};
+const cfwSites = [
+    {lat:32.7254505,lon:-97.4664509,name:"Camp Bowie Library Service Center",addr:"8628 Camp Bowie",zip:"76116",notes:"Leased; Camp Bowie Library; Several addresses. ADD this one.",cat:"library"},
+    {lat:32.7572875,lon:-97.28180909999999,name:"Gateway Park",addr:"751 Beach",zip:"76111",notes:"Gateway Park; there have been connectivity concerns for awhile",cat:"parks"},
+    {lat:32.73232,lon:-97.4419784,name:"MedStar Location",addr:"2900 Alta Mere",zip:"76116",notes:"MedStar Location",cat:"medical"},
+    {lat:32.9012842,lon:-97.3108328,name:"MedStar Location",addr:"8928 Medical City",zip:"76177",notes:"MedStar Location",cat:"medical"},
+    {lat:32.7660151,lon:-97.47968279999999,name:"Clifford Library",addr:"9336 Clifford",zip:"76108",notes:"New facility",cat:"library"},
+    {lat:32.7357493,lon:-97.560645,name:"Fire Station #43",addr:"2200 Walsh Ranch Pkwy",zip:"76008",notes:"FS#43, new facility, FROG circuit due to development restrictions",cat:"fire"},
+    {lat:32.8934438,lon:-97.3516076,name:"Betsy Price CC",addr:"8375 Blue Mound",zip:"76131",notes:"New facility",cat:"parks"},
+    {lat:32.9678366,lon:-97.3867444,name:"Far Northwest Library",addr:"1297 Avondale-Haslet",zip:"76052",notes:"New facility",cat:"library"},
+    {lat:32.8004338,lon:-97.2503036,name:"NW PD Division",addr:"3900 Angle",zip:"76106",notes:"New facility",cat:"police"},
+    {lat:32.7308635,lon:-97.40825919999999,name:"Fire Station #16",addr:"5701 Lovell",zip:"76107",notes:"New facility",cat:"fire"},
+    {lat:32.752982,lon:-97.33493610000001,name:"Central Library",addr:"512 W 4th",zip:"76102",notes:"New facility",cat:"library"},
+    {lat:32.6757367,lon:-97.3882746,name:"Fire Station #26",addr:"4921 South",zip:"76132",notes:"New facility",cat:"fire"},
+    {lat:32.7297599,lon:-97.24430319999999,name:"MLK Community Center and Pool",addr:"1502 Liberty",zip:"76105",notes:"New facility",cat:"parks"},
+    {lat:32.8838748,lon:-97.2409218,name:"Fire Station #37",addr:"10800 Alta Vista",zip:"76148",notes:"New facility",cat:"fire"},
+    {lat:33.0054606,lon:-97.3176788,name:"PD - Alliance",addr:"2000 Eagle Parkway",zip:"76177",notes:"Close to Phase 19; likely a full patrol center in the near future; Maps doesn\'t take you to the right spot with this address, though - a site visit is strongly recommended",cat:"police"},
+    {lat:32.8755499,lon:-97.47490870000001,name:"Eagle Mountain Flow Control",addr:"8619 Eagle Mountain Circle",zip:"76135",notes:"Water; Eagle mountain flow control at the dam; 3mi from the Eagle Mountain complex - actually at the lake; Near Water Eagle Mountain pump in Phase 9; Can be added if necessary",cat:"water"},
+    {lat:32.6766748,lon:-97.3233807,name:"PD Baitcar",addr:"212 E Felix",zip:"76115",notes:"PD Baitcar; Vehicle theft prevention; closest to Phase 6",cat:"police"},
+    {lat:32.7554883,lon:-97.3307658,name:"South Holly Admin Building",addr:"1608 11",zip:"76102",notes:"All water sites within the Holly Complex on city-owned fiber connect to this site",cat:"water"},
+    {lat:32.6271493,lon:-97.3099026,name:"Fire Station #28",addr:"1300 Everman Pkwy",zip:"76140",notes:"Previously listed as 1224 Everman Pkwy",cat:"fire"},
+    {lat:32.7485878,lon:-97.33522889999999,name:"Fire Station #2",addr:"1000 Cherry",zip:"76102",notes:"Fire Station #2 connected to Fire Arson",cat:"fire"},
+    {lat:32.7409721,lon:-97.3854487,name:"Fire Station #18",addr:"1908 Carleton",zip:"76107",notes:"",cat:"fire"},
+    {lat:32.7271879,lon:-97.4689449,name:"Fire Station #23",addr:"3201 Portales",zip:"76116",notes:"",cat:"fire"},
+    {lat:32.7486029,lon:-97.335523,name:"Fire Arson",addr:"715 Texas",zip:"76102",notes:"",cat:"fire"},
+    {lat:32.7336213,lon:-97.4574056,name:"LVT Rise CC",addr:"8201 Calmont",zip:"76116",notes:"",cat:"parks"},
+    {lat:32.7476384,lon:-97.332128,name:"TPW - Architectural Services",addr:"407 W 13",zip:"76102",notes:"Macon",cat:"other"},
+    {lat:32.734593,lon:-97.4301619,name:"Water ridglea tower",addr:"6560 Calmont",zip:"76116",notes:"",cat:"water"},
+    {lat:32.7476406,lon:-97.33229899999999,name:"TPW Architectural Services",addr:"401 W 13",zip:"76102",notes:"South Annex; occupancy unknown; Archicture moved out and somebody else moved in, but we don\'t know if they\'re still there",cat:"admin"},
+    {lat:32.6912041,lon:-97.321502,name:"Water Ridglea Tower",addr:"None Listed",zip:"",notes:"",cat:"water"},
+    {lat:32.7569827,lon:-97.3356907,name:"PD - Jail",addr:"350 W Belknap",zip:"76102",notes:"Leased",cat:"police"},
+    {lat:32.7553528,lon:-97.3284056,name:"PD - Central Division",addr:"501 Jones",zip:"76102",notes:"Leased",cat:"police"},
+    {lat:32.7503245,lon:-97.33453929999999,name:"Tower - Burnett",addr:"801 Cherry",zip:"76102",notes:"Leased; Burnett Plaza Tower",cat:"tower"},
+    {lat:32.7527778,lon:-97.3599011,name:"PD - 7th Bike SF",addr:"2929 W 5",zip:"76107",notes:"Leased",cat:"police"},
+    {lat:32.7192385,lon:-97.4432332,name:"PD - CACU",addr:"3600 Benbrook Hwy",zip:"76116",notes:"",cat:"police"},
+    {lat:32.7596071,lon:-97.32963389999999,name:"Fire Station #1",addr:"120 N Pecan",zip:"76102",notes:"",cat:"fire"},
+    {lat:32.7263109,lon:-97.4352521,name:"PARD - RD Evans CC",addr:"3242 Lackland",zip:"76116",notes:"",cat:"parks"},
+    {lat:32.7456671,lon:-97.36651169999999,name:"Will Rogers Memorial Center",addr:"3401 W Lancaster",zip:"76107",notes:"",cat:"admin"},
+    {lat:32.7201097,lon:-97.44322509999999,name:"PD - West Division",addr:"3525 Marquita",zip:"76116",notes:"Listed as 3532 Joyce Dr Fort Worth, TX 76116 (Google Maps)",cat:"police"},
+    {lat:32.7245153,lon:-97.419117,name:"Library - Ridglea",addr:"3628 Bernie Anderson",zip:"76116",notes:"",cat:"library"},
+    {lat:32.67055240000001,lon:-97.390587,name:"Fire Station #30",addr:"4416 SW",zip:"76116",notes:"",cat:"fire"},
+    {lat:32.7155578,lon:-97.4084122,name:"PARD - Como CC",addr:"4660 Horne",zip:"76107",notes:"",cat:"parks"},
+    {lat:32.7603017,lon:-97.3413599,name:"PARD - Haws Athletics",addr:"600 Congress",zip:"76107",notes:"Connected to 1000 Calvert via PTP fiber",cat:"parks"},
+    {lat:32.7331112,lon:-97.4395457,name:"PARD - West District/Z BOAZ",addr:"7151 Calmont",zip:"76116",notes:"",cat:"parks"},
+    {lat:32.7529389,lon:-97.3435118,name:"New City Hall",addr:"100 Pier 1",zip:"76102",notes:"",cat:"admin"},
+    {lat:32.7554883,lon:-97.3307658,name:"IT - Telecom",addr:"1515 11",zip:"76102",notes:"Telecom",cat:"ops"},
+    {lat:29.7600771,lon:-95.37011079999999,name:"Proposed Sprocket Data Center",addr:"515 Houston",zip:"76102",notes:"",cat:"ops"},
+    {lat:32.7461172,lon:-97.3726924,name:"Water Westside Pump Station",addr:"3716 Watonga",zip:"76107",notes:"",cat:"water"},
+    {lat:32.7200464,lon:-97.41258769999999,name:"Water como tank",addr:"5920 Blackmore",zip:"76107",notes:"",cat:"water"},
+    {lat:32.6979234,lon:-97.49899979999999,name:"Tower - Westland 6",addr:"1021 Chapin School",zip:"76126",notes:"Leased",cat:"tower"},
+    {lat:32.7595329,lon:-97.50120109999999,name:"Fire Station #32",addr:"10201 White Settlement",zip:"76108",notes:"",cat:"fire"},
+    {lat:32.74357,lon:-97.5307808,name:"Water Westland Treatment",addr:"12200 Old Weatherford",zip:"76008",notes:"",cat:"water"},
+    {lat:32.7549535,lon:-97.5195442,name:"Water tower",addr:"11066 Dorfan",zip:"76108",notes:"",cat:"water"},
+    {lat:32.6519666,lon:-97.3874318,name:"Water tank",addr:"4328 Altamesa",zip:"76133",notes:"",cat:"water"},
+    {lat:32.732578,lon:-97.3324956,name:"PD - One Safe Place",addr:"1100 Hemphill",zip:"76104",notes:"Leased",cat:"police"},
+    {lat:32.7311511,lon:-97.33132669999999,name:"PD - NPD #2",addr:"1289 Hemphill",zip:"76104",notes:"Leased",cat:"police"},
+    {lat:32.7488215,lon:-97.3291546,name:"Fire Station #8",addr:"1101 12",zip:"76104",notes:"FS#8; AT&T Service Address",cat:"fire"},
+    {lat:32.7267112,lon:-97.3329639,name:"PARD - Fire Station CC",addr:"1601 Lipscomb",zip:"76104",notes:"",cat:"fire"},
+    {lat:32.7197905,lon:-97.3619533,name:"PARD - Log Cabin Village",addr:"2100 Log Cabin Village",zip:"76109",notes:"",cat:"parks"},
+    {lat:32.7194582,lon:-97.3526686,name:"PARD - Forest Park Pool",addr:"2850 Park Place",zip:"76110",notes:"",cat:"parks"},
+    {lat:32.7410319,lon:-97.3798443,name:"PARD - Thomas Place CC",addr:"4237 Lafayette",zip:"76107",notes:"",cat:"parks"},
+    {lat:32.7330799,lon:-97.3187305,name:"Library - Shamblee",addr:"1062 Evans",zip:"76104",notes:"",cat:"library"},
+    {lat:32.7328294,lon:-97.2849943,name:"PD - Traffic/NPD #6",addr:"1100 Nashville",zip:"76105",notes:"",cat:"police"},
+    {lat:32.73209370000001,lon:-97.32119449999999,name:"Guinn School",addr:"1150 S Fwy",zip:"76104",notes:"",cat:"other"},
+    {lat:32.728148,lon:-97.3120598,name:"PARD - Hillside CC",addr:"1201 E Maddox",zip:"76104",notes:"",cat:"parks"},
+    {lat:29.7600771,lon:-95.37011079999999,name:"Fort Worth Convention Center",addr:"1201 Houston",zip:"76102",notes:"",cat:"admin"},
+    {lat:32.7463573,lon:-97.31283379999999,name:"PD - NPO Lancaster",addr:"1509 E Lancaster",zip:"76102",notes:"",cat:"police"},
+    {lat:32.72812820000001,lon:-97.293656,name:"PARD - East District Service Center",addr:"2300 Avenue H",zip:"76105",notes:"",cat:"parks"},
+    {lat:32.7313185,lon:-97.2902103,name:"PARD - Sycamore CC",addr:"2525 E Rosedale",zip:"76105",notes:"",cat:"parks"},
+    {lat:32.7439606,lon:-97.28615549999999,name:"Fire Station #14",addr:"2737 Meadowbrook",zip:"76103",notes:"",cat:"fire"},
+    {lat:32.7394041,lon:-97.2328153,name:"Library - Meadowbrook",addr:"2800 Stark",zip:"76112",notes:"",cat:"library"},
+    {lat:32.7404314,lon:-97.27143939999999,name:"PD - Crime Lab",addr:"3616 E Lancaster",zip:"76103",notes:"",cat:"police"},
+    {lat:32.7412027,lon:-97.26806380000001,name:"Library - Reby Cary",addr:"3851 E Lancaster",zip:"76103",notes:"",cat:"library"},
+    {lat:32.750148,lon:-97.26518399999999,name:"PD - KXAS/SOD; Tower - Barnett/KXAS",addr:"3900 Barnett",zip:"76103",notes:"Listed as both PD-KXAS/SOD and Tower - Barnett/KXAS",cat:"police"},
+    {lat:32.7373788,lon:-97.23365899999999,name:"PD - East Division",addr:"5650 E Lancaster",zip:"76112",notes:"",cat:"police"},
+    {lat:32.7358912,lon:-97.3194558,name:"Code - Hazel Harvey Peace",addr:"818 Missouri",zip:"76104",notes:"",cat:"other"},
+    {lat:32.7306941,lon:-97.319132,name:"Fire Station #5",addr:"850 Irma",zip:"76104",notes:"",cat:"fire"},
+    {lat:32.732635,lon:-97.31622139999999,name:"PARD - Southside CC",addr:"959 E Rosedale",zip:"76104",notes:"",cat:"parks"},
+    {lat:32.73477829999999,lon:-97.2909576,name:"Water Sycamore Pump",addr:"2509 Avenue B",zip:"76105",notes:"",cat:"water"},
+    {lat:32.7378627,lon:-97.2972344,name:"PARD - Sycamore Golf Maintenance",addr:"615 Sycamore",zip:"76104",notes:"Service center for the golf course",cat:"parks"},
+    {lat:32.6725127,lon:-97.291142,name:"PARD - Forestry",addr:"2525 Joe B Rushing",zip:"76119",notes:"",cat:"parks"},
+    {lat:32.6951602,lon:-97.291102,name:"PARD - Bradley Center CC",addr:"2601 Timberline",zip:"76119",notes:"",cat:"parks"},
+    {lat:32.712778,lon:-97.3534176,name:"Fire Station #24",addr:"3101 Forest",zip:"76112",notes:"",cat:"fire"},
+    {lat:32.7131972,lon:-97.2595202,name:"Library - East Berry",addr:"4300 E Berry",zip:"76119",notes:"",cat:"library"},
+    {lat:32.7208526,lon:-97.25409549999999,name:"Fire Station #3",addr:"4700 Ramey",zip:"76105",notes:"",cat:"fire"},
+    {lat:32.6991968,lon:-97.25139659999999,name:"Fire Station #22",addr:"4849 Wilbarger",zip:"76119",notes:"",cat:"fire"},
+    {lat:32.6884054,lon:-97.25051769999999,name:"Code - Animal Control",addr:"4900 Martin",zip:"76119",notes:"",cat:"animal"},
+    {lat:32.6984569,lon:-97.24929759999999,name:"PARD - McCray CC",addr:"4932 Wilbarger",zip:"76119",notes:"",cat:"parks"},
+    {lat:32.6931447,lon:-97.2491812,name:"SE Service Center",addr:"5000 MLK Fwy",zip:"76119",notes:"",cat:"ops"},
+    {lat:32.692536,lon:-97.24498439999999,name:"SE Dropoff Center",addr:"5150 MLK Fwy",zip:"76119",notes:"",cat:"water"},
+    {lat:32.7400737,lon:-97.2220931,name:"PARD - Handley/Meadowbrook CC",addr:"6201 Beaty",zip:"76112",notes:"",cat:"parks"},
+    {lat:32.7554883,lon:-97.3307658,name:"Water tower",addr:"4260 Strong",zip:"76105",notes:"",cat:"water"},
+    {lat:32.6737718,lon:-97.32777109999999,name:"PD - Bob Bolen Training Center",addr:"509 W Felix",zip:"76115",notes:"Already tied into 505 W Felix ; 509 is the demarc for the entire complex and needs to be wired, but 505 and 511 are on city-owned fiber - approx. 27mi of fiber there",cat:"police"},
+    {lat:32.6618146,lon:-97.2996857,name:"PARD - Highland Hills CC",addr:"1600 Glasgow",zip:"76134",notes:"",cat:"parks"},
+    {lat:32.6856911,lon:-97.3436018,name:"PARD - McCleland Tennis Center",addr:"1600 W Seminary",zip:"76115",notes:"",cat:"parks"},
+    {lat:32.7081029,lon:-97.29908100000002,name:"Fire Station #4",addr:"2954 Old Mansfield",zip:"76119",notes:"",cat:"fire"},
+    {lat:32.7035774,lon:-97.3312395,name:"Fire Station #10",addr:"3209 Hemphill",zip:"76110",notes:"",cat:"fire"},
+    {lat:32.6992461,lon:-97.3299874,name:"PARD - Victory Forest CC",addr:"3427 Hemphill",zip:"76110",notes:"",cat:"parks"},
+    {lat:32.6545171,lon:-97.4316221,name:"PARD - Worth Heights CC",addr:"3551 New York",zip:"76110",notes:"",cat:"parks"},
+    {lat:32.5780166,lon:-97.31207900000001,name:"Fire Station #42",addr:"450 E Rendon Crowley",zip:"76028",notes:"",cat:"fire"},
+    {lat:32.7554883,lon:-97.3307658,name:"James Ave Service Center",addr:"5001 James",zip:"76115",notes:"",cat:"ops"},
+    {lat:32.6888646,lon:-97.3226677,name:"Library - Seminary",addr:"501 E Bolt",zip:"76110",notes:"",cat:"library"},
+    {lat:32.669567,lon:-97.3367791,name:"PARD - Greenbrier CC",addr:"5200 Hemphill",zip:"76115",notes:"",cat:"parks"},
+    {lat:32.7554883,lon:-97.3307658,name:"PARD - South Service Center",addr:"5201 James",zip:"76115",notes:"",cat:"parks"},
+    {lat:32.6571478,lon:-97.3241999,name:"Enviro Southside Dropoff",addr:"6260 Old Hemphill",zip:"76134",notes:"",cat:"water"},
+    {lat:32.5593054,lon:-97.33132959999999,name:"Spinks Airport",addr:"450 Alsbury",zip:"76028",notes:"Spinks Airport",cat:"other"},
+    {lat:32.5777238,lon:-97.33464359999999,name:"Water tank",addr:"2000 E Main",zip:"76036",notes:"",cat:"water"},
+    {lat:32.6278633,lon:-97.4009293,name:"Fire Station #36",addr:"5045 Columbus Trail",zip:"76123",notes:"",cat:"fire"},
+    {lat:32.6597771,lon:-97.4491807,name:"PARD - Pecan Valley Golf/ PARD - Pecan Valley Maintenance",addr:"6400 Pecan Valley",zip:"76123",notes:"Pecan Valley golf maintenance, connected to Pro Shop via PtP wireless",cat:"parks"},
+    {lat:32.6504923,lon:-97.3612867,name:"Fire Station #29",addr:"6400 Westcreek Drive",zip:"76133",notes:"",cat:"fire"},
+    {lat:32.6632809,lon:-97.4254213,name:"Fire Station #39",addr:"7655 Oakmont Boulevard",zip:"76132",notes:"",cat:"fire"},
+    {lat:32.6138522,lon:-97.371202,name:"Library - Lincoln",addr:"8829 McCart",zip:"76123",notes:"",cat:"library"},
+    {lat:32.609439,lon:-97.403086,name:"PARD - Chisholm Trail CC",addr:"4680 McPherson Boulevard",zip:"76123",notes:"Chisholm Trail Community Center",cat:"parks"},
+    {lat:32.6530352,lon:-97.3826606,name:"PARD - Southwest CC",addr:"6300 Welch Avenue",zip:"76133",notes:"SW Community Center - Duplicate listing. This is the correct address.",cat:"parks"},
+    {lat:32.6147774,lon:-97.37206289999999,name:"PD - South Division Patrol",addr:"3501 W Risinger",zip:"76123",notes:"",cat:"police"},
+    {lat:32.6007305,lon:-97.4167037,name:"Water tower",addr:"5820 Stewart Feltz",zip:"76123",notes:"",cat:"water"},
+    {lat:32.6130748,lon:-97.3714672,name:"Water McCart pump/tank",addr:"8889 McCart",zip:"76123",notes:"",cat:"water"},
+    {lat:32.6897529,lon:-97.3608294,name:"Bolt Tower/ 911 Communications",addr:"3000 W Bolt",zip:"76110",notes:"FCC# 1046943",cat:"tower"},
+    {lat:32.6960375,lon:-97.3674403,name:"Fire Station #21",addr:"3501 South Hills",zip:"76109",notes:"",cat:"fire"},
+    {lat:32.671585,lon:-97.3746886,name:"SW Courts",addr:"3741 SW Loop 820",zip:"76133",notes:"",cat:"admin"},
+    {lat:32.6702525,lon:-97.37495659999999,name:"Libary - Wedgwood",addr:"3816 Kimberly Lane",zip:"76133",notes:"",cat:"library"},
+    {lat:32.7554883,lon:-97.3307658,name:"Library - Southwest Regional",addr:"4001 Library",zip:"76109",notes:"",cat:"library"},
+    {lat:32.681619,lon:-97.3568481,name:"Water Seminary Hill Tank",addr:"2701 W Gambrell",zip:"76133",notes:"",cat:"water"},
+    {lat:32.6720044,lon:-97.3768537,name:"Water russon pump station",addr:"5301 Woodway",zip:"76133",notes:"",cat:"water"},
+    {lat:32.6844871,lon:-97.3966555,name:"Code - PetSmart Adoption/Hulen",addr:"4800 SW Loop 820",zip:"76109",notes:"",cat:"animal"},
+    {lat:32.8432719,lon:-97.494238,name:"Fire Bomb Disposal",addr:"10300 Jacksboro Hwy",zip:"76135",notes:"",cat:"fire"},
+    {lat:32.7895226,lon:-97.4689155,name:"PD - Horsebarn",addr:"1901 N Las Vegas",zip:"76108",notes:"",cat:"police"},
+    {lat:32.8286684,lon:-97.47941870000001,name:"PARD - Nature Center Gate",addr:"4400 Buffalo",zip:"76058",notes:"",cat:"parks"},
+    {lat:32.8335386,lon:-97.47383339999999,name:"PARD - Nature Center Refuge",addr:"4600 Broadview",zip:"76135",notes:"",cat:"parks"},
+    {lat:32.8182855,lon:-97.45353929999999,name:"Courts - Marshal Lake Front",addr:"7500 Surfside",zip:"76135",notes:"",cat:"admin"},
+    {lat:32.8473676,lon:-97.47585529999999,name:"PARD - Nature Center Hardwick",addr:"9601 Fossil Ridge",zip:"76135",notes:"",cat:"parks"},
+    {lat:32.868214,lon:-97.4850342,name:"Water Eagle Mountain pump",addr:"7988 Eagle Mountain Circle",zip:"76135",notes:"",cat:"water"},
+    {lat:32.8368603,lon:-97.42574570000001,name:"CASA Radar",addr:"5721 Boat Club",zip:"76135",notes:"CASA Radar; part of a national weather system - it has its own infrastructure, and it is not currently wired to our network - REMOVE?",cat:"ops"},
+    {lat:32.8313281,lon:-97.4212979,name:"Fire Station #13",addr:"5333 Lea Crest",zip:"76135",notes:"",cat:"fire"},
+    {lat:32.8517972,lon:-97.40219429999999,name:"Library - Northwest",addr:"6228 Crystal Lake Drive",zip:"76179",notes:"",cat:"library"},
+    {lat:32.8598618,lon:-97.4194473,name:"Eagle Mountain/DR Site",addr:"6801 Bowman Roberts",zip:"76179",notes:"",cat:"ops"},
+    {lat:32.8610674,lon:-97.4174558,name:"Tower - Eagle Mountain/ Water Eagle Mountain",addr:"6869 Bowman Roberts",zip:"76179",notes:"FCC# 1249488; Listed as both Tower - Eagle Mountain and Water Eagle Mountain",cat:"tower"},
+    {lat:32.7847453,lon:-97.35001,name:"Fire Station #12",addr:"120 NW 22",zip:"76164",notes:"",cat:"fire"},
+    {lat:32.8206857,lon:-97.35495619999999,name:"Meacham Airport",addr:"201 American Concourse",zip:"76106",notes:"",cat:"other"},
+    {lat:32.7746255,lon:-97.3687164,name:"PARD - Rockwood Maintenance/ PARD - Rockwood Golf",addr:"1851 Jacksboro Hwy",zip:"76114",notes:"Rockwood Maintenance, connected to Pro Shop via PtP wireless connection; Listed as both PARD - Rockwood Maint. and PARD - Rockwood Golf",cat:"parks"},
+    {lat:32.8159459,lon:-97.3565038,name:"Fire Station #44",addr:"4017 Falcon Way W",zip:"76106",notes:"Fire Station #44 is on the tarmac of Meacham, FAA controls digging/boring. ZAYO could not add this site. Have been out there with another provider, as well, and it seems unlikely. Wanted to get fiber between this location and the heliport, but the abilit",cat:"fire"},
+    {lat:32.7790643,lon:-97.36327229999999,name:"PARD - Northside CC",addr:"1100 NW 18",zip:"76164",notes:"",cat:"parks"},
+    {lat:32.7579821,lon:-97.36081449999999,name:"Fire Station #6",addr:"205 University",zip:"76107",notes:"",cat:"fire"},
+    {lat:32.7902101,lon:-97.3510228,name:"PD - Northwest Division",addr:"2500 N Houston",zip:"76164",notes:"",cat:"police"},
+    {lat:32.7985528,lon:-97.3678942,name:"PARD - North Tri-Ethnic CC",addr:"2950 Roosevelt",zip:"76106",notes:"",cat:"parks"},
+    {lat:32.80299400000001,lon:-97.383853,name:"Fire Station #15",addr:"3100 Azle Avenue",zip:"76106",notes:"",cat:"fire"},
+    {lat:32.8133907,lon:-97.35205719999999,name:"Fire Station #25",addr:"3801 N Main",zip:"76106",notes:"",cat:"fire"},
+    {lat:32.7734546,lon:-97.3465018,name:"Fire SCBA",addr:"400 Grand Avenue",zip:"76164",notes:"",cat:"fire"},
+    {lat:32.8085519,lon:-97.35619349999999,name:"Meacham Hangar",addr:"504 NW 35",zip:"76106",notes:"",cat:"other"},
+    {lat:32.7804291,lon:-97.35617119999999,name:"Library - Northside",addr:"601 Park Street",zip:"76164",notes:"",cat:"library"},
+    {lat:32.794377,lon:-97.3703846,name:"Water northside pump",addr:"2710 Rosen",zip:"76164",notes:"",cat:"water"},
+    {lat:32.8050239,lon:-97.3863488,name:"Water tank/tower/pump",addr:"3216 Azle",zip:"76106",notes:"",cat:"water"},
+    {lat:32.78059560000001,lon:-97.3501155,name:"PARD - Marine Creek Pool",addr:"303 NW 20",zip:"76164",notes:"",cat:"parks"},
+    {lat:32.7944881,lon:-97.4480868,name:"Water Lake Worth Office",addr:"7601 Cahoba Drive",zip:"76135",notes:"Near Water Lake Worth Office in Phase 11",cat:"water"},
+    {lat:32.8088099,lon:-97.3390496,name:"Library - Diamond Hill Jarvis (DHJ)",addr:"1300 NE 35",zip:"76106",notes:"",cat:"library"},
+    {lat:32.7897045,lon:-97.3344353,name:"PARD - Brennan Service Center",addr:"1700 Brennan",zip:"76106",notes:"",cat:"parks"},
+    {lat:32.8111407,lon:-97.3344075,name:"PARD - Diamond Hill Jarvis CC",addr:"1701 NE 36",zip:"76106",notes:"",cat:"parks"},
+    {lat:32.7638091,lon:-97.308556,name:"PARD - Andrew Doc Sessions CC",addr:"201 S Sylvania",zip:"76111",notes:"",cat:"parks"},
+    {lat:32.7880654,lon:-97.327939,name:"ESD - Brennan Service Center/ Auto Pound",addr:"2500 Brennan",zip:"76106",notes:"",cat:"ops"},
+    {lat:32.7849471,lon:-97.30759499999999,name:"Fire Station #19",addr:"2605 Carnation",zip:"76111",notes:"Listed as 2613 Carnation (Google Maps)",cat:"fire"},
+    {lat:32.7812251,lon:-97.303776,name:"Library - Riverside",addr:"2913 Yucca",zip:"76111",notes:"",cat:"library"},
+    {lat:32.7773164,lon:-97.29414100000001,name:"PARD - Riverside CC",addr:"3700 E Belknap",zip:"76111",notes:"",cat:"parks"},
+    {lat:32.8017001,lon:-97.1821559,name:"Fire Station #27",addr:"2940 Precinct Line",zip:"76118",notes:"",cat:"fire"},
+    {lat:32.808233,lon:-97.1291407,name:"Tower - Bergh #2",addr:"11149 Trinity",zip:"76040",notes:"FCC# 1026540",cat:"tower"},
+    {lat:32.818707,lon:-97.0496769,name:"Fire Station #33",addr:"14650 Statler Boulevard",zip:"76155",notes:"",cat:"fire"},
+    {lat:32.8282815,lon:-97.0346859,name:"Water tower",addr:"15201 FAA",zip:"76155",notes:"",cat:"water"},
+    {lat:32.6934641,lon:-97.346936,name:"Water tank",addr:"1800 W Waggoman",zip:"76110",notes:"",cat:"water"},
+    {lat:32.7754768,lon:-97.14266839999999,name:"Water Village Creek",addr:"4500 Wilma",zip:"76012",notes:"",cat:"water"},
+    {lat:32.8119206,lon:-97.24168809999999,name:"Library - East Regional",addr:"6301 Bridge",zip:"76112",notes:"",cat:"library"},
+    {lat:32.8114068,lon:-97.2417796,name:"Enviro Bridge Dropoff Center",addr:"6400 Bridge",zip:"76112",notes:"",cat:"water"},
+    {lat:32.8119206,lon:-97.24168809999999,name:"Tower - Bridge",addr:"6401 Bridge",zip:"76112",notes:"FCC# 1046939 - FCC Address: 6401 Bridge St (Bridge Tower) Fort Worth, TX 76112",cat:"tower"},
+    {lat:32.7642631,lon:-97.2419079,name:"Fire Station #20",addr:"1051 Woodhaven",zip:"76112",notes:"Listed as 901 Woodhaven (Google Maps)",cat:"fire"},
+    {lat:32.766162,lon:-97.19093799999999,name:"Fire Station #7",addr:"7601 John T White",zip:"76120",notes:"Listed as 925 Morrison (Google Maps)",cat:"fire"},
+    {lat:32.9350325,lon:-97.3910184,name:"Fire Station #41",addr:"11400 Willow Springs",zip:"76052",notes:"Listed as 11530 Willow Springs Haslet, TX 76052 (Google Maps)",cat:"fire"},
+    {lat:32.9065285,lon:-97.33246849999999,name:"Fire Station #45",addr:"1901 Quail Grove",zip:"76177",notes:"",cat:"fire"},
+    {lat:32.9277352,lon:-97.355576,name:"PARD - North Service Center",addr:"301 Hillshire",zip:"76052",notes:"",cat:"parks"},
+    {lat:32.8788691,lon:-97.42677809999999,name:"Fire Station #40",addr:"8510 Spring",zip:"76179",notes:"",cat:"fire"},
+    {lat:32.9261205,lon:-97.33109019999999,name:"Water tank",addr:"10500 Harmon",zip:"76177",notes:"",cat:"water"},
+    {lat:32.9843584,lon:-97.3856242,name:"Fire Station #34",addr:"14101 Sendera Ranch",zip:"76052",notes:"",cat:"fire"},
+    {lat:32.9999663,lon:-97.2925405,name:"Fire Station #35",addr:"2250 Alliance",zip:"76177",notes:"Listed as 2201 Flight Line Road (Google Maps)",cat:"fire"},
+    {lat:32.9684556,lon:-97.4103765,name:"Water tower",addr:"2249 Avondale-Haslet",zip:"76052",notes:"",cat:"water"},
+    {lat:33.0324865,lon:-97.3245048,name:"Fire Station #11",addr:"1900 Texan Drive",zip:"76247",notes:"",cat:"fire"},
+    {lat:33.0162287,lon:-97.2461554,name:"Tower - Roanoke",addr:"2521 W Hwy 114",zip:"76262",notes:"FCC# 1039914 - FCC Address: 2691 Hwy 114 (089201) Fort Worth, TX 76177",cat:"tower"},
+    {lat:32.9134723,lon:-97.3136023,name:"Code - PetSmart Adoption/Heritage Trace",addr:"2901 Texas Sage",zip:"76177",notes:"Duplicate. The Heritage address is the duplicate address. The Texas Sage address is the correct address.",cat:"animal"},
+    {lat:32.9713246,lon:-97.2622935,name:"Fire Station #38",addr:"13280 Park Vista",zip:"76248",notes:"",cat:"fire"},
+    {lat:32.8739162,lon:-97.29260110000001,name:"Library - Summerglen",addr:"4205 Basswood",zip:"76137",notes:"",cat:"library"},
+    {lat:32.8671867,lon:-97.29240659999999,name:"Fire Station #31",addr:"4209 Longstraw",zip:"76137",notes:"",cat:"fire"},
+    {lat:32.9311232,lon:-97.29218189999999,name:"Library - Golden Triangle",addr:"4264 Golden Triangle",zip:"76244",notes:"",cat:"library"},
+    {lat:32.9242482,lon:-97.2843491,name:"Tower - North Beach",addr:"4705 Ray White",zip:"76244",notes:"FCC# 1046940",cat:"tower"},
+    {lat:32.8997596,lon:-97.3077891,name:"PD - North Division",addr:"8755 N Riverside",zip:"76177",notes:"",cat:"police"},
+    {lat:32.9245948,lon:-97.283568,name:"Water tank",addr:"4961 Ray White",zip:"76244",notes:"",cat:"water"},
+    {lat:32.8261323,lon:-97.31062829999999,name:"Fire Station #9",addr:"2575 Polaris",zip:"76137",notes:"",cat:"fire"},
+    {lat:32.749253,lon:-97.3308124,name:"Old City Hall",addr:"200 Texas",zip:"76102",notes:"",cat:"admin"}
+];
+
+// CFW icons
+const cfwCats = {fire:{c:'#dc2626',l:'Fire',s:'<path d="M12 2C10 6 6 8 6 13a6 6 0 0012 0c0-5-4-7-6-11z" fill="#dc2626"/><circle cx="12" cy="14" r="2" fill="#fef2f2"/>'},parks:{c:'#16a34a',l:'Parks',s:'<path d="M12 3c-2 3-6 4-6 8a6 6 0 004 5.7V20h4v-3.3A6 6 0 0018 11c0-4-4-5-6-8z" fill="#16a34a"/><rect x="11" y="16" width="2" height="6" fill="#854d0e"/>'},police:{c:'#2563eb',l:'Police',s:'<path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" fill="#2563eb"/><path d="M10 12l2 2 4-4" stroke="#fff" stroke-width="2" fill="none"/>'},library:{c:'#9333ea',l:'Library',s:'<path d="M4 19V5a2 2 0 012-2h8a2 2 0 012 2v14" fill="none" stroke="#9333ea" stroke-width="2"/><path d="M4 19h12M8 3v16" stroke="#9333ea" stroke-width="2"/><rect x="17" y="7" width="3" height="12" rx="1" fill="#9333ea"/>'},water:{c:'#0891b2',l:'Water',s:'<path d="M12 2c-3 4-7 6-7 11a7 7 0 0014 0c0-5-4-7-7-11z" fill="#0891b2"/>'},admin:{c:'#ca8a04',l:'Admin',s:'<path d="M3 21h18v-2H3v2zm0-4h18v-2H3v2zm2-6v4h4V11H5zm6 0v4h4V11h-4zm6 0v4h4V11h-4zM4 9h16L12 3 4 9z" fill="#ca8a04"/>'},medical:{c:'#e11d48',l:'Medical',s:'<rect x="3" y="3" width="18" height="18" rx="3" fill="#e11d48"/><path d="M11 7h2v4h4v2h-4v4h-2v-4H7v-2h4V7z" fill="#fff"/>'},tower:{c:'#64748b',l:'Tower',s:'<path d="M12 2L8 10h3v10h2V10h3L12 2z" fill="#64748b"/>'},ops:{c:'#ea580c',l:'Ops',s:'<circle cx="12" cy="12" r="9" fill="#ea580c"/><circle cx="12" cy="12" r="3" fill="#fff7ed"/>'},animal:{c:'#a16207',l:'Animal',s:'<circle cx="12" cy="12" r="9" fill="#a16207"/><circle cx="9" cy="10" r="1.5" fill="#fefce8"/><circle cx="15" cy="10" r="1.5" fill="#fefce8"/>'},other:{c:'#6b7280',l:'Other',s:'<circle cx="12" cy="12" r="9" fill="#6b7280"/>'} };
+function cfwIcon(cat) { const c=cfwCats[cat]||cfwCats.other; return L.divIcon({className:'cfw-icon',html:'<svg viewBox="0 0 24 24" width="28" height="28" xmlns="http://www.w3.org/2000/svg">'+c.s+'</svg>',iconSize:[28,28],iconAnchor:[14,14],popupAnchor:[0,-14]}); }
+
+// ============================================================
+// MAP
+// ============================================================
+const cL = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:20});
+const cD = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:20});
+const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19});
+const esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:19});
+const map = L.map('map',{layers:[cL]});
+
+L.control.layers({"Street":cL,"Dark":cD,"Satellite":sat,"Esri":esri},{},{position:'topleft',collapsed:true}).addTo(map);
+
+// Interpolation — uses KMZ route geometry + Haversine distance for road-following placement
+function haversine(p1,p2){const R=20902231;const toRad=x=>x*Math.PI/180;const dLat=toRad(p2[0]-p1[0]);const dLon=toRad(p2[1]-p1[1]);const a=Math.sin(dLat/2)**2+Math.cos(toRad(p1[0]))*Math.cos(toRad(p2[0]))*Math.sin(dLon/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
+const routeDists=[0];
+for(let i=1;i<route.length;i++) routeDists.push(routeDists[i-1]+haversine(route[i-1],route[i]));
+const totalRouteDist=routeDists[routeDists.length-1];
+const totalStaFeet=9153; // STA 91+53
+function iPos(feet){
+  const targetDist=(feet/totalStaFeet)*totalRouteDist;
+  for(let i=0;i<routeDists.length-1;i++){
+    if(targetDist>=routeDists[i]&&targetDist<=routeDists[i+1]){
+      const segLen=routeDists[i+1]-routeDists[i];
+      const t=segLen>0?(targetDist-routeDists[i])/segLen:0;
+      return[route[i][0]+t*(route[i+1][0]-route[i][0]),route[i][1]+t*(route[i+1][1]-route[i][1])];
+    }
+  }
+  return route[route.length-1];
+}
+
+// ============================================================
+// TIER 1: HLD (Original KMZ)
+// ============================================================
+// Phase 9 full HLD network (background)
+const hldBgGroup = L.layerGroup();
+hldRoutes.forEach(r => {
+  if (r.name.indexOf('P09CP04') === 0) return; // CP02 shown separately
+  if (r.coords.length < 2) return;
+  const isBB = r.name.indexOf('BB') > -1;
+  L.polyline(r.coords, {color:'#f9a8d4',weight:isBB?2:1.5,opacity:0.4,dashArray:isBB?null:'4,4'})
+    .bindPopup('<div class="pop"><div class="hdr">'+r.name+'</div><span class="tier tier-hld">HLD — Original Design</span><div class="src">Source: '+SRC.hldFile+'<br>Date: '+SRC.hldDate+'</div></div>')
+    .addTo(hldBgGroup);
+});
+
+// CP02 HLD routes (highlighted)
+const hldCP02Group = L.layerGroup();
+hldRoutes.filter(r => r.name.indexOf('P09CP04') === 0).forEach(r => {
+  if (r.coords.length < 2) return;
+  const isBB = r.name.indexOf('BB') > -1;
+  L.polyline(r.coords, {color:'#ec4899',weight:isBB?4:3,opacity:0.8,dashArray:isBB?null:'8,4'})
+    .bindPopup('<div class="pop"><div class="hdr">'+r.name+'</div><span class="tier tier-hld">HLD — Original Design</span><div class="row"><span class="lbl">Package</span><span class="val">P09-CP02</span></div><div class="row"><span class="lbl">Permit</span><span class="val">'+SRC.permit+'</span></div><div class="row"><span class="lbl">Type</span><span class="val">'+(isBB?'Backbone':'Lateral')+'</span></div><div class="src">Source: '+SRC.hldFile+'<br>Date: '+SRC.hldDate+'</div></div>')
+    .addTo(hldCP02Group);
+});
+
+// ============================================================
+// TIER 2: PLANNED CONSTRUCTION (Design PDF)
+// ============================================================
+const plannedRouteGroup = L.layerGroup();
+L.polyline(route,{color:'#3b82f6',weight:4,opacity:0.7,dashArray:'10,6'})
+  .bindPopup('<div class="pop"><div class="hdr">Planned Route</div><span class="tier tier-plan">Planned Construction</span><div class="row"><span class="lbl">Package</span><span class="val">'+SRC.pkg+'</span></div><div class="row"><span class="lbl">Permit</span><span class="val">'+SRC.permit+'</span></div><div class="row"><span class="lbl">Jurisdiction</span><span class="val">'+SRC.jurisdiction+'</span></div><hr><div class="row"><span class="lbl">Design Co</span><span class="val">'+SRC.designCo+'</span></div><div class="row"><span class="lbl">Project Mgr</span><span class="val">'+SRC.designPM+'</span></div><div class="row"><span class="lbl">Constructor</span><span class="val">'+SRC.constructor+'</span></div><div class="row"><span class="lbl">Const Mgr</span><span class="val">'+SRC.constMgr+'</span></div><div class="row"><span class="lbl">Permitting</span><span class="val">'+SRC.permitAgencies+'</span></div><div class="src">File: '+SRC.filename+'<br>Date: '+SRC.designDate+'</div></div>')
+  .addTo(plannedRouteGroup);
+
+const plannedHHGroup = L.layerGroup();
+plannedHH.forEach(h => {
+  const pos = iPos(h.station_feet);
+  let pop = '<div class="pop"><div class="hdr">Planned Handhole</div><span class="tier tier-plan">Planned Construction</span>';
+  pop += '<div class="row"><span class="lbl">Station</span><span class="val">STA '+h.station+'</span></div>';
+  pop += '<div class="row"><span class="lbl">Size</span><span class="val">'+h.size+'</span></div>';
+  pop += '<div class="row"><span class="lbl">Package</span><span class="val">'+SRC.pkg+'</span></div>';
+  pop += '<div class="row"><span class="lbl">Permit</span><span class="val">'+SRC.permit+'</span></div>';
+  pop += '<hr><div class="row"><span class="lbl">Design Co</span><span class="val">'+SRC.designCo+'</span></div>';
+  pop += '<div class="row"><span class="lbl">Project Mgr</span><span class="val">'+SRC.designPM+'</span></div>';
+  pop += '<div class="row"><span class="lbl">Constructor</span><span class="val">'+SRC.constructor+'</span></div>';
+  pop += '<div class="row"><span class="lbl">Const Mgr</span><span class="val">'+SRC.constMgr+'</span></div>';
+  pop += '<div class="src">File: '+SRC.filename+'<br>Page: '+h.page+'<br>Date: '+SRC.designDate+'</div></div>';
+  L.circleMarker(pos,{radius:7,fillColor:'#93c5fd',color:'#1d4ed8',weight:2,fillOpacity:0.8}).bindPopup(pop).addTo(plannedHHGroup);
+});
+
+const plannedFiberGroup = L.layerGroup();
+// Fiber route visualization — thinner line along same route showing fiber placement
+L.polyline(route,{color:'#60a5fa',weight:2,opacity:0.5})
+  .bindPopup('<div class="pop"><div class="hdr">Planned Fiber</div><span class="tier tier-plan">Planned Construction</span><div class="row"><span class="lbl">Fiber</span><span class="val">288ct Armored UG</span></div><div class="row"><span class="lbl">Conduit</span><span class="val">7-Way DB (7x18/14)</span></div><div class="row"><span class="lbl">Total</span><span class="val">9,153 LF</span></div><div class="row"><span class="lbl">Slack Coil</span><span class="val">In each HH/MH</span></div><div class="src">File: '+SRC.filename+'<br>Page: 15 (Material Rake-Off)<br>Date: '+SRC.designDate+'</div></div>')
+  .addTo(plannedFiberGroup);
+
+// ============================================================
+// TIER 3: AS-BUILT CONSTRUCTION (Redlines)
+// ============================================================
+const asbuiltRouteGroup = L.layerGroup();
+const abPts=[];
+const minF=asbuiltStations.length?asbuiltStations[0].feet:0;
+const maxF=asbuiltStations.length?asbuiltStations[asbuiltStations.length-1].feet:0;
+for(let f=minF;f<=maxF;f+=50) abPts.push(iPos(f));
+L.polyline(abPts,{color:'#10b981',weight:6,opacity:0.6})
+  .bindPopup('<div class="pop"><div class="hdr">As-Built Coverage: ~85% (STA 0+00 → 109+50)</div><span class="tier tier-ab">As-Built Construction</span><div class="row"><span class="lbl">Coverage</span><span class="val">STA '+asbuiltStations[0].sta+' to STA '+asbuiltStations[asbuiltStations.length-1].sta+'</span></div><div class="row"><span class="lbl">Stations</span><span class="val">'+asbuiltStations.length+' measurements</span></div><div class="row"><span class="lbl">Coverage</span><span class="val">100%</span></div><hr><div class="row"><span class="lbl">Contractor</span><span class="val">'+SRC.constructor+'</span></div><div class="row"><span class="lbl">Const Contact</span><span class="val">'+SRC.constContact+'</span></div><div class="row"><span class="lbl">Const Mgr</span><span class="val">'+SRC.constMgr+'</span></div><div class="src">File: '+SRC.filename+'<br>Source: Redline annotations<br>Design Date: '+SRC.designDate+'<br>Construction: '+SRC.constDate+'</div></div>')
+  .addTo(asbuiltRouteGroup);
+
+const asbuiltHHGroup = L.layerGroup();
+asbuiltHH.forEach(h => {
+  const pos=iPos(h.feet);
+  const placed=!h.hh_not_placed;
+  const color=placed?'#f59e0b':'#ef4444';
+  const border=placed?'#92400e':'#991b1b';
+  const status=placed?'PLACED':'NOT PLACED';
+  let pop='<div class="pop"><div class="hdr">As-Built Handhole — '+status+'</div><span class="tier tier-ab">As-Built Construction</span>';
+  pop+='<div class="row"><span class="lbl">Station</span><span class="val">STA '+h.sta+'</span></div>';
+  pop+='<div class="row"><span class="lbl">Depth</span><span class="val">'+(h.depth||'Not recorded')+'</span></div>';
+  pop+='<div class="row"><span class="lbl">BOC</span><span class="val">'+(h.boc||'?')+'</span></div>';
+  pop+='<div class="row"><span class="lbl">Status</span><span class="val" style="color:'+(placed?'#166534':'#991b1b')+'"><b>'+status+'</b></span></div>';
+  pop+='<hr><div class="row"><span class="lbl">Contractor</span><span class="val">'+SRC.constructor+'</span></div>';
+  pop+='<div class="row"><span class="lbl">Const Contact</span><span class="val">'+SRC.constContact+'</span></div>';
+  pop+='<div class="row"><span class="lbl">Const Mgr</span><span class="val">'+SRC.constMgr+'</span></div>';
+  pop+='<div class="src">File: '+SRC.filename+'<br>Page: '+h.page+'<br>Source: Redline annotation<br>Design Date: '+SRC.designDate+'<br>Construction: '+SRC.constDate+'</div></div>';
+  L.circleMarker(pos,{radius:8,fillColor:color,color:border,weight:2,fillOpacity:0.9}).bindPopup(pop).addTo(asbuiltHHGroup);
+});
+
+const asbuiltBOCGroup = L.layerGroup();
+asbuiltStations.forEach(s => {
+  if(s.hh_placed||s.hh_not_placed) return;
+  const pos=iPos(s.feet);
+  let pop='<div class="pop"><div class="hdr">As-Built Station</div><span class="tier tier-ab">As-Built Construction</span>';
+  pop+='<div class="row"><span class="lbl">Station</span><span class="val">STA '+s.sta+'</span></div>';
+  pop+='<div class="row"><span class="lbl">Depth</span><span class="val">'+(s.depth||'Not recorded')+'</span></div>';
+  pop+='<div class="row"><span class="lbl">BOC</span><span class="val">'+(s.boc||'?')+'</span></div>';
+  pop+='<div class="row"><span class="lbl">Contractor</span><span class="val">'+SRC.constructor+'</span></div>';
+  pop+='<div class="row"><span class="lbl">Const Mgr</span><span class="val">'+SRC.constMgr+'</span></div>';
+  pop+='<div class="src">File: '+SRC.filename+'<br>Page: '+s.page+'<br>Source: Redline annotation<br>Design Date: '+SRC.designDate+'<br>Construction: '+SRC.constDate+'</div></div>';
+  L.circleMarker(pos,{radius:3,fillColor:'#10b981',color:'#065f46',weight:1,fillOpacity:0.7}).bindPopup(pop).addTo(asbuiltBOCGroup);
+});
+
+
+// ============================================================
+// REDLINE PAGE MARKERS — clickable page locations on map
+// ============================================================
+const pageMarkersGroup = L.layerGroup();
+
+// Build page boundaries from station data
+const pageStations = {};
+asbuiltStations.forEach(s => {
+  if (!pageStations[s.page]) pageStations[s.page] = {min: s.feet, max: s.feet, minSta: s.sta, maxSta: s.sta};
+  if (s.feet < pageStations[s.page].min) { pageStations[s.page].min = s.feet; pageStations[s.page].minSta = s.sta; }
+  if (s.feet > pageStations[s.page].max) { pageStations[s.page].max = s.feet; pageStations[s.page].maxSta = s.sta; }
+});
+
+// Create a marker for each page — prefer GPS waypoints, fall back to interpolated midpoint
+const usedPages = new Set();
+
+// First, place markers at GPS waypoint locations (most accurate)
+gpsData.forEach(g => {
+  usedPages.add(g.page);
+  const pgInfo = pageStations[g.page] || {};
+  const staRange = pgInfo.minSta && pgInfo.maxSta ? 
+    'STA ' + pgInfo.minSta + ' → ' + pgInfo.maxSta : (g.sta_range || '');
+  const stationCount = asbuiltStations.filter(s => s.page === g.page).length;
+  
+  const icon = L.divIcon({
+    className: 'page-marker-icon',
+    html: '<div class="page-marker">p' + g.page + '</div>',
+    iconSize: [28, 20],
+    iconAnchor: [14, 10]
+  });
+  
+  let pop = '<div class="pop"><div class="hdr">Redline Page ' + g.page + '</div>';
+  pop += '<div class="row"><span class="lbl">Stations</span><span class="val">' + staRange + '</span></div>';
+  pop += '<div class="row"><span class="lbl">Data Pts</span><span class="val">' + stationCount + ' stations</span></div>';
+  pop += '<div class="row"><span class="lbl">GPS</span><span class="val">' + g.lat.toFixed(6) + ', ' + g.lon.toFixed(6) + '</span></div>';
+  pop += '<div class="src">File: ' + SRC.filename + '<br>Source: GPS waypoint</div></div>';
+  
+  L.marker([g.lat, g.lon], {icon: icon}).bindPopup(pop).addTo(pageMarkersGroup);
+});
+
+// Then fill in pages that have station data but no GPS waypoint
+Object.keys(pageStations).forEach(pg => {
+  const pageNum = parseInt(pg);
+  if (usedPages.has(pageNum)) return;
+  
+  const info = pageStations[pageNum];
+  const midFeet = Math.round((info.min + info.max) / 2);
+  const pos = iPos(midFeet);
+  const stationCount = asbuiltStations.filter(s => s.page === pageNum).length;
+  
+  const icon = L.divIcon({
+    className: 'page-marker-icon',
+    html: '<div class="page-marker page-interp">p' + pageNum + '</div>',
+    iconSize: [28, 20],
+    iconAnchor: [14, 10]
+  });
+  
+  let pop = '<div class="pop"><div class="hdr">Redline Page ' + pageNum + '</div>';
+  pop += '<div class="row"><span class="lbl">Stations</span><span class="val">STA ' + info.minSta + ' → ' + info.maxSta + '</span></div>';
+  pop += '<div class="row"><span class="lbl">Data Pts</span><span class="val">' + stationCount + ' stations</span></div>';
+  pop += '<div class="row"><span class="lbl">Position</span><span class="val">Interpolated (midpoint)</span></div>';
+  pop += '<div class="src">File: ' + SRC.filename + '<br>Source: Interpolated from station range</div></div>';
+  
+  L.marker(pos, {icon: icon}).bindPopup(pop).addTo(pageMarkersGroup);
+});
+
+// CFW
+const cfwGroup = L.layerGroup();
+cfwSites.forEach(s=>{const m=L.marker([s.lat,s.lon],{icon:cfwIcon(s.cat)});const ci=cfwCats[s.cat]||cfwCats.other;let p='<div class="cfw-popup"><div class="cfw-header">'+s.name+'</div><div class="cfw-cat" style="color:'+ci.c+'">'+ci.l+'</div><div class="cfw-row"><span class="cfw-label">Address</span><span class="cfw-value">'+s.addr+'</span></div><div class="cfw-row"><span class="cfw-label">Zip</span><span class="cfw-value">'+s.zip+'</span></div>';if(s.notes)p+='<div class="cfw-notes">'+s.notes+'</div>';p+='</div>';m.bindPopup(p);cfwGroup.addLayer(m);});
+
+// ============================================================
+// CUSTOM LAYER PANEL — proper parent/child toggles
+// ============================================================
+const tiers = {
+  hld: {
+    label: 'HLD — Original Design (Nov 2025)',
+    cssClass: 'hld',
+    children: [
+      {label: 'CP02 HLD Routes', layer: hldCP02Group, on: true},
+      {label: 'Phase 9 Network (other CPs)', layer: hldBgGroup, on: false}
+    ]
+  },
+  planned: {
+    label: 'Planned Construction (Feb 2026)',
+    cssClass: 'planned',
+    children: [
+      {label: 'Planned Route (road geometry)', layer: plannedRouteGroup, on: true},
+      {label: 'Planned HH (6)', layer: plannedHHGroup, on: true},
+      {label: 'Planned Fiber (288ct)', layer: plannedFiberGroup, on: false}
+    ]
+  },
+  asbuilt: {
+    label: 'As-Built Construction (~Mar 2026)',
+    cssClass: 'asbuilt',
+    children: [
+      {label: 'As-Built Route (100% coverage)', layer: asbuiltRouteGroup, on: true},
+      {label: 'As-Built HH (11)', layer: asbuiltHHGroup, on: true},
+      {label: 'BOC/Depth Stations (180)', layer: asbuiltBOCGroup, on: false}
+    ]
+  },
+  other: {
+    label: 'Reference Layers',
+    cssClass: 'other',
+    children: [
+      {label: 'Redline Page Markers', layer: pageMarkersGroup, on: true},
+      {label: 'CFW Target Sites (191)', layer: cfwGroup, on: false}
+    ]
+  }
+};
+
+// Build the panel
+const panel = L.control({position: 'topright'});
+panel.onAdd = function() {
+  const div = L.DomUtil.create('div', 'layer-panel');
+  L.DomEvent.disableClickPropagation(div);
+  L.DomEvent.disableScrollPropagation(div);
+
+  Object.entries(tiers).forEach(([key, tier]) => {
+    const section = document.createElement('div');
+    section.className = 'lp-section';
+
+    // Header with master checkbox
+    const header = document.createElement('div');
+    header.className = 'lp-header ' + tier.cssClass;
+    const masterCb = document.createElement('input');
+    masterCb.type = 'checkbox';
+    masterCb.checked = true;
+    masterCb.id = 'master-' + key;
+    header.appendChild(masterCb);
+    const headerLabel = document.createElement('span');
+    headerLabel.textContent = tier.label;
+    header.appendChild(headerLabel);
+    section.appendChild(header);
+
+    // Children
+    const childDiv = document.createElement('div');
+    childDiv.className = 'lp-children';
+
+    tier.children.forEach((child, idx) => {
+      const row = document.createElement('div');
+      row.className = 'lp-child';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = child.on;
+      cb.id = key + '-' + idx;
+      cb.dataset.tierKey = key;
+      const lbl = document.createElement('label');
+      lbl.htmlFor = cb.id;
+      lbl.textContent = child.label;
+      row.appendChild(cb);
+      row.appendChild(lbl);
+      childDiv.appendChild(row);
+
+      // Add/remove layer based on initial state
+      if (child.on) map.addLayer(child.layer);
+
+      // Child toggle
+      cb.addEventListener('change', function() {
+        if (this.checked) map.addLayer(child.layer);
+        else map.removeLayer(child.layer);
+        // Update master
+        const allChecked = tier.children.every((c,i) => document.getElementById(key+'-'+i).checked);
+        const anyChecked = tier.children.some((c,i) => document.getElementById(key+'-'+i).checked);
+        masterCb.checked = anyChecked;
+        masterCb.indeterminate = anyChecked && !allChecked;
+      });
+    });
+
+    section.appendChild(childDiv);
+    div.appendChild(section);
+
+    // Master toggle
+    masterCb.addEventListener('change', function() {
+      tier.children.forEach((child, idx) => {
+        const cb = document.getElementById(key + '-' + idx);
+        cb.checked = masterCb.checked;
+        if (masterCb.checked) { if (!map.hasLayer(child.layer)) map.addLayer(child.layer); }
+        else { if (map.hasLayer(child.layer)) map.removeLayer(child.layer); }
+      });
+      masterCb.indeterminate = false;
+    });
+  });
+
+  return div;
+};
+panel.addTo(map);
+
+// ============================================================
+// LEGEND
+// ============================================================
+const legend = L.control({position:'bottomright'});
+legend.onAdd = function(){
+  const d=L.DomUtil.create('div','legend');
+  d.innerHTML=`
+    <h4 style="color:#9d174d">HLD (KMZ, Nov 2025)</h4>
+    <div class="legend-item"><div class="legend-line" style="background:#ec4899"></div>CP02 HLD Route</div>
+    <div class="legend-item"><div class="legend-line" style="background:#f9a8d4;opacity:0.5"></div>Other Phase 9 HLD</div>
+    <hr style="margin:4px 0">
+    <h4 style="color:#1e40af">Planned (PDF, Feb 2026)</h4>
+    <div class="legend-item"><div class="legend-line" style="background:#3b82f6;border-top:2px dashed #3b82f6;height:0"></div>Planned Route</div>
+    <div class="legend-item"><div class="legend-circle" style="background:#93c5fd;border-color:#1d4ed8"></div>Planned HH (6)</div>
+    <hr style="margin:4px 0">
+    <h4 style="color:#065f46">As-Built (Redlines, ~Mar 2026)</h4>
+    <div class="legend-item"><div class="legend-line" style="background:#10b981;height:6px;opacity:0.6"></div>As-Built Route</div>
+    <div class="legend-item"><div class="legend-circle" style="background:#f59e0b;border-color:#92400e"></div>HH Placed (11)</div>
+    <div class="legend-item"><div class="legend-circle" style="background:#10b981;border-color:#065f46;width:8px;height:8px"></div>BOC Station (180)</div>
+    <hr style="margin:4px 0">
+    <div style="font-size:10px;color:#888">11 HH placed vs 6 planned (+5 added)<br>Permit #34 | 100% redline coverage</div>
+  `;
+  return d;
+};
+legend.addTo(map);
+
+// INFO PANEL
+const info = L.control({position:'bottomleft'});
+info.onAdd = function(){
+  const d=L.DomUtil.create('div','info');
+  d.innerHTML=`
+    <h4>P09-CP02-BACKBONE</h4>
+    <div style="font-size:10px;color:#6b7280;margin-bottom:4px">Silver Creek to Confederate Park | Permit #34</div>
+    <div class="stat"><span>HLD Route</span><span class="stat-val" style="color:#ec4899">9,486 FT</span></div>
+    <div class="stat"><span>Planned HH</span><span class="stat-val" style="color:#3b82f6">6</span></div>
+    <div class="stat"><span>As-Built HH</span><span class="stat-val" style="color:#f59e0b">11</span></div>
+    <div class="stat"><span>HH Added in Field</span><span class="stat-val" style="color:#22c55e">+5</span></div>
+    <div class="stat"><span>As-Built Stations</span><span class="stat-val" style="color:#10b981">180</span></div>
+    <div class="stat"><span>Redline Coverage</span><span class="stat-val" style="color:#22c55e">100%</span></div>
+    <div class="src-box">HLD: Sprocket_FWF_11-13-25_WG.kmz<br>Plan: P09-CP02-BACKBONE_SILVER CREEK-CONFEDERATE REDLINES.pdf<br>Design: February 04, 2026<br>Construction: ~March 2026</div>
+  `;
+  return d;
+};
+info.addTo(map);
+
+map.fitBounds(L.latLngBounds(route).pad(0.2));
+</script>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+const ALLOWED_DOMAINS = ["sprocketnetworks.com", "lassobroadband.com", "digitalalpha.ai", "ntxcom.com"];
+
+function parseJwt(token) {
+  const base64Url = token.split('.')[1];
+  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+  const jsonPayload = decodeURIComponent(atob(base64).split('').map(c =>
+    '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+  ).join(''));
+  return JSON.parse(jsonPayload);
+}
+
+function handleCredentialResponse(response) {
+  const payload = parseJwt(response.credential);
+  const email = payload.email || '';
+  const domain = email.split('@')[1] || '';
+  
+  if (ALLOWED_DOMAINS.includes(domain)) {
+    // Auth success
+    document.getElementById('auth-gate').classList.add('hidden');
+    document.getElementById('auth-user').textContent = email;
+    try { localStorage.setItem('fwf_auth', JSON.stringify({email: email, exp: payload.exp, token: response.credential})); } catch(e) {}
+  } else {
+    const errEl = document.getElementById('auth-error');
+    errEl.style.display = 'block';
+    errEl.textContent = 'Access denied: ' + domain + ' is not an authorized domain.';
+  }
+}
+
+// Check for existing valid auth
+(function() {
+  try {
+    const stored = JSON.parse(localStorage.getItem('fwf_auth') || '{}');
+    if (stored.email && stored.exp && (stored.exp * 1000) > Date.now()) {
+      document.getElementById('auth-gate').classList.add('hidden');
+      document.getElementById('auth-user').textContent = stored.email;
+    }
+  } catch(e) {}
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="/auth.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Will Gibson — Projects</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0a0f1a;
+    color: #e0e6f0;
+    min-height: 100vh;
+  }
+  .header {
+    padding: 60px 40px 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .header h1 {
+    font-size: 2.4rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.5px;
+  }
+  .header p {
+    font-size: 1.1rem;
+    color: #8892a8;
+    margin-top: 8px;
+  }
+  .categories {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 30px 40px 10px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .cat-btn {
+    padding: 10px 24px;
+    border-radius: 100px;
+    border: 1px solid #1e2a45;
+    background: transparent;
+    color: #8892a8;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+  }
+  .cat-btn:hover { border-color: #3b5998; color: #c0c8d8; }
+  .cat-btn.active { border-color: transparent; color: #fff; font-weight: 600; }
+  .cat-btn[data-cat="sprocket"].active { background: linear-gradient(135deg, #1a5c2e, #22753a); }
+  .cat-btn[data-cat="lasso"].active { background: linear-gradient(135deg, #1a3d5c, #1f5275); }
+  .cat-btn[data-cat="personal"].active { background: linear-gradient(135deg, #3a1a5c, #5228a0); }
+  .cat-btn[data-cat="all"].active { background: linear-gradient(135deg, #1e2a45, #2a3a5c); }
+  .projects {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 20px 40px 60px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
+  }
+  .section-label {
+    grid-column: 1 / -1;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding: 20px 0 4px;
+    border-bottom: 1px solid #1e2a45;
+    margin-bottom: 4px;
+  }
+  .section-label.sprocket { color: #4ade80; }
+  .section-label.lasso { color: #60a5fa; }
+  .section-label.personal { color: #a78bfa; }
+  .card {
+    background: linear-gradient(135deg, #141b2d 0%, #1a2340 100%);
+    border: 1px solid #1e2a45;
+    border-radius: 16px;
+    padding: 32px;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+  .card.hidden { display: none; }
+  .card:hover {
+    border-color: var(--accent, #3b82f6);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(59,130,246,0.12);
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2, var(--accent)));
+    opacity: 0;
+    transition: opacity 0.25s ease;
+  }
+  .card:hover::before { opacity: 1; }
+  .card-icon {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+  }
+  .card h2 { font-size: 1.25rem; color: #fff; font-weight: 600; margin-bottom: 8px; }
+  .card .desc { font-size: 0.9rem; color: #8892a8; line-height: 1.5; margin-bottom: 16px; flex-grow: 1; }
+  .card .meta { font-size: 0.78rem; color: #4a5568; display: flex; align-items: center; gap: 6px; }
+  .card .meta .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+  .dot.live { background: #22c55e; }
+  .dot.coming { background: #f59e0b; }
+  .badge {
+    display: inline-block; padding: 3px 10px; border-radius: 20px;
+    font-size: 0.72rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.5px; margin-bottom: 16px; align-self: flex-start;
+  }
+  .footer {
+    text-align: center; padding: 40px; color: #4a5568; font-size: 0.85rem;
+    border-top: 1px solid #1e2a45; max-width: 1100px; margin: 0 auto;
+  }
+  @media (max-width: 600px) {
+    .header { padding: 40px 20px 16px; }
+    .header h1 { font-size: 1.8rem; }
+    .categories { padding: 20px 20px 10px; }
+    .projects { padding: 16px 20px 40px; grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Will Gibson</h1>
+  <p>Building broadband infrastructure in North Texas</p>
+</div>
+
+<div class="categories">
+  <button class="cat-btn active" data-cat="all" onclick="filterCat('all')">All Projects</button>
+  <button class="cat-btn" data-cat="lasso" onclick="filterCat('lasso')">Lasso Broadband</button>
+  <button class="cat-btn" data-cat="sprocket" onclick="filterCat('sprocket')">Sprocket Networks</button>
+  <button class="cat-btn" data-cat="personal" onclick="filterCat('personal')">Personal Projects</button>
+</div>
+
+<div class="projects" id="projectGrid">
+
+  <!-- ===== LASSO BROADBAND ===== -->
+  <div class="section-label lasso" data-cat="lasso">Lasso Broadband</div>
+
+  <a class="card" data-cat="lasso" href="https://sprocket-fiber-map-will-gibsons-projects-9b8c18c8.vercel.app" style="--accent: #3b82f6; --accent2: #60a5fa;">
+    <div class="card-icon" style="background: rgba(59,130,246,0.12);">
+      <span style="color: #3b82f6;">&#127758;</span>
+    </div>
+    <div class="badge" style="background: rgba(59,130,246,0.12); color: #60a5fa;">GIS &bull; FTTH Construction</div>
+    <h2>FWF Fiber Map</h2>
+    <div class="desc">Interactive FTTH construction dashboard &mdash; 248 routes across 22 phases with three-tier visualization: HLD, Planned, and As-Built with bore data overlays.</div>
+    <div class="meta"><span class="dot live"></span> Live &mdash; 15 detail maps</div>
+  </a>
+
+  <a class="card" data-cat="lasso" href="https://fiber-build-analyzer-theta.vercel.app" style="--accent: #06b6d4; --accent2: #22d3ee;">
+    <div class="card-icon" style="background: rgba(6,182,212,0.12);">
+      <span style="color: #06b6d4;">&#128269;</span>
+    </div>
+    <div class="badge" style="background: rgba(6,182,212,0.12); color: #22d3ee;">Engineering &bull; Analysis</div>
+    <h2>Fiber Build Analyzer</h2>
+    <div class="desc">Upload and analyze fiber construction documents &mdash; redlines, materials lists, and bore logs with automated data extraction.</div>
+    <div class="meta"><span class="dot live"></span> Live</div>
+  </a>
+
+  <!-- ===== SPROCKET NETWORKS ===== -->
+  <div class="section-label sprocket" data-cat="sprocket">Sprocket Networks</div>
+
+  <a class="card" data-cat="sprocket" href="https://oc-dashboard-will-gibsons-projects-9b8c18c8.vercel.app" style="--accent: #22c55e; --accent2: #4ade80;">
+    <div class="card-icon" style="background: rgba(34,197,94,0.12);">
+      <span style="color: #22c55e;">&#128202;</span>
+    </div>
+    <div class="badge" style="background: rgba(34,197,94,0.12); color: #4ade80;">Analytics &bull; Dashboard</div>
+    <h2>OC Dashboard</h2>
+    <div class="desc">Operations and analytics dashboard for business intelligence and performance tracking.</div>
+    <div class="meta"><span class="dot live"></span> Live</div>
+  </a>
+
+  <!-- ===== PERSONAL ===== -->
+  <div class="section-label personal" data-cat="personal">Personal Projects</div>
+
+  <a class="card" data-cat="personal" href="https://opengill-will-gibsons-projects-9b8c18c8.vercel.app" style="--accent: #8b5cf6; --accent2: #a78bfa;">
+    <div class="card-icon" style="background: rgba(139,92,246,0.12);">
+      <span style="color: #8b5cf6;">&#129302;</span>
+    </div>
+    <div class="badge" style="background: rgba(139,92,246,0.12); color: #a78bfa;">AI &bull; Platform</div>
+    <h2>OpenGill</h2>
+    <div class="desc">AI-powered platform project.</div>
+    <div class="meta"><span class="dot live"></span> Live</div>
+  </a>
+
+</div>
+
+<div class="footer">
+  &copy; 2026 Will Gibson
+</div>
+
+<script>
+function filterCat(cat) {
+  document.querySelectorAll('.cat-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.cat === cat);
+  });
+  document.querySelectorAll('#projectGrid > [data-cat]').forEach(el => {
+    if (cat === 'all') {
+      el.classList.remove('hidden');
+    } else {
+      el.classList.toggle('hidden', el.dataset.cat !== cat);
+    }
+  });
+}
+</script>
+
+</body>
+</html>

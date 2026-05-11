@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html><head>
+<script src="/auth.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FWF Phase 4 — CFW Backbone Phase 4</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{--bg:#1a1a2e;--panel:#16213e;--text:#e0e0e0;--accent:#00d4ff;--border:#2a2a4a}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;height:100vh;display:flex;flex-direction:column}
+#header{background:var(--panel);padding:10px 20px;font-size:18px;font-weight:700;border-bottom:2px solid var(--accent);display:flex;align-items:center;justify-content:space-between}
+#header .sub{font-size:12px;font-weight:400;color:#999;margin-left:12px}
+#header a{color:var(--accent);text-decoration:none;font-size:13px}
+#wrap{flex:1;display:flex;position:relative}
+#map{flex:1}
+#panel{width:280px;background:var(--panel);border-left:1px solid var(--border);overflow-y:auto;padding:10px}
+#panel h3{color:var(--accent);font-size:13px;margin-bottom:6px;border-bottom:1px solid var(--border);padding-bottom:4px}
+.stats{font-size:12px;margin-bottom:10px;line-height:1.6}
+.stats b{color:var(--accent)}
+.leg-item:hover{background:rgba(0,212,255,0.1)}
+.info-box{background:rgba(0,0,0,0.3);border-radius:6px;padding:8px;margin-bottom:10px;font-size:11px;line-height:1.5}
+
+  #auth-gate {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: #1a1a2e; z-index: 99999;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+  }
+  #auth-gate.hidden { display: none; }
+  .auth-box {
+    background: #16213e; border-radius: 12px; padding: 40px;
+    text-align: center; max-width: 420px; width: 90%;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    border: 1px solid #2a2a4a;
+  }
+  .auth-box h1 { color: #00d4ff; font-size: 22px; margin: 0 0 8px; }
+  .auth-box .sub { color: #8888aa; font-size: 13px; margin-bottom: 24px; }
+  .auth-box .logo { font-size: 40px; margin-bottom: 16px; }
+  .auth-box .error { color: #ef4444; font-size: 13px; margin-top: 12px; display: none; }
+  .auth-box .domains { color: #6b7280; font-size: 11px; margin-top: 16px; }
+  #g_id_onload, .g_id_signin { display: inline-block; margin-top: 8px; }
+  .auth-user { color: #10b981; font-size: 12px; position: fixed; top: 4px; right: 8px; z-index: 99998; }
+</style>
+</head><body>
+
+<div id="auth-gate">
+  <div class="auth-box">
+    <div class="logo">🔒</div>
+    <h1>Sprocket Networks</h1>
+    <div class="sub">Fiber Construction Maps — Sign in to continue</div>
+    <div id="g_id_onload"
+      data-client_id="432178814016-q4hdj3rncd53n4tklia21g7b66k872t2.apps.googleusercontent.com"
+      data-callback="handleCredentialResponse"
+      data-auto_prompt="true">
+    </div>
+    <div class="g_id_signin"
+      data-type="standard"
+      data-size="large"
+      data-theme="filled_blue"
+      data-text="sign_in_with"
+      data-shape="rectangular"
+      data-logo_alignment="left">
+    </div>
+    <div id="auth-error" class="error"></div>
+    <div class="domains">Authorized: sprocketnetworks.com, lassobroadband.com, digitalalpha.ai</div>
+  </div>
+</div>
+<div class="auth-user" id="auth-user"></div>
+
+<div id="header">FWF Phase 4 — CFW Backbone Phase 4<span class="sub">HLD Route Overview (Plan Only)</span>
+<a href="FWF-Phase-Overview.html">← Phase Overview</a></div>
+<div id="wrap">
+<div id="map"></div>
+<div id="panel">
+<h3>Phase 4 Summary</h3>
+<div class="info-box">
+<div><b>Status:</b> Plan Only (No As-Built Data)</div>
+<div><b>Total Footage:</b> 77,699 ft (14.7 mi)</div>
+<div><b>Backbone:</b> 67,174 ft</div>
+<div><b>Laterals:</b> 10,525 ft</div>
+<div><b>Routes:</b> 5 backbone, 16 lateral</div>
+<div><b>Source:</b> HLD KMZ Design</div>
+</div>
+<h3>Routes</h3>
+<div style="font-weight:700;margin-top:8px;color:var(--text)">CP01</div>
+<div class="leg-item" data-route="P04CP01BB01 (PERMIT #1 - 14968FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#e74c3c;font-weight:700">━━</span> PERMIT #1 <span style="color:#999">(14,968 ft)</span></div>
+<div class="leg-item" data-route="P04CP01LA01 (PD - NPO LANCASTER - 302FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#3498db;font-weight:700">──</span> PD - NPO LANCASTER <span style="color:#999">(302 ft)</span></div>
+<div class="leg-item" data-route="P04CP01LA02 (CODE - HAZEL HARVEY PEACE CENTER FOR NEIGHBORHOODS - 68FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#3498db;font-weight:700">──</span> CODE - HAZEL HARVEY PEACE CENTER FOR NEI <span style="color:#999">(68 ft)</span></div>
+<div class="leg-item" data-route="P04CP01LA03 (LIBRARY - SHAMBLEE - 140FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#3498db;font-weight:700">──</span> LIBRARY - SHAMBLEE <span style="color:#999">(140 ft)</span></div>
+<div style="font-weight:700;margin-top:8px;color:var(--text)">CP02</div>
+<div class="leg-item" data-route="P04CP02BB01 (PERMIT #2 - 17281FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#e74c3c;font-weight:700">━━</span> PERMIT #2 <span style="color:#999">(17,281 ft)</span></div>
+<div class="leg-item" data-route="P04CP02LA01 (PARD - SYCAMORE PARK MAINTENANCE CENTER - 3048FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#3498db;font-weight:700">──</span> PARD - SYCAMORE PARK MAINTENANCE CENTER <span style="color:#999">(3,048 ft)</span></div>
+<div class="leg-item" data-route="P04CP02LA02 (FIRE STATION #5 - 631FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#3498db;font-weight:700">──</span> FIRE STATION #5 <span style="color:#999">(631 ft)</span></div>
+<div class="leg-item" data-route="P04CP02LA03 (PARD - SOUTHSIDE CC - 190FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#3498db;font-weight:700">──</span> PARD - SOUTHSIDE CC <span style="color:#999">(190 ft)</span></div>
+<div class="leg-item" data-route="P04CP02LA04 (PARD - ATATIANA CARR-JEFFERSON CC AT HILLSIDE - 327FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#3498db;font-weight:700">──</span> PARD - ATATIANA CARR-JEFFERSON CC AT HIL <span style="color:#999">(327 ft)</span></div>
+<div class="leg-item" data-route="P04CP02LA05 (PARD - EAST DISTRICT SERVICE CENTER - 497FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#3498db;font-weight:700">──</span> PARD - EAST DISTRICT SERVICE CENTER <span style="color:#999">(497 ft)</span></div>
+<div class="leg-item" data-route="P04CP02LA06 (WATER SYCAMORE PUMP - 527FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#3498db;font-weight:700">──</span> WATER SYCAMORE PUMP <span style="color:#999">(527 ft)</span></div>
+<div class="leg-item" data-route="P04CP02LA07 (PARD - SYCAMORE CC - 235FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#3498db;font-weight:700">──</span> PARD - SYCAMORE CC <span style="color:#999">(235 ft)</span></div>
+<div class="leg-item" data-route="P04CP02LA08 (PD - TRAFFIC/NPD #6 - 2031FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#3498db;font-weight:700">──</span> PD - TRAFFIC/NPD #6 <span style="color:#999">(2,031 ft)</span></div>
+<div style="font-weight:700;margin-top:8px;color:var(--text)">CP03</div>
+<div class="leg-item" data-route="P04CP03BB01 (PERMIT #3 - 15068FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#e74c3c;font-weight:700">━━</span> PERMIT #3 <span style="color:#999">(15,068 ft)</span></div>
+<div class="leg-item" data-route="P04CP03LA01 (FIRE STATION #14 - 474FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#3498db;font-weight:700">──</span> FIRE STATION #14 <span style="color:#999">(474 ft)</span></div>
+<div class="leg-item" data-route="P04CP03LA02 (PD - CRIME LAB AND PROPERTY ROOM FACILITY - 380FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#3498db;font-weight:700">──</span> PD - CRIME LAB AND PROPERTY ROOM FACILIT <span style="color:#999">(380 ft)</span></div>
+<div class="leg-item" data-route="P04CP03LA03 (LIBRARY - REBY CARY YOUTH - 130FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#3498db;font-weight:700">──</span> LIBRARY - REBY CARY YOUTH <span style="color:#999">(130 ft)</span></div>
+<div class="leg-item" data-route="P04CP03LA04 (PD - KXAS/SOD; TOWER - BARNETT/KXAS - 1163FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#3498db;font-weight:700">──</span> PD - KXAS/SOD; TOWER - BARNETT/KXAS <span style="color:#999">(1,163 ft)</span></div>
+<div style="font-weight:700;margin-top:8px;color:var(--text)">CP04</div>
+<div class="leg-item" data-route="P04CP04BB01 (PERMIT 4 - 15912FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#e74c3c;font-weight:700">━━</span> PERMIT 4 <span style="color:#999">(15,912 ft)</span></div>
+<div style="font-weight:700;margin-top:8px;color:var(--text)">CP05</div>
+<div class="leg-item" data-route="P04CP05BB01 (PERMIT #5 - 3945FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#e74c3c;font-weight:700">━━</span> PERMIT #5 <span style="color:#999">(3,945 ft)</span></div>
+<div class="leg-item" data-route="P04CP05LA01 (GUINN SCHOOL - 382FT)" style="cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px"><span style="color:#3498db;font-weight:700">──</span> GUINN SCHOOL <span style="color:#999">(382 ft)</span></div>
+</div>
+</div>
+<script>
+const routes = [
+  {name:"P04CP01BB01 (PERMIT #1 - 14968FT)",desc:"PERMIT #1",footage:14968,cp:"CP01",is_backbone:true,coords:[[32.73252643380024, -97.31897911530992], [32.73306750787481, -97.3190712983716], [32.73653749147989, -97.31894994288544], [32.7366019354835, -97.31892661761891], [32.73659971422817, -97.31786274055645], [32.73649622315533, -97.31782491960648], [32.7364625745067, -97.31218886384201], [32.74278627367838, -97.31210569302056], [32.74477540957501, -97.31174239361506], [32.74634151246999, -97.31195295718288], [32.74713980736123, -97.31203285240309], [32.74856033983806, -97.31319777696143], [32.74822604151267, -97.3142924443492], [32.74882078886061, -97.31465108162584], [32.74870656560136, -97.31534859475774], [32.74856792125401, -97.31592015264339], [32.74818491956054, -97.31607504369143], [32.74816483340396, -97.31831435853924], [32.7477028848286, -97.31846608584424], [32.74713946023749, -97.32268919553378], [32.74750134865962, -97.3232290028267], [32.74718604215787, -97.32425410193623], [32.74667169945364, -97.32389291099595], [32.74669517589984, -97.32707241140511], [32.74788423322071, -97.32786673035837], [32.74759738130239, -97.32847153345588], [32.74989201901459, -97.33007002633725], [32.74988646115733, -97.33039747817739]]},
+  {name:"P04CP01LA01 (PD - NPO LANCASTER - 302FT)",desc:"PD - NPO LANCASTER",footage:302,cp:"CP01",is_backbone:false,coords:[[32.74642669726155, -97.31277032468111], [32.74642682895455, -97.31277160067945], [32.74656440984018, -97.31278442464888], [32.74654492342987, -97.31196670426993]]},
+  {name:"P04CP01LA02 (CODE - HAZEL HARVEY PEACE CENTER FOR NEIGHBORHOODS - 68FT)",desc:"CODE - HAZEL HARVEY PEACE CENTER FOR NEIGHBORHOODS",footage:68,cp:"CP01",is_backbone:false,coords:[[32.73585668186009, -97.31919182206768], [32.7358554475898, -97.31896982907463]]},
+  {name:"P04CP01LA03 (LIBRARY - SHAMBLEE - 140FT)",desc:"LIBRARY - SHAMBLEE",footage:140,cp:"CP01",is_backbone:false,coords:[[32.73341107122263, -97.31906750498895], [32.73341092824857, -97.31867462940149], [32.73335939681142, -97.3186670447882]]},
+  {name:"P04CP02BB01 (PERMIT #2 - 17281FT)",desc:"PERMIT #2",footage:17281,cp:"CP02",is_backbone:true,coords:[[32.73250196604508, -97.31899773944494], [32.7323338012494, -97.31765756186002], [32.73228198064826, -97.3156239937254], [32.72715329200846, -97.31570094111895], [32.72717933613726, -97.31183046425983], [32.72715500189489, -97.30543950935177], [32.72692436687251, -97.30402935743246], [32.72682274863177, -97.30297067243762], [32.7267321592765, -97.29744294580718], [32.72669424233698, -97.29336933981023], [32.72670176917523, -97.29231186516044], [32.72716595512434, -97.29005723778695], [32.72804669632774, -97.28972694143371], [32.72839691586066, -97.28962971275159], [32.73087483695468, -97.2895819932112], [32.73592002212686, -97.28946035419763], [32.73599978527851, -97.2871626645206], [32.7387688312355, -97.28706872930317], [32.74066037213593, -97.2866752145689], [32.74130517534198, -97.28637804607214], [32.74205130307689, -97.28578041930396], [32.74251411608478, -97.2855987698099], [32.74272796304207, -97.28565505729077]]},
+  {name:"P04CP02LA01 (PARD - SYCAMORE PARK MAINTENANCE CENTER - 3048FT)",desc:"PARD - SYCAMORE PARK MAINTENANCE CENTER",footage:3048,cp:"CP02",is_backbone:false,coords:[[32.73591250693498, -97.28945422898961], [32.73584329213658, -97.29671431008876], [32.73770255414624, -97.29673963412797], [32.73769812722909, -97.29720209657464]]},
+  {name:"P04CP02LA02 (FIRE STATION #5 - 631FT)",desc:"FIRE STATION #5",footage:631,cp:"CP02",is_backbone:false,coords:[[32.73249437369126, -97.3190000051707], [32.7307639607295, -97.31897320772815]]},
+  {name:"P04CP02LA03 (PARD - SOUTHSIDE CC - 190FT)",desc:"PARD - SOUTHSIDE CC",footage:190,cp:"CP02",is_backbone:false,coords:[[32.73234329825325, -97.31576174623633], [32.73274649666362, -97.31576826318391], [32.73274109910514, -97.31590799350067]]},
+  {name:"P04CP02LA04 (PARD - ATATIANA CARR-JEFFERSON CC AT HILLSIDE - 327FT)",desc:"PARD - ATATIANA CARR-JEFFERSON CC AT HILLSIDE",footage:327,cp:"CP02",is_backbone:false,coords:[[32.72805706073087, -97.31203170364081], [32.72763016364869, -97.31184815274723], [32.7271866631983, -97.31185352537157]]},
+  {name:"P04CP02LA05 (PARD - EAST DISTRICT SERVICE CENTER - 497FT)",desc:"PARD - EAST DISTRICT SERVICE CENTER",footage:497,cp:"CP02",is_backbone:false,coords:[[32.7266892624077, -97.29335717528471], [32.7266922092555, -97.29336416205226], [32.72723935230692, -97.29360463080782], [32.7280069067784, -97.29371549074062]]},
+  {name:"P04CP02LA06 (WATER SYCAMORE PUMP - 527FT)",desc:"WATER SYCAMORE PUMP",footage:527,cp:"CP02",is_backbone:false,coords:[[32.73459433748745, -97.29096493521423], [32.73440522374781, -97.29098017200748], [32.73440314912979, -97.28948938562006]]},
+  {name:"P04CP02LA07 (PARD - SYCAMORE CC - 235FT)",desc:"PARD - SYCAMORE CC",footage:235,cp:"CP02",is_backbone:false,coords:[[32.73111715653867, -97.29007347758719], [32.73087486563601, -97.29005504015637], [32.73087945914084, -97.28957830894937]]},
+  {name:"P04CP02LA08 (PD - TRAFFIC/NPD #6 - 2031FT)",desc:"PD - TRAFFIC/NPD #6",footage:2031,cp:"CP02",is_backbone:false,coords:[[32.73088131603441, -97.28956017405254], [32.73083884278021, -97.28528024645001], [32.73259351282177, -97.285289214565], [32.73274615748615, -97.28511485485711]]},
+  {name:"P04CP03BB01 (PERMIT #3 - 15068FT)",desc:"PERMIT #3",footage:15068,cp:"CP03",is_backbone:true,coords:[[32.74273061244021, -97.28565527823444], [32.74271343803867, -97.270913971448], [32.74073666399235, -97.27090861256877], [32.74074333871326, -97.2618276836696], [32.74075141804146, -97.26185660728599], [32.74935309351509, -97.26164759424213], [32.74935195563147, -97.25401320536542], [32.74884935283593, -97.25395729805597], [32.74885135714658, -97.25309491586812], [32.7518582730253, -97.2529792173462]]},
+  {name:"P04CP03LA01 (FIRE STATION #14 - 474FT)",desc:"FIRE STATION #14",footage:474,cp:"CP03",is_backbone:false,coords:[[32.74274317379359, -97.28567231252082], [32.74378981393056, -97.2857312709285], [32.74381470798291, -97.28602763358766]]},
+  {name:"P04CP03LA02 (PD - CRIME LAB AND PROPERTY ROOM FACILITY - 380FT)",desc:"PD - CRIME LAB AND PROPERTY ROOM FACILITY",footage:380,cp:"CP03",is_backbone:false,coords:[[32.74074321383175, -97.27089810779113], [32.74071813141784, -97.27107551037666], [32.74070130983583, -97.27199390592527], [32.74061955055675, -97.27197084579949], [32.74061412135537, -97.27193232309068]]},
+  {name:"P04CP03LA03 (LIBRARY - REBY CARY YOUTH - 130FT)",desc:"LIBRARY - REBY CARY YOUTH",footage:130,cp:"CP03",is_backbone:false,coords:[[32.74112278822022, -97.26788317454836], [32.74076885326215, -97.26792607383355]]},
+  {name:"P04CP03LA04 (PD - KXAS/SOD; TOWER - BARNETT/KXAS - 1163FT)",desc:"PD - KXAS/SOD; TOWER - BARNETT/KXAS",footage:1163,cp:"CP03",is_backbone:false,coords:[[32.7493481349911, -97.26147447159246], [32.74939488037504, -97.26398293048153], [32.7495469336325, -97.26424436789523], [32.74971121848075, -97.26428450454124], [32.75006308201457, -97.2649236514382]]},
+  {name:"P04CP04BB01 (PERMIT 4 - 15912FT)",desc:"PERMIT 4",footage:15912,cp:"CP04",is_backbone:true,coords:[[32.75187576793208, -97.2530056290952], [32.75181010746986, -97.2434475595926], [32.75195314708063, -97.24276078975815], [32.7523838172995, -97.24229467815945], [32.75316322733247, -97.24174823671622], [32.75351714971579, -97.24165906869403], [32.75730166349528, -97.24140057098762], [32.75774840292616, -97.24141053542871], [32.75993241934416, -97.24033230363554], [32.75998463263657, -97.23830115266367], [32.75930743282952, -97.23843026360143], [32.75847446885433, -97.23823896458353], [32.75741653569979, -97.23746257852982], [32.75686868466852, -97.23686081100384], [32.75647873468247, -97.23543379111287], [32.75622402457409, -97.23463567046454], [32.755709953234, -97.23381504637378], [32.75502868311867, -97.23326739934875], [32.75325815902506, -97.2327301775194], [32.75267519855385, -97.2327460383857], [32.74965477170691, -97.23339699240839], [32.74840627990579, -97.23346995602252], [32.73996400851981, -97.23332219845692], [32.737903248329, -97.23337436134389], [32.73751127697732, -97.23347831135766]]},
+  {name:"P04CP05BB01 (PERMIT #5 - 3945FT)",desc:"PERMIT #5",footage:3945,cp:"CP05",is_backbone:true,coords:[[32.73246809284132, -97.31898862158819], [32.73305774941028, -97.32098713464674], [32.7329475552532, -97.33172325982106]]},
+  {name:"P04CP05LA01 (GUINN SCHOOL - 382FT)",desc:"GUINN SCHOOL",footage:382,cp:"CP05",is_backbone:false,coords:[[32.73209336975025, -97.32106092477174], [32.73209202279081, -97.32095356398852], [32.73304798509827, -97.32101338830205]]},
+];
+const map = L.map('map',{zoomControl:true}).setView([32.74333694752214,-97.28222671867023],13);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',{
+  maxZoom:19,attribution:'&copy; CARTO'
+}).addTo(map);
+
+const bbGroup = L.layerGroup().addTo(map);
+const laGroup = L.layerGroup().addTo(map);
+
+routes.forEach(r => {
+  const color = r.is_backbone ? '#e74c3c' : '#3498db';
+  const weight = r.is_backbone ? 4 : 3;
+  const opacity = r.is_backbone ? 0.9 : 0.7;
+  const line = L.polyline(r.coords, {color, weight, opacity});
+  
+  // Add endpoint markers
+  if (r.coords.length > 0) {
+    const last = r.coords[r.coords.length - 1];
+    if (!r.is_backbone) {
+      L.circleMarker(last, {radius:5, color:'#fff', fillColor:color, fillOpacity:1, weight:2})
+        .bindPopup('<b>' + r.desc + '</b><br>' + r.footage.toLocaleString() + ' ft<br>' + r.cp)
+        .addTo(r.is_backbone ? bbGroup : laGroup);
+    }
+  }
+  
+  line.bindPopup('<b>' + r.desc + '</b><br>' + r.footage.toLocaleString() + ' ft<br>' + r.cp);
+  line.addTo(r.is_backbone ? bbGroup : laGroup);
+});
+
+L.control.layers({}, {'Backbone': bbGroup, 'Laterals': laGroup}, {collapsed:false}).addTo(map);
+
+// Legend click interaction
+document.querySelectorAll('.leg-item').forEach(el => {
+  el.addEventListener('click', () => {
+    const name = el.dataset.route;
+    const r = routes.find(x => x.name === name);
+    if (r && r.coords.length > 0) {
+      const bounds = L.latLngBounds(r.coords);
+      map.fitBounds(bounds, {padding:[50,50]});
+    }
+  });
+});
+</script>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+const ALLOWED_DOMAINS = ["sprocketnetworks.com", "lassobroadband.com", "digitalalpha.ai", "ntxcom.com"];
+
+function parseJwt(token) {
+  const base64Url = token.split('.')[1];
+  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+  const jsonPayload = decodeURIComponent(atob(base64).split('').map(c =>
+    '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+  ).join(''));
+  return JSON.parse(jsonPayload);
+}
+
+function handleCredentialResponse(response) {
+  const payload = parseJwt(response.credential);
+  const email = payload.email || '';
+  const domain = email.split('@')[1] || '';
+  
+  if (ALLOWED_DOMAINS.includes(domain)) {
+    // Auth success
+    document.getElementById('auth-gate').classList.add('hidden');
+    document.getElementById('auth-user').textContent = email;
+    try { localStorage.setItem('fwf_auth', JSON.stringify({email: email, exp: payload.exp, token: response.credential})); } catch(e) {}
+  } else {
+    const errEl = document.getElementById('auth-error');
+    errEl.style.display = 'block';
+    errEl.textContent = 'Access denied: ' + domain + ' is not an authorized domain.';
+  }
+}
+
+// Check for existing valid auth
+(function() {
+  try {
+    const stored = JSON.parse(localStorage.getItem('fwf_auth') || '{}');
+    if (stored.email && stored.exp && (stored.exp * 1000) > Date.now()) {
+      document.getElementById('auth-gate').classList.add('hidden');
+      document.getElementById('auth-user').textContent = stored.email;
+    }
+  } catch(e) {}
+})();
+</script>
+</body></html>

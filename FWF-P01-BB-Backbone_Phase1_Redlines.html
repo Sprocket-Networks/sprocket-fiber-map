@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="/auth.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<title>FWF-P01-BB-Backbone_Phase1_Redlines</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
+  #map { position: absolute; top: 50px; bottom: 0; width: 100%; }
+  #header { height: 50px; background: #1a1a2e; color: white; display: flex; align-items: center; padding: 0 20px; font-size: 15px; font-weight: 600; }
+  #header .sub { color: #8888aa; margin-left: 12px; font-weight: 400; font-size: 12px; }
+
+  .layer-panel {
+    background: white; padding: 0; border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2); font-size: 11px; width: 260px;
+    max-height: 80vh; overflow-y: auto;
+  }
+  .lp-section { border-bottom: 1px solid #e5e7eb; }
+  .lp-section:last-child { border-bottom: none; }
+  .lp-header {
+    padding: 8px 12px; cursor: pointer; display: flex; align-items: center;
+    font-weight: 600; font-size: 12px; user-select: none;
+  }
+  .lp-header input { margin-right: 8px; }
+  .lp-header.planned { background: #dbeafe; color: #1e40af; }
+  .lp-header.asbuilt { background: #d1fae5; color: #065f46; }
+  .lp-header.other { background: #f3f4f6; color: #374151; }
+  .lp-children { padding: 2px 12px 6px 32px; }
+  .lp-child { display: flex; align-items: center; margin: 2px 0; cursor: pointer; }
+  .lp-child input { margin-right: 6px; }
+  .lp-child label { cursor: pointer; }
+
+  .pop { font-size: 12px; line-height: 1.6; min-width: 280px; max-width: 360px; }
+  .pop .hdr { font-size: 14px; font-weight: 700; color: #1a1a2e; margin-bottom: 2px; }
+  .pop .tier { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding: 2px 6px; border-radius: 3px; display: inline-block; margin-bottom: 6px; }
+  .pop .tier-plan { background: #dbeafe; color: #1e40af; }
+  .pop .tier-ab { background: #d1fae5; color: #065f46; }
+  .pop .row { display: flex; margin: 1px 0; }
+  .pop .lbl { color: #6b7280; width: 90px; flex-shrink: 0; font-size: 11px; }
+  .pop .val { font-weight: 500; font-size: 11px; }
+  .pop hr { border: none; border-top: 1px solid #e5e7eb; margin: 6px 0; }
+  .pop .src { font-size: 10px; color: #9ca3af; font-family: monospace; margin-top: 4px; background: #f9fafb; padding: 4px 6px; border-radius: 3px; line-height: 1.5; }
+
+  .legend { background: white; padding: 10px 14px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); font-size: 11px; max-width: 260px; line-height: 20px; }
+  .legend h4 { margin: 0 0 4px 0; font-size: 12px; color: #1a1a2e; }
+  .legend-item { display: flex; align-items: center; margin: 2px 0; }
+  .legend-line { width: 20px; height: 4px; margin-right: 6px; border-radius: 2px; }
+  .legend-circle { width: 10px; height: 10px; margin-right: 6px; border-radius: 50%; border: 2px solid white; box-shadow: 0 1px 2px rgba(0,0,0,0.3); flex-shrink:0; }
+
+  .info { background: white; padding: 10px 14px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); font-size: 11px; max-width: 300px; }
+  .info h4 { margin: 0 0 4px 0; color: #1a1a2e; font-size: 13px; }
+  .info .stat { display: flex; justify-content: space-between; margin: 2px 0; }
+  .info .stat-val { font-weight: 600; }
+  .info .src-box { background: #f9fafb; padding: 4px 6px; border-radius: 3px; margin-top: 6px; font-size: 10px; font-family: monospace; color: #374151; line-height: 1.5; }
+
+  .page-marker-icon { background: none !important; border: none !important; }
+  .page-marker {
+    background: #f59e0b; color: #000; font-size: 10px; font-weight: 700;
+    padding: 2px 4px; border-radius: 3px; text-align: center;
+    border: 1px solid #d97706; box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    white-space: nowrap; cursor: pointer;
+  }
+  .page-marker.page-interp {
+    background: #fbbf24; border-color: #f59e0b; font-style: italic;
+  }
+
+  #auth-gate {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: #1a1a2e; z-index: 99999;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+  }
+  #auth-gate.hidden { display: none; }
+  .auth-box {
+    background: #16213e; border-radius: 12px; padding: 40px;
+    text-align: center; max-width: 420px; width: 90%;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    border: 1px solid #2a2a4a;
+  }
+  .auth-box h1 { color: #00d4ff; font-size: 22px; margin: 0 0 8px; }
+  .auth-box .sub { color: #8888aa; font-size: 13px; margin-bottom: 24px; }
+  .auth-box .logo { font-size: 40px; margin-bottom: 16px; }
+  .auth-box .error { color: #ef4444; font-size: 13px; margin-top: 12px; display: none; }
+  .auth-box .domains { color: #6b7280; font-size: 11px; margin-top: 16px; }
+  #g_id_onload, .g_id_signin { display: inline-block; margin-top: 8px; }
+  .auth-user { color: #10b981; font-size: 12px; position: fixed; top: 4px; right: 8px; z-index: 99998; }
+</style>
+</head>
+<body>
+
+<div id="auth-gate">
+  <div class="auth-box">
+    <div class="logo">&#x1F512;</div>
+    <h1>Sprocket Networks</h1>
+    <div class="sub">Fiber Construction Maps &mdash; Sign in to continue</div>
+    <div id="g_id_onload"
+      data-client_id="432178814016-q4hdj3rncd53n4tklia21g7b66k872t2.apps.googleusercontent.com"
+      data-callback="handleCredentialResponse"
+      data-auto_prompt="true">
+    </div>
+    <div class="g_id_signin"
+      data-type="standard"
+      data-size="large"
+      data-theme="filled_blue"
+      data-text="sign_in_with"
+      data-shape="rectangular"
+      data-logo_alignment="left">
+    </div>
+    <div id="auth-error" class="error"></div>
+    <div class="domains">Authorized: sprocketnetworks.com, lassobroadband.com, digitalalpha.ai</div>
+  </div>
+</div>
+<div class="auth-user" id="auth-user"></div>
+
+<div id="header">FWF-P01-BB &mdash; Backbone Phase 1<span class="sub">Planned / As-Built</span><a href="https://sprocket-fiber-map-will-gibsons-projects-9b8c18c8.vercel.app" onclick="try{if(window!==window.top){window.top.closeDetail();return false;}}catch(e){}" style="color:#8888cc;text-decoration:none;margin-right:16px;font-size:13px">&larr; Sprocket Fiber Map</a></div>
+<div id="map"></div>
+<script>
+const plannedSegments = [
+  {from: "STA 540+65", to: "STA 546+42", len: 577, pg: 17, coords: [[32.73386,-97.44582],[32.73888,-97.44617]]},
+  {from: "STA 546+42", to: "STA 549+04", len: 262, pg: 18, coords: [[32.73888,-97.44617],[32.73386,-97.44778]]},
+  {from: "STA 549+04", to: "STA 551+80", len: 276, pg: 18, coords: [[32.73386,-97.44778],[32.73387,-97.44865]]},
+  {from: "STA 595+95", to: "STA 598+85", len: 290, pg: 27, coords: [[32.73405,-97.46235],[32.73383,-97.46325]]},
+  {from: "STA 602+73", to: "STA 606+19", len: 346, pg: 28, coords: [[32.73352,-97.46446],[32.73326,-97.46553]]},
+  {from: "STA 615+90", to: "STA 615+90", len: 436, pg: 30, coords: [[32.73139,-97.4666],[32.73139,-97.4666]]},
+  {from: "STA 622+90", to: "STA 623+96", len: 106, pg: 31, coords: [[32.72978,-97.46679],[32.72957,-97.46711]]},
+  {from: "STA 631+56", to: "STA 636+14", len: 458, pg: 33, coords: [[32.72882,-97.46874],[32.72863,-97.46949]]},
+];
+
+const asBuiltHH = [
+  {sta: "STA 534+46", lat: 32.73386, lon: -97.44437, src: "interpolated", size: "30\"X48\"X36\"", pg: 16},
+  {sta: "STA 540+65", lat: 32.73386, lon: -97.44582, src: "measured", size: "30\"X48\"X36\"", pg: 17},
+  {sta: "STA 546+42", lat: 32.73888, lon: -97.44617, src: "measured", size: "30\"X48\"X36\"", pg: 18},
+  {sta: "STA 549+04", lat: 32.73386, lon: -97.44778, src: "measured", size: "30\"X48\"X36\"", pg: 18},
+  {sta: "STA 551+80", lat: 32.73387, lon: -97.44865, src: "measured", size: "30\"X48\"X36\"", pg: 18},
+  {sta: "STA 554+45", lat: 32.73388, lon: -97.44954, src: "interpolated", size: "30\"X48\"X36\"", pg: 19},
+  {sta: "STA 558+65", lat: 32.73389, lon: -97.45096, src: "measured", size: "30\"X48\"X36\"", pg: 20},
+  {sta: "STA 568+28", lat: 32.73351, lon: -97.45368, src: "measured", size: "30\"X48\"X36\"", pg: 21},
+  {sta: "STA 576+52", lat: 32.7339, lon: -97.45647, src: "measured", size: "30\"X48\"X36\"", pg: 23},
+  {sta: "STA 583+35", lat: 32.73455, lon: -97.45873, src: "measured", size: "30\"X48\"X36\"", pg: 24},
+  {sta: "STA 587+72", lat: 32.73403, lon: -97.45975, src: "measured", size: "30\"X48\"X36\"", pg: 25},
+  {sta: "STA 593+04", lat: 32.73406, lon: -97.46102, src: "measured", size: "30\"X48\"X36\"", pg: 26},
+  {sta: "STA 595+95", lat: 32.73405, lon: -97.46235, src: "measured", size: "30\"X48\"X36\"", pg: 27},
+  {sta: "STA 598+85", lat: 32.73383, lon: -97.46325, src: "interpolated", size: "30\"X48\"X36\"", pg: 27},
+  {sta: "STA 602+73", lat: 32.73352, lon: -97.46446, src: "interpolated", size: "30\"X48\"X36\"", pg: 28},
+  {sta: "STA 606+19", lat: 32.73326, lon: -97.46553, src: "interpolated", size: "30\"X48\"X36\"", pg: 28},
+  {sta: "STA 609+49", lat: 32.733, lon: -97.46656, src: "measured", size: "30\"X48\"X36\"", pg: 29},
+  {sta: "STA 615+90", lat: 32.73139, lon: -97.4666, src: "measured", size: "30\"X48\"X36\"", pg: 30},
+  {sta: "STA 622+90", lat: 32.72978, lon: -97.46679, src: "measured", size: "30\"X48\"X36\"", pg: 31},
+  {sta: "STA 623+96", lat: 32.72957, lon: -97.46711, src: "interpolated", size: "30\"X48\"X36\"", pg: 31},
+  {sta: "STA 626+66", lat: 32.72902, lon: -97.46794, src: "measured", size: "30\"X48\"X36\"", pg: 32},
+  {sta: "STA 631+56", lat: 32.72882, lon: -97.46874, src: "interpolated", size: "30\"X48\"X36\"", pg: 33},
+  {sta: "STA 636+14", lat: 32.72863, lon: -97.46949, src: "measured", size: "30\"X48\"X36\"", pg: 33},
+];
+
+const asBuiltRoute = [[32.73386, -97.44437], [32.73386, -97.44582], [32.73888, -97.44617], [32.73386, -97.44778], [32.73387, -97.44865], [32.73388, -97.44954], [32.73389, -97.45096], [32.73351, -97.45368], [32.7339, -97.45647], [32.73455, -97.45873], [32.73403, -97.45975], [32.73406, -97.46102], [32.73405, -97.46235], [32.73383, -97.46325], [32.73352, -97.46446], [32.73326, -97.46553], [32.733, -97.46656], [32.73139, -97.4666], [32.72978, -97.46679], [32.72957, -97.46711], [32.72902, -97.46794], [32.72882, -97.46874], [32.72863, -97.46949]];
+
+const pageMarkers = [
+  {pg: 16, lat: 32.73386, lon: -97.44437, sta: "STA 534+46"},
+  {pg: 17, lat: 32.73386, lon: -97.44582, sta: "STA 540+65"},
+  {pg: 18, lat: 32.73888, lon: -97.44617, sta: "STA 546+42"},
+  {pg: 19, lat: 32.73388, lon: -97.44954, sta: "STA 554+45"},
+  {pg: 20, lat: 32.73389, lon: -97.45096, sta: "STA 558+65"},
+  {pg: 21, lat: 32.73351, lon: -97.45368, sta: "STA 568+28"},
+  {pg: 23, lat: 32.7339, lon: -97.45647, sta: "STA 576+52"},
+  {pg: 24, lat: 32.73455, lon: -97.45873, sta: "STA 583+35"},
+  {pg: 25, lat: 32.73403, lon: -97.45975, sta: "STA 587+72"},
+  {pg: 26, lat: 32.73406, lon: -97.46102, sta: "STA 593+04"},
+  {pg: 27, lat: 32.73405, lon: -97.46235, sta: "STA 595+95"},
+  {pg: 28, lat: 32.73352, lon: -97.46446, sta: "STA 602+73"},
+  {pg: 29, lat: 32.733, lon: -97.46656, sta: "STA 609+49"},
+  {pg: 30, lat: 32.73139, lon: -97.4666, sta: "STA 615+90"},
+  {pg: 31, lat: 32.72978, lon: -97.46679, sta: "STA 622+90"},
+  {pg: 32, lat: 32.72902, lon: -97.46794, sta: "STA 626+66"},
+  {pg: 33, lat: 32.72882, lon: -97.46874, sta: "STA 631+56"},
+];
+
+
+const PDF_FILE = "Backbone Phase 1-REVISED - P&P (33 pages).pdf";
+const PKG_NAME = "CFW BACKBONE PH 1";
+const DESIGNER = "LIT-SERVICES";
+const DWG_DATE = "11/18/24";
+
+var map = L.map('map').setView([32.733, -97.457], 14);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '&copy; OpenStreetMap'
+}).addTo(map);
+
+// ========== PLANNED LAYER ==========
+var plannedGroup = L.layerGroup();
+var plannedRouteGroup = L.layerGroup();
+var plannedHHGroup = L.layerGroup();
+
+plannedSegments.forEach(function(seg) {
+  var line = L.polyline(seg.coords, {color: '#2563eb', weight: 4, opacity: 0.7, dashArray: '8,6'});
+  line.bindPopup('<div class="pop"><div class="hdr">Planned Bore Segment</div>' +
+    '<span class="tier tier-plan">PLANNED</span>' +
+    '<div class="row"><span class="lbl">From</span><span class="val">' + seg.from + '</span></div>' +
+    '<div class="row"><span class="lbl">To</span><span class="val">' + seg.to + '</span></div>' +
+    '<div class="row"><span class="lbl">Length</span><span class="val">' + seg.len + ' ft</span></div>' +
+    '<div class="row"><span class="lbl">Method</span><span class="val">DIR. BORE 2-1.25" HDPE</span></div>' +
+    '<div class="row"><span class="lbl">Cable</span><span class="val">288ct Fiber Optic</span></div>' +
+    '<hr><div class="src">Source: ' + PDF_FILE + '<br>Page ' + seg.pg + ' | ' + PKG_NAME + '<br>Designer: ' + DESIGNER + ' | ' + DWG_DATE + '</div></div>');
+  plannedRouteGroup.addLayer(line);
+});
+
+asBuiltHH.forEach(function(hh) {
+  var m = L.circleMarker([hh.lat, hh.lon], {
+    radius: 6, fillColor: '#2563eb', color: '#1e40af', weight: 2, opacity: 1, fillOpacity: 0.7
+  });
+  var srcNote = hh.src === 'interpolated' ? ' (GPS interpolated)' : ' (GPS measured)';
+  m.bindPopup('<div class="pop"><div class="hdr">' + hh.sta + ' — Planned HH</div>' +
+    '<span class="tier tier-plan">PLANNED</span>' +
+    '<div class="row"><span class="lbl">Size</span><span class="val">' + hh.size + '</span></div>' +
+    '<div class="row"><span class="lbl">Slack Coil</span><span class="val">100\'</span></div>' +
+    '<div class="row"><span class="lbl">GPS</span><span class="val">' + hh.lat.toFixed(5) + ', ' + hh.lon.toFixed(5) + srcNote + '</span></div>' +
+    '<hr><div class="src">Source: ' + PDF_FILE + '<br>Page ' + hh.pg + ' | ' + PKG_NAME + '<br>Designer: ' + DESIGNER + ' | ' + DWG_DATE + '</div></div>');
+  plannedHHGroup.addLayer(m);
+});
+
+plannedGroup.addLayer(plannedRouteGroup);
+plannedGroup.addLayer(plannedHHGroup);
+plannedGroup.addTo(map);
+
+// ========== AS-BUILT LAYER ==========
+var asBuiltGroup = L.layerGroup();
+var abRouteGroup = L.layerGroup();
+var abHHGroup = L.layerGroup();
+
+var abLine = L.polyline(asBuiltRoute, {color: '#059669', weight: 5, opacity: 0.8});
+abLine.bindPopup('<div class="pop"><div class="hdr">As-Built Route</div>' +
+  '<span class="tier tier-ab">AS-BUILT</span>' +
+  '<div class="row"><span class="lbl">Package</span><span class="val">' + PKG_NAME + '</span></div>' +
+  '<div class="row"><span class="lbl">Total HH</span><span class="val">' + asBuiltHH.length + '</span></div>' +
+  '<div class="row"><span class="lbl">Cable</span><span class="val">288ct Fiber Optic</span></div>' +
+  '<hr><div class="src">Source: ' + PDF_FILE + '<br>' + PKG_NAME + '</div></div>');
+abRouteGroup.addLayer(abLine);
+
+asBuiltHH.forEach(function(hh) {
+  var m = L.circleMarker([hh.lat, hh.lon], {
+    radius: 7, fillColor: '#059669', color: '#047857', weight: 2, opacity: 1, fillOpacity: 0.8
+  });
+  var srcNote = hh.src === 'interpolated' ? ' (GPS interpolated)' : ' (GPS measured)';
+  m.bindPopup('<div class="pop"><div class="hdr">' + hh.sta + ' — As-Built HH</div>' +
+    '<span class="tier tier-ab">AS-BUILT</span>' +
+    '<div class="row"><span class="lbl">Size</span><span class="val">' + hh.size + '</span></div>' +
+    '<div class="row"><span class="lbl">Slack Coil</span><span class="val">100\'</span></div>' +
+    '<div class="row"><span class="lbl">GPS</span><span class="val">' + hh.lat.toFixed(5) + ', ' + hh.lon.toFixed(5) + srcNote + '</span></div>' +
+    '<div class="row"><span class="lbl">Depth/BOC</span><span class="val">Not available (bore logs needed)</span></div>' +
+    '<hr><div class="src">Source: ' + PDF_FILE + '<br>Page ' + hh.pg + ' | ' + PKG_NAME + '<br>GPS from yellow redline labels</div></div>');
+  abHHGroup.addLayer(m);
+});
+
+asBuiltGroup.addLayer(abRouteGroup);
+asBuiltGroup.addLayer(abHHGroup);
+asBuiltGroup.addTo(map);
+
+// ========== PAGE MARKERS ==========
+var pageMarkerGroup = L.layerGroup();
+pageMarkers.forEach(function(pm) {
+  var icon = L.divIcon({
+    className: 'page-marker-icon',
+    html: '<div class="page-marker">p' + pm.pg + '</div>',
+    iconSize: [32, 18], iconAnchor: [16, 24]
+  });
+  var m = L.marker([pm.lat, pm.lon], {icon: icon});
+  m.bindPopup('<div class="pop"><div class="hdr">PDF Page ' + pm.pg + '</div>' +
+    '<div class="row"><span class="lbl">Station</span><span class="val">' + pm.sta + '</span></div>' +
+    '<div class="row"><span class="lbl">File</span><span class="val">' + PDF_FILE + '</span></div></div>');
+  pageMarkerGroup.addLayer(m);
+});
+pageMarkerGroup.addTo(map);
+
+// ========== LAYER PANEL ==========
+var layerControl = L.control({position: 'topright'});
+layerControl.onAdd = function() {
+  var div = L.DomUtil.create('div', 'layer-panel');
+  div.innerHTML = '<div class="lp-section">' +
+    '<div class="lp-header planned"><input type="checkbox" id="lp-planned" checked> Planned (Design)</div>' +
+    '<div class="lp-children">' +
+    '<div class="lp-child"><input type="checkbox" id="lp-planned-route" checked><label for="lp-planned-route">Route</label></div>' +
+    '<div class="lp-child"><input type="checkbox" id="lp-planned-hh" checked><label for="lp-planned-hh">Handholes</label></div>' +
+    '</div></div>' +
+    '<div class="lp-section">' +
+    '<div class="lp-header asbuilt"><input type="checkbox" id="lp-ab" checked> As-Built (Redline)</div>' +
+    '<div class="lp-children">' +
+    '<div class="lp-child"><input type="checkbox" id="lp-ab-route" checked><label for="lp-ab-route">Route</label></div>' +
+    '<div class="lp-child"><input type="checkbox" id="lp-ab-hh" checked><label for="lp-ab-hh">Handholes</label></div>' +
+    '</div></div>' +
+    '<div class="lp-section">' +
+    '<div class="lp-header other"><input type="checkbox" id="lp-pages" checked> Page Markers</div>' +
+    '</div>';
+  L.DomEvent.disableClickPropagation(div);
+  L.DomEvent.disableScrollPropagation(div);
+  return div;
+};
+layerControl.addTo(map);
+
+function toggleLayer(checkbox, layer) {
+  checkbox.addEventListener('change', function() {
+    if (this.checked) map.addLayer(layer); else map.removeLayer(layer);
+  });
+}
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() {
+    toggleLayer(document.getElementById('lp-planned'), plannedGroup);
+    toggleLayer(document.getElementById('lp-planned-route'), plannedRouteGroup);
+    toggleLayer(document.getElementById('lp-planned-hh'), plannedHHGroup);
+    toggleLayer(document.getElementById('lp-ab'), asBuiltGroup);
+    toggleLayer(document.getElementById('lp-ab-route'), abRouteGroup);
+    toggleLayer(document.getElementById('lp-ab-hh'), abHHGroup);
+    toggleLayer(document.getElementById('lp-pages'), pageMarkerGroup);
+
+    var plannedCheck = document.getElementById('lp-planned');
+    plannedCheck.addEventListener('change', function() {
+      document.getElementById('lp-planned-route').checked = this.checked;
+      document.getElementById('lp-planned-hh').checked = this.checked;
+    });
+    var abCheck = document.getElementById('lp-ab');
+    abCheck.addEventListener('change', function() {
+      document.getElementById('lp-ab-route').checked = this.checked;
+      document.getElementById('lp-ab-hh').checked = this.checked;
+    });
+  }, 100);
+});
+
+// ========== LEGEND ==========
+var legend = L.control({position: 'bottomright'});
+legend.onAdd = function() {
+  var div = L.DomUtil.create('div', 'legend');
+  div.innerHTML = '<h4>Legend</h4>' +
+    '<div class="legend-item"><div class="legend-line" style="background:#2563eb;border:1px dashed #1e40af"></div>Planned Route</div>' +
+    '<div class="legend-item"><div class="legend-circle" style="background:#2563eb"></div>Planned HH</div>' +
+    '<div class="legend-item"><div class="legend-line" style="background:#059669"></div>As-Built Route</div>' +
+    '<div class="legend-item"><div class="legend-circle" style="background:#059669"></div>As-Built HH</div>' +
+    '<div class="legend-item"><div class="page-marker" style="font-size:9px;margin-right:6px">p16</div>PDF Page Marker</div>';
+  return div;
+};
+legend.addTo(map);
+
+// ========== INFO PANEL ==========
+var info = L.control({position: 'bottomleft'});
+info.onAdd = function() {
+  var div = L.DomUtil.create('div', 'info');
+  div.innerHTML = '<h4>CFW Backbone Phase 1</h4>' +
+    '<div class="stat"><span>Package</span><span class="stat-val">' + PKG_NAME + '</span></div>' +
+    '<div class="stat"><span>Handholes</span><span class="stat-val">' + asBuiltHH.length + '</span></div>' +
+    '<div class="stat"><span>Bore Segments</span><span class="stat-val">' + plannedSegments.length + '</span></div>' +
+    '<div class="stat"><span>GPS Measured</span><span class="stat-val">' + asBuiltHH.filter(h => h.src==='measured').length + '</span></div>' +
+    '<div class="stat"><span>GPS Interpolated</span><span class="stat-val">' + asBuiltHH.filter(h => h.src==='interpolated').length + '</span></div>' +
+    '<div class="stat"><span>Depth/BOC</span><span class="stat-val">Pending (bore logs)</span></div>' +
+    '<div class="src-box">Source: ' + PDF_FILE + '<br>Designer: ' + DESIGNER + '<br>Date: ' + DWG_DATE + '<br>Note: Depth/BOC data requires bore log processing</div>';
+  return div;
+};
+info.addTo(map);
+
+// Fit map to route bounds
+map.fitBounds(L.polyline(asBuiltRoute).getBounds().pad(0.1));
+
+// ========== GOOGLE AUTH ==========
+function handleCredentialResponse(response) {
+  var base64Url = response.credential.split('.')[1];
+  var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+  var payload = JSON.parse(decodeURIComponent(atob(base64).split('').map(function(c) {
+    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+  }).join('')));
+  var email = payload.email || '';
+  var domain = email.split('@')[1] || '';
+  var allowed = ['sprocketnetworks.com','lassobroadband.com','digitalalpha.ai','ntxcom.com'];
+  if (allowed.indexOf(domain) !== -1) {
+    document.getElementById('auth-gate').classList.add('hidden');
+    document.getElementById('auth-user').textContent = email;
+    setTimeout(function(){ map.invalidateSize(); }, 200);
+  } else {
+    var err = document.getElementById('auth-error');
+    err.style.display = 'block';
+    err.textContent = 'Access denied: ' + domain + ' is not authorized.';
+  }
+}
+</script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+</body>
+</html>

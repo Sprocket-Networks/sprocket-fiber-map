@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="/auth.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<title>FWF-P04-BB-Backbone_Phase4_Redlines</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
+  #map { position: absolute; top: 50px; bottom: 0; width: 100%; }
+  #header { height: 50px; background: #1a1a2e; color: white; display: flex; align-items: center; padding: 0 20px; font-size: 15px; font-weight: 600; }
+  #header .sub { color: #8888aa; margin-left: 12px; font-weight: 400; font-size: 12px; }
+
+  .layer-panel {
+    background: white; padding: 0; border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2); font-size: 11px; width: 260px;
+    max-height: 80vh; overflow-y: auto;
+  }
+  .lp-section { border-bottom: 1px solid #e5e7eb; }
+  .lp-section:last-child { border-bottom: none; }
+  .lp-header {
+    padding: 8px 12px; cursor: pointer; display: flex; align-items: center;
+    font-weight: 600; font-size: 12px; user-select: none;
+  }
+  .lp-header input { margin-right: 8px; }
+  .lp-header.planned { background: #dbeafe; color: #1e40af; }
+  .lp-header.asbuilt { background: #d1fae5; color: #065f46; }
+  .lp-header.other { background: #f3f4f6; color: #374151; }
+  .lp-children { padding: 2px 12px 6px 32px; }
+  .lp-child { display: flex; align-items: center; margin: 2px 0; cursor: pointer; }
+  .lp-child input { margin-right: 6px; }
+  .lp-child label { cursor: pointer; }
+
+  .pop { font-size: 12px; line-height: 1.6; min-width: 280px; max-width: 360px; }
+  .pop .hdr { font-size: 14px; font-weight: 700; color: #1a1a2e; margin-bottom: 2px; }
+  .pop .tier { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding: 2px 6px; border-radius: 3px; display: inline-block; margin-bottom: 6px; }
+  .pop .tier-plan { background: #dbeafe; color: #1e40af; }
+  .pop .tier-ab { background: #d1fae5; color: #065f46; }
+  .pop .row { display: flex; margin: 1px 0; }
+  .pop .lbl { color: #6b7280; width: 90px; flex-shrink: 0; font-size: 11px; }
+  .pop .val { font-weight: 500; font-size: 11px; }
+  .pop hr { border: none; border-top: 1px solid #e5e7eb; margin: 6px 0; }
+  .pop .src { font-size: 10px; color: #9ca3af; font-family: monospace; margin-top: 4px; background: #f9fafb; padding: 4px 6px; border-radius: 3px; line-height: 1.5; }
+
+  .legend { background: white; padding: 10px 14px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); font-size: 11px; max-width: 260px; line-height: 20px; }
+  .legend h4 { margin: 0 0 4px 0; font-size: 12px; color: #1a1a2e; }
+  .legend-item { display: flex; align-items: center; margin: 2px 0; }
+  .legend-line { width: 20px; height: 4px; margin-right: 6px; border-radius: 2px; }
+  .legend-circle { width: 10px; height: 10px; margin-right: 6px; border-radius: 50%; border: 2px solid white; box-shadow: 0 1px 2px rgba(0,0,0,0.3); flex-shrink:0; }
+
+  .info { background: white; padding: 10px 14px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); font-size: 11px; max-width: 300px; }
+  .info h4 { margin: 0 0 4px 0; color: #1a1a2e; font-size: 13px; }
+  .info .stat { display: flex; justify-content: space-between; margin: 2px 0; }
+  .info .stat-val { font-weight: 600; }
+  .info .src-box { background: #f9fafb; padding: 4px 6px; border-radius: 3px; margin-top: 6px; font-size: 10px; font-family: monospace; color: #374151; line-height: 1.5; }
+
+  .page-marker-icon { background: none !important; border: none !important; }
+  .page-marker {
+    background: #f59e0b; color: #000; font-size: 10px; font-weight: 700;
+    padding: 2px 4px; border-radius: 3px; text-align: center;
+    border: 1px solid #d97706; box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    white-space: nowrap; cursor: pointer;
+  }
+
+  #auth-gate {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: #1a1a2e; z-index: 99999;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+  }
+  #auth-gate.hidden { display: none; }
+  .auth-box {
+    background: #16213e; border-radius: 12px; padding: 40px;
+    text-align: center; max-width: 420px; width: 90%;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    border: 1px solid #2a2a4a;
+  }
+  .auth-box h1 { color: #00d4ff; font-size: 22px; margin: 0 0 8px; }
+  .auth-box .sub { color: #8888aa; font-size: 13px; margin-bottom: 24px; }
+  .auth-box .logo { font-size: 40px; margin-bottom: 16px; }
+  .auth-box .error { color: #ef4444; font-size: 13px; margin-top: 12px; display: none; }
+  .auth-box .domains { color: #6b7280; font-size: 11px; margin-top: 16px; }
+  #g_id_onload, .g_id_signin { display: inline-block; margin-top: 8px; }
+  .auth-user { color: #10b981; font-size: 12px; position: fixed; top: 4px; right: 8px; z-index: 99998; }
+</style>
+</head>
+<body>
+
+<div id="auth-gate">
+  <div class="auth-box">
+    <div class="logo">&#x1F512;</div>
+    <h1>Sprocket Networks</h1>
+    <div class="sub">Fiber Construction Maps &mdash; Sign in to continue</div>
+    <div id="g_id_onload"
+      data-client_id="432178814016-q4hdj3rncd53n4tklia21g7b66k872t2.apps.googleusercontent.com"
+      data-callback="handleCredentialResponse"
+      data-auto_prompt="true">
+    </div>
+    <div class="g_id_signin"
+      data-type="standard"
+      data-size="large"
+      data-theme="filled_blue"
+      data-text="sign_in_with"
+      data-shape="rectangular"
+      data-logo_alignment="left">
+    </div>
+    <div id="auth-error" class="error"></div>
+    <div class="domains">Authorized: sprocketnetworks.com, lassobroadband.com, digitalalpha.ai</div>
+  </div>
+</div>
+<div class="auth-user" id="auth-user"></div>
+
+<div id="header">FWF-P04-BB &mdash; Backbone Phase 4<span class="sub">Planned / As-Built &bull; 200 Texas St, Fort Worth</span><a href="https://sprocket-fiber-map-will-gibsons-projects-9b8c18c8.vercel.app" onclick="try{if(window!==window.top){window.top.closeDetail();return false;}}catch(e){}" style="color:#8888cc;text-decoration:none;margin-right:16px;font-size:13px">&larr; Sprocket Fiber Map</a></div>
+<div id="map"></div>
+<script>
+const plannedSegments = [
+  {
+    "from": "STA 109+07",
+    "to": "STA 110+49",
+    "len": 142,
+    "pg": 4,
+    "coords": [
+      [
+        32.74194,
+        -97.31232
+      ],
+      [
+        32.74157,
+        -97.31232
+      ]
+    ]
+  },
+  {
+    "from": "STA 111+11",
+    "to": "STA 115+63",
+    "len": 452,
+    "pg": 4,
+    "coords": [
+      [
+        32.74141,
+        -97.31232
+      ],
+      [
+        32.74023,
+        -97.31232
+      ]
+    ]
+  },
+  {
+    "from": "STA 115+63",
+    "to": "STA 118+68",
+    "len": 305,
+    "pg": 5,
+    "coords": [
+      [
+        32.74023,
+        -97.31232
+      ],
+      [
+        32.73944,
+        -97.31233
+      ]
+    ]
+  },
+  {
+    "from": "STA 118+68",
+    "to": "STA 121+63",
+    "len": 295,
+    "pg": 5,
+    "coords": [
+      [
+        32.73944,
+        -97.31233
+      ],
+      [
+        32.73867,
+        -97.31233
+      ]
+    ]
+  },
+  {
+    "from": "STA 126+79",
+    "to": "STA 127+63",
+    "len": 84,
+    "pg": 6,
+    "coords": [
+      [
+        32.73733,
+        -97.31233
+      ],
+      [
+        32.73681,
+        -97.31232
+      ]
+    ]
+  },
+  {
+    "from": "STA 127+63",
+    "to": "STA 129+48",
+    "len": 185,
+    "pg": 7,
+    "coords": [
+      [
+        32.73681,
+        -97.31232
+      ],
+      [
+        32.73563,
+        -97.31229
+      ]
+    ]
+  },
+  {
+    "from": "STA 131+23",
+    "to": "STA 137+18",
+    "len": 595,
+    "pg": 8,
+    "coords": [
+      [
+        32.73575,
+        -97.31284
+      ],
+      [
+        32.73626,
+        -97.31476
+      ]
+    ]
+  },
+  {
+    "from": "STA 140+08",
+    "to": "STA 143+18",
+    "len": 310,
+    "pg": 9,
+    "coords": [
+      [
+        32.73652,
+        -97.3157
+      ],
+      [
+        32.7361,
+        -97.31614
+      ]
+    ]
+  },
+  {
+    "from": "STA 146+17",
+    "to": "STA 147+07",
+    "len": 90,
+    "pg": 10,
+    "coords": [
+      [
+        32.7357,
+        -97.31655
+      ],
+      [
+        32.73557,
+        -97.31668
+      ]
+    ]
+  },
+  {
+    "from": "STA 147+07",
+    "to": "STA 149+49",
+    "len": 242,
+    "pg": 10,
+    "coords": [
+      [
+        32.73557,
+        -97.31668
+      ],
+      [
+        32.73524,
+        -97.31701
+      ]
+    ]
+  },
+  {
+    "from": "STA 149+49",
+    "to": "STA 150+71",
+    "len": 122,
+    "pg": 11,
+    "coords": [
+      [
+        32.73524,
+        -97.31701
+      ],
+      [
+        32.73508,
+        -97.31718
+      ]
+    ]
+  },
+  {
+    "from": "STA 154+91",
+    "to": "STA 155+45",
+    "len": 54,
+    "pg": 11,
+    "coords": [
+      [
+        32.73451,
+        -97.31777
+      ],
+      [
+        32.73443,
+        -97.31784
+      ]
+    ]
+  },
+  {
+    "from": "STA 155+45",
+    "to": "STA 159+57",
+    "len": 412,
+    "pg": 12,
+    "coords": [
+      [
+        32.73443,
+        -97.31784
+      ],
+      [
+        32.73387,
+        -97.31841
+      ]
+    ]
+  },
+  {
+    "from": "STA 161+48",
+    "to": "STA 164+17",
+    "len": 269,
+    "pg": 13,
+    "coords": [
+      [
+        32.73361,
+        -97.31868
+      ],
+      [
+        32.73325,
+        -97.31905
+      ]
+    ]
+  },
+  {
+    "from": "STA 181+15",
+    "to": "STA 181+61",
+    "len": 46,
+    "pg": 14,
+    "coords": [
+      [
+        32.73093,
+        -97.32142
+      ],
+      [
+        32.73087,
+        -97.32148
+      ]
+    ]
+  },
+  {
+    "from": "STA 187+15",
+    "to": "STA 188+69",
+    "len": 154,
+    "pg": 15,
+    "coords": [
+      [
+        32.73012,
+        -97.32225
+      ],
+      [
+        32.72991,
+        -97.32246
+      ]
+    ]
+  },
+  {
+    "from": "STA 188+69",
+    "to": "STA 192+21",
+    "len": 352,
+    "pg": 15,
+    "coords": [
+      [
+        32.72991,
+        -97.32246
+      ],
+      [
+        32.72943,
+        -97.32295
+      ]
+    ]
+  },
+  {
+    "from": "STA 193+15",
+    "to": "STA 195+16",
+    "len": 201,
+    "pg": 16,
+    "coords": [
+      [
+        32.7293,
+        -97.32308
+      ],
+      [
+        32.72903,
+        -97.32336
+      ]
+    ]
+  },
+  {
+    "from": "STA 197+04",
+    "to": "STA 202+73",
+    "len": 569,
+    "pg": 17,
+    "coords": [
+      [
+        32.72877,
+        -97.32363
+      ],
+      [
+        32.728,
+        -97.32442
+      ]
+    ]
+  },
+  {
+    "from": "STA 205+17",
+    "to": "STA 208+71",
+    "len": 354,
+    "pg": 18,
+    "coords": [
+      [
+        32.72766,
+        -97.32476
+      ],
+      [
+        32.72718,
+        -97.32525
+      ]
+    ]
+  },
+  {
+    "from": "STA 208+71",
+    "to": "STA 213+46",
+    "len": 475,
+    "pg": 19,
+    "coords": [
+      [
+        32.72718,
+        -97.32525
+      ],
+      [
+        32.72653,
+        -97.32591
+      ]
+    ]
+  },
+  {
+    "from": "STA 214+70",
+    "to": "STA 220+70",
+    "len": 600,
+    "pg": 20,
+    "coords": [
+      [
+        32.72637,
+        -97.32608
+      ],
+      [
+        32.72555,
+        -97.32692
+      ]
+    ]
+  },
+  {
+    "from": "STA 221+41",
+    "to": "STA 226+70",
+    "len": 529,
+    "pg": 21,
+    "coords": [
+      [
+        32.72545,
+        -97.32701
+      ],
+      [
+        32.72473,
+        -97.32775
+      ]
+    ]
+  }
+];
+
+const asBuiltHH = [
+  {
+    "sta": "STA 110+53",
+    "lat": 32.74156,
+    "lon": -97.31232,
+    "src": "measured",
+    "size": "24\"X36\"X24\"",
+    "pg": 4
+  },
+  {
+    "sta": "STA 111+15",
+    "lat": 32.7414,
+    "lon": -97.31232,
+    "src": "interpolated",
+    "size": "24\"X36\"X24\"",
+    "pg": 4
+  },
+  {
+    "sta": "STA 126+83",
+    "lat": 32.73732,
+    "lon": -97.31233,
+    "src": "measured",
+    "size": "24\"X36\"X24\"",
+    "pg": 6
+  },
+  {
+    "sta": "STA 129+52",
+    "lat": 32.7356,
+    "lon": -97.31229,
+    "src": "measured",
+    "size": "24\"X36\"X24\"",
+    "pg": 7
+  },
+  {
+    "sta": "STA 140+12",
+    "lat": 32.73652,
+    "lon": -97.31571,
+    "src": "measured",
+    "size": "24\"X36\"X24\"",
+    "pg": 9
+  },
+  {
+    "sta": "STA 146+21",
+    "lat": 32.73569,
+    "lon": -97.31656,
+    "src": "interpolated",
+    "size": "24\"X36\"X24\"",
+    "pg": 10
+  },
+  {
+    "sta": "STA 147+11",
+    "lat": 32.73557,
+    "lon": -97.31668,
+    "src": "interpolated",
+    "size": "24\"X36\"X24\"",
+    "pg": 10
+  },
+  {
+    "sta": "STA 150+75",
+    "lat": 32.73507,
+    "lon": -97.31719,
+    "src": "interpolated",
+    "size": "24\"X36\"X24\"",
+    "pg": 11
+  },
+  {
+    "sta": "STA 154+95",
+    "lat": 32.7345,
+    "lon": -97.31777,
+    "src": "interpolated",
+    "size": "24\"X36\"X24\"",
+    "pg": 11
+  },
+  {
+    "sta": "STA 159+61",
+    "lat": 32.73387,
+    "lon": -97.31842,
+    "src": "interpolated",
+    "size": "24\"X36\"X24\"",
+    "pg": 12
+  },
+  {
+    "sta": "STA 164+21",
+    "lat": 32.73324,
+    "lon": -97.31906,
+    "src": "measured",
+    "size": "24\"X36\"X24\"",
+    "pg": 13
+  },
+  {
+    "sta": "STA 181+65",
+    "lat": 32.73087,
+    "lon": -97.32149,
+    "src": "interpolated",
+    "size": "24\"X36\"X24\"",
+    "pg": 14
+  },
+  {
+    "sta": "STA 184+03",
+    "lat": 32.73054,
+    "lon": -97.32182,
+    "src": "interpolated",
+    "size": "24\"X36\"X24\"",
+    "pg": 14
+  },
+  {
+    "sta": "STA 188+73",
+    "lat": 32.7299,
+    "lon": -97.32247,
+    "src": "interpolated",
+    "size": "24\"X36\"X24\"",
+    "pg": 15
+  },
+  {
+    "sta": "STA 192+25",
+    "lat": 32.72942,
+    "lon": -97.32296,
+    "src": "interpolated",
+    "size": "24\"X36\"X24\"",
+    "pg": 15
+  },
+  {
+    "sta": "STA 195+20",
+    "lat": 32.72902,
+    "lon": -97.32337,
+    "src": "interpolated",
+    "size": "24\"X36\"X24\"",
+    "pg": 16
+  },
+  {
+    "sta": "STA 205+21",
+    "lat": 32.72766,
+    "lon": -97.32476,
+    "src": "interpolated",
+    "size": "24\"X36\"X24\"",
+    "pg": 18
+  },
+  {
+    "sta": "STA 213+50",
+    "lat": 32.72653,
+    "lon": -97.32591,
+    "src": "interpolated",
+    "size": "24\"X36\"X24\"",
+    "pg": 19
+  },
+  {
+    "sta": "STA 221+45",
+    "lat": 32.72545,
+    "lon": -97.32702,
+    "src": "interpolated",
+    "size": "24\"X36\"X24\"",
+    "pg": 21
+  }
+];
+
+const asBuiltRoute = [[32.74156, -97.31232], [32.7414, -97.31232], [32.73732, -97.31233], [32.7356, -97.31229], [32.73652, -97.31571], [32.73569, -97.31656], [32.73557, -97.31668], [32.73507, -97.31719], [32.7345, -97.31777], [32.73387, -97.31842], [32.73324, -97.31906], [32.73087, -97.32149], [32.73054, -97.32182], [32.7299, -97.32247], [32.72942, -97.32296], [32.72902, -97.32337], [32.72766, -97.32476], [32.72653, -97.32591], [32.72545, -97.32702]];
+
+const pageMarkers = [
+  {
+    "pg": 4,
+    "lat": 32.74156,
+    "lon": -97.31232,
+    "sta": "STA 110+53"
+  },
+  {
+    "pg": 6,
+    "lat": 32.73732,
+    "lon": -97.31233,
+    "sta": "STA 126+83"
+  },
+  {
+    "pg": 7,
+    "lat": 32.7356,
+    "lon": -97.31229,
+    "sta": "STA 129+52"
+  },
+  {
+    "pg": 9,
+    "lat": 32.73652,
+    "lon": -97.31571,
+    "sta": "STA 140+12"
+  },
+  {
+    "pg": 10,
+    "lat": 32.73569,
+    "lon": -97.31656,
+    "sta": "STA 146+21"
+  },
+  {
+    "pg": 11,
+    "lat": 32.73507,
+    "lon": -97.31719,
+    "sta": "STA 150+75"
+  },
+  {
+    "pg": 12,
+    "lat": 32.73387,
+    "lon": -97.31842,
+    "sta": "STA 159+61"
+  },
+  {
+    "pg": 13,
+    "lat": 32.73324,
+    "lon": -97.31906,
+    "sta": "STA 164+21"
+  },
+  {
+    "pg": 14,
+    "lat": 32.73087,
+    "lon": -97.32149,
+    "sta": "STA 181+65"
+  },
+  {
+    "pg": 15,
+    "lat": 32.7299,
+    "lon": -97.32247,
+    "sta": "STA 188+73"
+  },
+  {
+    "pg": 16,
+    "lat": 32.72902,
+    "lon": -97.32337,
+    "sta": "STA 195+20"
+  },
+  {
+    "pg": 18,
+    "lat": 32.72766,
+    "lon": -97.32476,
+    "sta": "STA 205+21"
+  },
+  {
+    "pg": 19,
+    "lat": 32.72653,
+    "lon": -97.32591,
+    "sta": "STA 213+50"
+  },
+  {
+    "pg": 21,
+    "lat": 32.72545,
+    "lon": -97.32702,
+    "sta": "STA 221+45"
+  }
+];
+
+const PDF_FILE = "CFW - Backbone Phase 4_06-24-25 (21 pages).pdf";
+const PKG_NAME = "CFW BACKBONE PH 4";
+const DESIGNER = "LIT-SERVICES";
+const DWG_DATE = "02/12/2025";
+
+var map = L.map('map').setView([32.73314368421053, -97.31897105263158], 14);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '&copy; OpenStreetMap'
+}).addTo(map);
+
+// ========== PLANNED LAYER ==========
+var plannedGroup = L.layerGroup();
+var plannedRouteGroup = L.layerGroup();
+var plannedHHGroup = L.layerGroup();
+
+plannedSegments.forEach(function(seg) {
+  var line = L.polyline(seg.coords, {color: '#2563eb', weight: 4, opacity: 0.7, dashArray: '8,6'});
+  line.bindPopup('<div class="pop"><div class="hdr">Planned Bore Segment</div>' +
+    '<span class="tier tier-plan">PLANNED</span>' +
+    '<div class="row"><span class="lbl">From</span><span class="val">' + seg.from + '</span></div>' +
+    '<div class="row"><span class="lbl">To</span><span class="val">' + seg.to + '</span></div>' +
+    '<div class="row"><span class="lbl">Length</span><span class="val">' + seg.len + ' ft</span></div>' +
+    '<div class="row"><span class="lbl">Method</span><span class="val">DIR. BORE 7-WAY 18/14mm</span></div>' +
+    '<div class="row"><span class="lbl">Cable</span><span class="val">288ct Fiber Optic</span></div>' +
+    '<hr><div class="src">Source: ' + PDF_FILE + '<br>Page ' + seg.pg + ' | ' + PKG_NAME + '<br>Designer: ' + DESIGNER + ' | ' + DWG_DATE + '</div></div>');
+  plannedRouteGroup.addLayer(line);
+});
+
+asBuiltHH.forEach(function(hh) {
+  var m = L.circleMarker([hh.lat, hh.lon], {
+    radius: 6, fillColor: '#2563eb', color: '#1e40af', weight: 2, opacity: 1, fillOpacity: 0.7
+  });
+  var srcNote = hh.src === 'interpolated' ? ' (GPS interpolated)' : ' (GPS measured)';
+  m.bindPopup('<div class="pop"><div class="hdr">' + hh.sta + ' — Planned HH</div>' +
+    '<span class="tier tier-plan">PLANNED</span>' +
+    '<div class="row"><span class="lbl">Size</span><span class="val">' + hh.size + '</span></div>' +
+    '<div class="row"><span class="lbl">Slack Coil</span><span class="val">100\'</span></div>' +
+    '<div class="row"><span class="lbl">GPS</span><span class="val">' + hh.lat.toFixed(5) + ', ' + hh.lon.toFixed(5) + srcNote + '</span></div>' +
+    '<hr><div class="src">Source: ' + PDF_FILE + '<br>Page ' + hh.pg + ' | ' + PKG_NAME + '<br>Designer: ' + DESIGNER + ' | ' + DWG_DATE + '</div></div>');
+  plannedHHGroup.addLayer(m);
+});
+
+plannedGroup.addLayer(plannedRouteGroup);
+plannedGroup.addLayer(plannedHHGroup);
+plannedGroup.addTo(map);
+
+// ========== AS-BUILT LAYER ==========
+var asBuiltGroup = L.layerGroup();
+var abRouteGroup = L.layerGroup();
+var abHHGroup = L.layerGroup();
+
+var abLine = L.polyline(asBuiltRoute, {color: '#059669', weight: 5, opacity: 0.8});
+abLine.bindPopup('<div class="pop"><div class="hdr">As-Built Route</div>' +
+  '<span class="tier tier-ab">AS-BUILT</span>' +
+  '<div class="row"><span class="lbl">Package</span><span class="val">' + PKG_NAME + '</span></div>' +
+  '<div class="row"><span class="lbl">Total HH</span><span class="val">' + asBuiltHH.length + '</span></div>' +
+  '<div class="row"><span class="lbl">Conduit</span><span class="val">7-WAY 18/14mm</span></div>' +
+  '<div class="row"><span class="lbl">Cable</span><span class="val">288ct Fiber Optic</span></div>' +
+  '<hr><div class="src">Source: ' + PDF_FILE + '<br>' + PKG_NAME + '</div></div>');
+abRouteGroup.addLayer(abLine);
+
+asBuiltHH.forEach(function(hh) {
+  var m = L.circleMarker([hh.lat, hh.lon], {
+    radius: 7, fillColor: '#059669', color: '#047857', weight: 2, opacity: 1, fillOpacity: 0.8
+  });
+  var srcNote = hh.src === 'interpolated' ? ' (GPS interpolated)' : ' (GPS measured)';
+  m.bindPopup('<div class="pop"><div class="hdr">' + hh.sta + ' — As-Built HH</div>' +
+    '<span class="tier tier-ab">AS-BUILT</span>' +
+    '<div class="row"><span class="lbl">Size</span><span class="val">' + hh.size + '</span></div>' +
+    '<div class="row"><span class="lbl">Slack Coil</span><span class="val">100\'</span></div>' +
+    '<div class="row"><span class="lbl">GPS</span><span class="val">' + hh.lat.toFixed(5) + ', ' + hh.lon.toFixed(5) + srcNote + '</span></div>' +
+    '<div class="row"><span class="lbl">Depth/BOC</span><span class="val">Not available (bore logs needed)</span></div>' +
+    '<hr><div class="src">Source: ' + PDF_FILE + '<br>Page ' + hh.pg + ' | ' + PKG_NAME + '<br>GPS from yellow redline labels</div></div>');
+  abHHGroup.addLayer(m);
+});
+
+asBuiltGroup.addLayer(abRouteGroup);
+asBuiltGroup.addLayer(abHHGroup);
+asBuiltGroup.addTo(map);
+
+// ========== PAGE MARKERS ==========
+var pageMarkerGroup = L.layerGroup();
+pageMarkers.forEach(function(pm) {
+  var icon = L.divIcon({
+    className: 'page-marker-icon',
+    html: '<div class="page-marker">p' + pm.pg + '</div>',
+    iconSize: [32, 18], iconAnchor: [16, 24]
+  });
+  var m = L.marker([pm.lat, pm.lon], {icon: icon});
+  m.bindPopup('<div class="pop"><div class="hdr">PDF Page ' + pm.pg + '</div>' +
+    '<div class="row"><span class="lbl">Station</span><span class="val">' + pm.sta + '</span></div>' +
+    '<div class="row"><span class="lbl">File</span><span class="val">' + PDF_FILE + '</span></div></div>');
+  pageMarkerGroup.addLayer(m);
+});
+pageMarkerGroup.addTo(map);
+
+// ========== LAYER PANEL ==========
+var layerControl = L.control({position: 'topright'});
+layerControl.onAdd = function() {
+  var div = L.DomUtil.create('div', 'layer-panel');
+  div.innerHTML = '<div class="lp-section">' +
+    '<div class="lp-header planned"><input type="checkbox" id="lp-planned" checked> Planned (Design)</div>' +
+    '<div class="lp-children">' +
+    '<div class="lp-child"><input type="checkbox" id="lp-planned-route" checked><label for="lp-planned-route">Route</label></div>' +
+    '<div class="lp-child"><input type="checkbox" id="lp-planned-hh" checked><label for="lp-planned-hh">Handholes</label></div>' +
+    '</div></div>' +
+    '<div class="lp-section">' +
+    '<div class="lp-header asbuilt"><input type="checkbox" id="lp-ab" checked> As-Built (Redline)</div>' +
+    '<div class="lp-children">' +
+    '<div class="lp-child"><input type="checkbox" id="lp-ab-route" checked><label for="lp-ab-route">Route</label></div>' +
+    '<div class="lp-child"><input type="checkbox" id="lp-ab-hh" checked><label for="lp-ab-hh">Handholes</label></div>' +
+    '</div></div>' +
+    '<div class="lp-section">' +
+    '<div class="lp-header other"><input type="checkbox" id="lp-pages" checked> Page Markers</div>' +
+    '</div>';
+  L.DomEvent.disableClickPropagation(div);
+  L.DomEvent.disableScrollPropagation(div);
+  return div;
+};
+layerControl.addTo(map);
+
+function toggleLayer(checkbox, layer) {
+  checkbox.addEventListener('change', function() {
+    if (this.checked) map.addLayer(layer); else map.removeLayer(layer);
+  });
+}
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() {
+    toggleLayer(document.getElementById('lp-planned'), plannedGroup);
+    toggleLayer(document.getElementById('lp-planned-route'), plannedRouteGroup);
+    toggleLayer(document.getElementById('lp-planned-hh'), plannedHHGroup);
+    toggleLayer(document.getElementById('lp-ab'), asBuiltGroup);
+    toggleLayer(document.getElementById('lp-ab-route'), abRouteGroup);
+    toggleLayer(document.getElementById('lp-ab-hh'), abHHGroup);
+    toggleLayer(document.getElementById('lp-pages'), pageMarkerGroup);
+
+    var plannedCheck = document.getElementById('lp-planned');
+    plannedCheck.addEventListener('change', function() {
+      document.getElementById('lp-planned-route').checked = this.checked;
+      document.getElementById('lp-planned-hh').checked = this.checked;
+    });
+    var abCheck = document.getElementById('lp-ab');
+    abCheck.addEventListener('change', function() {
+      document.getElementById('lp-ab-route').checked = this.checked;
+      document.getElementById('lp-ab-hh').checked = this.checked;
+    });
+  }, 100);
+});
+
+// ========== LEGEND ==========
+var legend = L.control({position: 'bottomright'});
+legend.onAdd = function() {
+  var div = L.DomUtil.create('div', 'legend');
+  div.innerHTML = '<h4>Legend</h4>' +
+    '<div class="legend-item"><div class="legend-line" style="background:#2563eb;border:1px dashed #1e40af"></div>Planned Route</div>' +
+    '<div class="legend-item"><div class="legend-circle" style="background:#2563eb"></div>Planned HH</div>' +
+    '<div class="legend-item"><div class="legend-line" style="background:#059669"></div>As-Built Route</div>' +
+    '<div class="legend-item"><div class="legend-circle" style="background:#059669"></div>As-Built HH</div>' +
+    '<div class="legend-item"><div class="page-marker" style="font-size:9px;margin-right:6px">p4</div>PDF Page Marker</div>';
+  return div;
+};
+legend.addTo(map);
+
+// ========== INFO PANEL ==========
+var info = L.control({position: 'bottomleft'});
+info.onAdd = function() {
+  var div = L.DomUtil.create('div', 'info');
+  div.innerHTML = '<h4>CFW Backbone Phase 4</h4>' +
+    '<div class="stat"><span>Package</span><span class="stat-val">' + PKG_NAME + '</span></div>' +
+    '<div class="stat"><span>Handholes</span><span class="stat-val">' + asBuiltHH.length + ' (+ 2 unmapped)</span></div>' +
+    '<div class="stat"><span>Bore Segments</span><span class="stat-val">' + plannedSegments.length + '</span></div>' +
+    '<div class="stat"><span>GPS Measured</span><span class="stat-val">' + asBuiltHH.filter(h => h.src==='measured').length + '</span></div>' +
+    '<div class="stat"><span>GPS Interpolated</span><span class="stat-val">' + asBuiltHH.filter(h => h.src==='interpolated').length + '</span></div>' +
+    '<div class="stat"><span>Total Bore</span><span class="stat-val">7,595 ft (1.4 mi)</span></div>' +
+    '<div class="stat"><span>Depth/BOC</span><span class="stat-val">Pending (bore logs)</span></div>' +
+    '<div class="src-box">Source: ' + PDF_FILE + '<br>Designer: ' + DESIGNER + '<br>Date: ' + DWG_DATE + ' (Rev: 05/06/2025)<br>Conduit: 7-WAY 18/14mm | Cable: 288ct FO<br>Note: STA 52+23, 57+39 (pages 2-3) unmapped — no GPS labels</div>';
+  return div;
+};
+info.addTo(map);
+
+map.fitBounds(L.polyline(asBuiltRoute).getBounds().pad(0.1));
+
+// ========== GOOGLE AUTH ==========
+function handleCredentialResponse(response) {
+  var base64Url = response.credential.split('.')[1];
+  var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+  var payload = JSON.parse(decodeURIComponent(atob(base64).split('').map(function(c) {
+    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+  }).join('')));
+  var domain = payload.hd || '';
+  var allowed = ['sprocketnetworks.com', 'lassobroadband.com', 'digitalalpha.ai', 'ntxcom.com'];
+  if (allowed.indexOf(domain) === -1) {
+    document.getElementById('auth-error').style.display = 'block';
+    document.getElementById('auth-error').textContent = 'Access denied. Use a ' + allowed.join(', ') + ' email.';
+    return;
+  }
+  document.getElementById('auth-gate').classList.add('hidden');
+  document.getElementById('auth-user').textContent = payload.email;
+  map.invalidateSize();
+}
+</script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+</body>
+</html>
