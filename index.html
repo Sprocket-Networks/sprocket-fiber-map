@@ -39,23 +39,48 @@
     #map {
       position: absolute; top: 44px; left: 0; right: 0; bottom: 0;
     }
-    #legend {
-      position: fixed; bottom: 24px; left: 16px; z-index: 1000;
+    #layers-panel {
+      position: fixed; top: 60px; left: 16px; z-index: 1000;
       background: white; border-radius: 8px;
-      padding: 10px 14px;
+      padding: 12px 14px 10px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.18);
       font-size: 12px; color: #1e293b;
+      width: 260px; max-height: calc(100vh - 80px); overflow-y: auto;
     }
-    #legend .legend-title {
+    .layers-title {
       font-weight: 600; font-size: 11px; text-transform: uppercase;
-      letter-spacing: 0.06em; color: #94a3b8; margin-bottom: 7px;
+      letter-spacing: 0.06em; color: #94a3b8; margin-bottom: 9px;
     }
-    .legend-item {
-      display: flex; align-items: center; gap: 8px; margin-bottom: 5px;
+    .lyr-group { margin-bottom: 4px; }
+    .lyr-group summary {
+      cursor: pointer; padding: 5px 0; font-weight: 600; font-size: 12.5px;
+      display: flex; align-items: center; gap: 8px; list-style: none;
     }
-    .legend-item:last-child { margin-bottom: 0; }
-    .legend-line {
-      width: 20px; height: 3px; border-radius: 2px; flex-shrink: 0;
+    .lyr-group summary::-webkit-details-marker { display: none; }
+    .lyr-group summary::before {
+      content: '▸'; color: #94a3b8; font-size: 10px; transition: transform 0.15s;
+      display: inline-block; width: 10px;
+    }
+    .lyr-group[open] summary::before { transform: rotate(90deg); }
+    .lyr-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+      display: inline-block;
+    }
+    .lyr-badge {
+      font-size: 9px; font-weight: 700; color: #64748b; background: #f1f5f9;
+      padding: 1px 6px; border-radius: 999px; margin-left: 4px; letter-spacing: 0.02em;
+    }
+    .lyr-item {
+      display: flex; align-items: center; gap: 7px; padding: 4px 0 4px 22px;
+      font-size: 12px; cursor: pointer;
+    }
+    .lyr-item input[type=checkbox] { cursor: pointer; margin: 0; }
+    .lyr-item .lyr-link {
+      color: #2563eb; text-decoration: none; font-size: 12px;
+    }
+    .lyr-item .lyr-link:hover { text-decoration: underline; }
+    .lyr-pending {
+      padding: 4px 0 4px 22px; font-size: 11px; color: #94a3b8; font-style: italic;
     }
     .leaflet-popup-content h3 {
       margin: 0 0 4px; font-size: 14px; color: #0f172a;
@@ -151,14 +176,48 @@
     <div class="completeness-legend"><div class="c-swatch" style="background:#e2e8f0"></div>Level 0 — No data</div>
   </div>
 
-  <div id="legend">
-    <div class="legend-title">Networks</div>
-    <div class="legend-item"><div class="legend-line" style="background:#3b82f6"></div>Fort Worth Fiber (fw1_bb)</div>
-    <div class="legend-item"><div class="legend-line" style="background:#f97316"></div>Dallas Backbone (dal1_bb)</div>
-    <div class="legend-item"><div class="legend-line" style="background:#a855f7"></div>Dallas Enterprise (dal_de_bb)</div>
+  <div id="layers-panel">
+    <div class="layers-title">Layers</div>
+
+    <details class="lyr-group" open>
+      <summary><span class="lyr-dot" style="background:#3b82f6"></span>Sprocket Networks</summary>
+      <label class="lyr-item"><input type="checkbox" data-layer="fwf" checked> Fort Worth Fiber</label>
+      <label class="lyr-item"><input type="checkbox" data-layer="dal" checked> Dallas Backbone</label>
+      <label class="lyr-item"><input type="checkbox" data-layer="dal_de" checked> Dallas Enterprise</label>
+    </details>
+
+    <details class="lyr-group">
+      <summary><span class="lyr-dot" style="background:#10b981"></span>Element8 <span class="lyr-badge">DA</span></summary>
+      <label class="lyr-item"><input type="checkbox" data-layer="e8_fcc"> FCC coverage — TX (218k loc)</label>
+      <label class="lyr-item"><a href="/E8_Crowley_FTTH_Plan.html" class="lyr-link">↗ Crowley FTTH plan</a></label>
+      <label class="lyr-item"><a href="/E8_Lakeside_FTTH_Plan.html" class="lyr-link">↗ Lakeside FTTH plan</a></label>
+    </details>
+
+    <details class="lyr-group">
+      <summary><span class="lyr-dot" style="background:#f59e0b"></span>WeLink <span class="lyr-badge">DA</span></summary>
+      <label class="lyr-item"><input type="checkbox" data-layer="wl_fcc"> FCC coverage — TX (15k loc)</label>
+    </details>
+
+    <details class="lyr-group">
+      <summary><span class="lyr-dot" style="background:#ec4899"></span>AtLink <span class="lyr-badge">DA</span></summary>
+      <div class="lyr-pending">FCC coverage — pending nationwide data load</div>
+    </details>
+
+    <details class="lyr-group">
+      <summary><span class="lyr-dot" style="background:#8b5cf6"></span>Wisper <span class="lyr-badge">DA</span></summary>
+      <div class="lyr-pending">FCC coverage — pending nationwide data load</div>
+    </details>
+
+    <details class="lyr-group">
+      <summary><span class="lyr-dot" style="background:#64748b"></span>Potential acquisitions</summary>
+      <div class="lyr-pending">Pending target list</div>
+    </details>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
   <script>
     var map = L.map('map').setView([32.82, -97.08], 11);
 
@@ -213,6 +272,70 @@
     if (dalLayer.getLayers().length) allBounds.extend(dalLayer.getBounds());
     if (dalDeLayer.getLayers().length) allBounds.extend(dalDeLayer.getBounds());
     map.fitBounds(allBounds.pad(0.05));
+
+    // ---- Layer toggle wiring ----
+
+    // Map of layer key -> reference (existing route layers + lazy-loaded FCC layers)
+    var LAYERS = {
+      fwf:    { layer: fwfLayer,    loaded: true },
+      dal:    { layer: dalLayer,    loaded: true },
+      dal_de: { layer: dalDeLayer,  loaded: true },
+      e8_fcc: { layer: null, loaded: false, url: 'data/element8_tx.geojson', color: '#10b981' },
+      wl_fcc: { layer: null, loaded: false, url: 'data/welink_tx.geojson',   color: '#f59e0b' }
+    };
+
+    function makeClusterLayer(geojson, color) {
+      var cluster = L.markerClusterGroup({
+        chunkedLoading: true,
+        maxClusterRadius: 60,
+        iconCreateFunction: function (c) {
+          var n = c.getChildCount();
+          return L.divIcon({
+            html: '<div style="background:' + color + ';opacity:0.85;color:white;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.3)">' +
+                  (n >= 1000 ? Math.round(n/100)/10 + 'k' : n) + '</div>',
+            className: '', iconSize: [36, 36]
+          });
+        }
+      });
+      L.geoJSON(geojson, {
+        pointToLayer: function (_, latlng) {
+          return L.circleMarker(latlng, { radius: 3, color: color, fillColor: color, fillOpacity: 0.7, weight: 1 });
+        }
+      }).eachLayer(function (l) { cluster.addLayer(l); });
+      return cluster;
+    }
+
+    function setLayer(key, on) {
+      var entry = LAYERS[key];
+      if (!entry) return;
+      if (on) {
+        if (!entry.loaded) {
+          // Lazy-load
+          var cb = document.querySelector('input[data-layer="' + key + '"]');
+          if (cb) cb.disabled = true;
+          fetch(entry.url)
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+              entry.layer = makeClusterLayer(data, entry.color);
+              entry.loaded = true;
+              entry.layer.addTo(map);
+              if (cb) cb.disabled = false;
+            })
+            .catch(function (e) {
+              console.error('Failed to load', entry.url, e);
+              if (cb) { cb.checked = false; cb.disabled = false; }
+            });
+        } else {
+          entry.layer.addTo(map);
+        }
+      } else if (entry.layer) {
+        map.removeLayer(entry.layer);
+      }
+    }
+
+    document.querySelectorAll('#layers-panel input[type=checkbox][data-layer]').forEach(function (cb) {
+      cb.addEventListener('change', function () { setLayer(this.dataset.layer, this.checked); });
+    });
 
     // ---- County completeness choropleth ----
 
