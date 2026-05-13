@@ -114,9 +114,10 @@
   <script>
     // Reveal Admin link if the signed-in user has the 'admin' scope.
     // auth.js writes google_user to localStorage after /api/me validates,
-    // which may happen async after this script runs — so poll briefly.
+    // which can happen async after this script runs (especially if the user
+    // hasn't clicked the Google sign-in button yet). Poll indefinitely at a
+    // slow cadence — cheap and resilient.
     (function () {
-      var attempts = 0;
       function check() {
         try {
           var raw = localStorage.getItem('google_user');
@@ -125,11 +126,11 @@
             if (user && Array.isArray(user.scopes) && user.scopes.indexOf('admin') !== -1) {
               var el = document.getElementById('admin-link');
               if (el) el.style.display = 'inline-block';
-              return;
+              return; // stop polling
             }
           }
         } catch (e) { /* best-effort */ }
-        if (++attempts < 30) setTimeout(check, 250); // 7.5 s max
+        setTimeout(check, 1000);
       }
       check();
     })();

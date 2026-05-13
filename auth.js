@@ -30,31 +30,8 @@
     } catch (e) { /* best-effort */ }
   })();
 
-  // Inject a subtle "← Home" bar if user arrived from willgibson.com
-  function injectHomeBar() {
-    var ref = localStorage.getItem(REFERRER_KEY);
-    if (!ref) return;
-    var homeUrl = ref === 'willgibson' ? 'https://willgibson.com' : ref;
-    var bar = document.createElement('div');
-    bar.id = HOME_BAR_ID;
-    bar.setAttribute('style', [
-      'position:fixed', 'top:0', 'left:0', 'right:0',
-      'z-index:9999', 'height:32px',
-      'background:rgba(15,23,42,0.92)', 'backdrop-filter:blur(6px)',
-      'display:flex', 'align-items:center', 'padding:0 14px',
-      'border-bottom:1px solid rgba(255,255,255,0.07)',
-    ].join(';'));
-    bar.innerHTML =
-      '<a href="' + homeUrl + '" style="color:#94a3b8;font-size:12px;font-family:system-ui,sans-serif;' +
-      'text-decoration:none;display:flex;align-items:center;gap:5px;letter-spacing:0.01em">' +
-      '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" style="flex-shrink:0">' +
-      '<path d="M10 13L5 8l5-5" stroke="#94a3b8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>' +
-      '</svg>willgibson.com</a>';
-    // Offset map/header content to avoid overlap
-    document.head.insertAdjacentHTML('beforeend',
-      '<style>#sprocket-home-bar ~ * { padding-top: 32px; } body { padding-top: 32px; }</style>');
-    document.body.insertBefore(bar, document.body.firstChild);
-  }
+  // Home bar removed — sprocketnetworks.net will replace willgibson.com soon.
+  function injectHomeBar() { /* no-op */ }
 
   function validateToken(token) {
     return fetch(API_BASE + '/api/me', {
