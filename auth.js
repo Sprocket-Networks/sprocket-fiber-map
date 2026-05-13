@@ -137,7 +137,7 @@
             '<div id="g_id_onload"' +
               ' data-client_id="' + GOOGLE_CLIENT_ID + '"' +
               ' data-callback="sprocketHandleSignIn"' +
-              ' data-auto_select="true"></div>' +
+              ' data-auto_select="false"></div>' +
             '<div class="g_id_signin"' +
               ' data-type="standard"' +
               ' data-size="large"' +
