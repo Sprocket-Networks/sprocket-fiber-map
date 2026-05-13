@@ -738,8 +738,8 @@ function renderUsersTable() {
       '<td><div class="btn-row">' +
         '<button class="action-btn" onclick="openEditModal(' + JSON.stringify(u).replace(/"/g,'&quot;') + ')">Edit</button>' +
         (active
-          ? '<button class="action-btn danger" onclick="revokeUser(' + escHtml(u.id) + ', ' + JSON.stringify(u.email) + ')">Revoke</button>'
-          : '<button class="action-btn success" onclick="reactivateUser(' + escHtml(u.id) + ')">Re-activate</button>') +
+          ? '<button class="action-btn danger" onclick="revokeUser(' + JSON.stringify(u.id) + ', ' + JSON.stringify(u.email) + ')">Revoke</button>'
+          : '<button class="action-btn success" onclick="reactivateUser(' + JSON.stringify(u.id) + ')">Re-activate</button>') +
       '</div></td>' +
     '</tr>';
   });
@@ -952,8 +952,8 @@ function renderRequestsTable(rows) {
         '<td><span class="badge ' + escHtml(r.status) + '">' + escHtml(r.status) + '</span></td>';
       if (showActions) {
         html += '<td><div class="btn-row">' +
-          '<button class="action-btn success" onclick="openApproveModal(' + r.id + ', ' + JSON.stringify(r.email) + ')">Approve</button>' +
-          '<button class="action-btn danger" onclick="denyRequest(' + r.id + ', ' + JSON.stringify(r.email) + ')">Deny</button>' +
+          '<button class="action-btn success" onclick="openApproveModal(' + JSON.stringify(r.id) + ', ' + JSON.stringify(r.email) + ')">Approve</button>' +
+          '<button class="action-btn danger" onclick="denyRequest(' + JSON.stringify(r.id) + ', ' + JSON.stringify(r.email) + ')">Deny</button>' +
           '</div></td>';
       }
       html += '</tr>';
