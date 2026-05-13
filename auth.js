@@ -33,6 +33,13 @@
   // Home bar removed — sprocketnetworks.net will replace willgibson.com soon.
   function injectHomeBar() { /* no-op */ }
 
+  // App-specific scope. Admins bypass.
+  var REQUIRED_SCOPE = 'fiber-map';
+  function hasAccess(user) {
+    if (!user || !Array.isArray(user.scopes)) return false;
+    return user.scopes.indexOf(REQUIRED_SCOPE) !== -1 || user.scopes.indexOf('admin') !== -1;
+  }
+
   function validateToken(token) {
     return fetch(API_BASE + '/api/me', {
       headers: { Authorization: 'Bearer ' + token },
@@ -70,12 +77,14 @@
     if (area) area.innerHTML = '<p style="color:#94a3b8;font-size:13px;margin:0">Verifying…</p>';
 
     validateToken(credential).then(function (user) {
-      if (user) {
+      if (user && hasAccess(user)) {
         localStorage.setItem(TOKEN_KEY, credential);
         localStorage.setItem(USER_KEY, JSON.stringify(user));
         showPage();
       } else {
-        setError('Your account is not authorized to access this app.');
+        setError(user
+          ? 'Your account does not have access to the Fiber Map. Ask an admin to grant the "fiber-map" scope.'
+          : 'Your account is not authorized to access this app.');
         if (area) {
           area.innerHTML = buildSigninHTML();
           // Re-render the GSI button if the library is loaded
@@ -149,12 +158,14 @@
     var storedToken = localStorage.getItem(TOKEN_KEY);
     if (storedToken) {
       validateToken(storedToken).then(function (user) {
-        if (user) {
+        if (user && hasAccess(user)) {
           localStorage.setItem(USER_KEY, JSON.stringify(user));
           showPage();
         } else {
+          // Either token invalid or user lacks fiber-map scope.
           localStorage.removeItem(TOKEN_KEY);
           localStorage.removeItem(USER_KEY);
+          if (user) setError('Your account does not have access to the Fiber Map. Ask an admin to grant the "fiber-map" scope.');
           showGate();
         }
       });
