@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fiber Map Admin — Sprocket Networks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!-- Google Identity Services (FedCM) -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+:root {
+  --bg: #f8f9fb;
+  --surface: #ffffff;
+  --border: #e2e5ea;
+  --text: #1a1d23;
+  --text-secondary: #5f6672;
+  --text-muted: #9098a4;
+  --green: #059669;
+  --green-bg: #ecfdf5;
+  --yellow: #eab308;
+  --yellow-bg: #fefce8;
+  --red: #dc2626;
+  --accent: #2563eb;
+  --radius: 12px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+/* Header */
+.header {
+  background:var(--surface); border-bottom:1px solid var(--border);
+  padding:16px 32px; display:flex; align-items:center; justify-content:space-between;
+}
+.header h1 { font-size:18px; font-weight:700; }
+.header .subtitle { font-size:12px; color:var(--text-secondary); margin-top:2px; }
+.export-btn {
+  display:inline-flex; align-items:center; gap:5px; padding:6px 14px; border-radius:6px;
+  font-size:12px; font-weight:600; font-family:inherit; cursor:pointer; border:1px solid var(--border);
+  background:var(--surface); color:var(--text-secondary); transition:all 0.15s; text-decoration:none;
+}
+.export-btn:hover { background:var(--accent); color:white; border-color:var(--accent); }
+.header-right { display:flex; align-items:center; gap:10px; }
+
+/* Main */
+.main { max-width:1280px; margin:0 auto; padding:24px 32px; }
+
+/* Tab Nav */
+.tab-nav {
+  display:flex; gap:4px; margin-bottom:24px; background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius); padding:4px; box-shadow:var(--shadow);
+}
+.tab-btn {
+  flex:1; padding:12px 20px; border:none; border-radius:8px; font-family:inherit;
+  font-size:14px; font-weight:600; cursor:pointer; transition:all 0.2s;
+  background:transparent; color:var(--text-secondary);
+}
+.tab-btn:hover { background:var(--bg); }
+.tab-btn.active { background:var(--accent); color:white; box-shadow:0 2px 8px rgba(37,99,235,0.25); }
+.tab-btn .tab-desc { display:block; font-size:10px; font-weight:400; margin-top:2px; opacity:0.8; }
+
+/* Cards */
+.card {
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  box-shadow:var(--shadow); overflow:hidden; margin-bottom:20px;
+}
+.card-header {
+  padding:14px 20px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+}
+.card-header h3 { font-size:14px; font-weight:600; }
+.card-body { padding:0; }
+
+/* Tables */
+.data-table { width:100%; border-collapse:collapse; font-size:13px; }
+.data-table th {
+  text-align:left; padding:8px 16px; font-size:10px; font-weight:700;
+  text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted);
+  background:var(--bg); border-bottom:1px solid var(--border); white-space:nowrap;
+}
+.data-table td { padding:10px 16px; border-bottom:1px solid var(--border); vertical-align:middle; }
+.data-table tr:last-child td { border-bottom:none; }
+.data-table tr:hover td { background:#f8fafc; }
+.data-table .no-data td { text-align:center; color:var(--text-muted); font-style:italic; padding:24px; }
+.data-table th.sortable { cursor:pointer; user-select:none; }
+.data-table th.sortable:hover { background:#eef2f7; color:var(--text); }
+.data-table th.sortable.active { color:var(--accent); }
+.data-table th .sort-arrow {
+  display:inline-block; width:10px; margin-left:3px; font-size:10px;
+  color:var(--accent); opacity:0.85;
+}
+.data-table th.sortable:not(.active) .sort-arrow { opacity:0.25; color:var(--text-muted); }
+
+/* Scope pills */
+.scope-pill {
+  display:inline-flex; align-items:center; padding:2px 8px; border-radius:999px;
+  font-size:10px; font-weight:600; margin:1px 2px; white-space:nowrap;
+  background:#dbeafe; color:#1e40af; border:1px solid #bfdbfe;
+}
+.scope-pill.admin { background:#fce7f3; color:#9d174d; border-color:#fbcfe8; }
+.scope-pill.fwf-dashboard { background:#d1fae5; color:#065f46; border-color:#a7f3d0; }
+.scope-pill.willgibson-estimator { background:#fef3c7; color:#92400e; border-color:#fde68a; }
+
+/* Status badge */
+.badge {
+  display:inline-flex; padding:2px 8px; border-radius:4px;
+  font-size:11px; font-weight:600; white-space:nowrap;
+}
+.badge.active { background:var(--green-bg); color:var(--green); }
+.badge.revoked { background:#fee2e2; color:#991b1b; }
+.badge.pending { background:var(--yellow-bg); color:#854d0e; }
+.badge.approved { background:var(--green-bg); color:var(--green); }
+.badge.denied { background:#fee2e2; color:#991b1b; }
+
+/* Action buttons */
+.action-btn {
+  padding:4px 10px; border-radius:5px; font-size:11px; font-weight:600;
+  font-family:inherit; cursor:pointer; border:1px solid var(--border);
+  background:var(--surface); color:var(--text-secondary); transition:all 0.15s;
+  white-space:nowrap;
+}
+.action-btn:hover { background:var(--accent); color:white; border-color:var(--accent); }
+.action-btn.danger:hover { background:var(--red); border-color:var(--red); color:white; }
+.action-btn.success:hover { background:var(--green); border-color:var(--green); color:white; }
+.btn-row { display:flex; gap:6px; flex-wrap:wrap; }
+
+/* Search / filter input */
+.filter-input {
+  padding:7px 12px; border:1px solid var(--border); border-radius:6px;
+  font-size:13px; font-family:inherit; background:var(--bg); color:var(--text);
+  min-width:240px;
+}
+.filter-input:focus { outline:none; border-color:var(--accent); background:#fff; }
+
+/* Grant/modal overlay */
+.modal-backdrop {
+  position:fixed; inset:0; z-index:99998;
+  background:rgba(15,23,42,0.55); backdrop-filter:blur(2px);
+  display:flex; align-items:center; justify-content:center; padding:20px;
+}
+.modal-backdrop.hidden { display:none; }
+.modal-box {
+  background:#fff; border-radius:14px; box-shadow:0 20px 50px rgba(0,0,0,0.25);
+  max-width:520px; width:100%; max-height:90vh; overflow-y:auto;
+}
+.modal-header {
+  padding:18px 22px 14px; border-bottom:1px solid #e2e8f0;
+  display:flex; justify-content:space-between; align-items:center;
+}
+.modal-header h3 { font-size:16px; font-weight:700; }
+.modal-close {
+  background:#f1f5f9; border:none; border-radius:50%; width:32px; height:32px;
+  font-size:18px; cursor:pointer; color:#64748b; display:flex; align-items:center; justify-content:center;
+  transition:background 0.15s;
+}
+.modal-close:hover { background:#e2e8f0; color:#0f172a; }
+.modal-body { padding:20px 22px; }
+.modal-footer { padding:14px 22px; border-top:1px solid #e2e8f0; display:flex; gap:10px; justify-content:flex-end; }
+
+/* Form fields */
+.form-group { margin-bottom:14px; }
+.form-label { display:block; font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom:5px; }
+.form-input {
+  width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:6px;
+  font-size:13px; font-family:inherit; color:var(--text); background:#fff;
+}
+.form-input:focus { outline:none; border-color:var(--accent); }
+textarea.form-input { resize:vertical; }
+.scope-checkboxes { display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; }
+.scope-check { display:flex; align-items:center; gap:5px; font-size:13px; cursor:pointer; }
+.scope-check input { cursor:pointer; }
+
+/* Primary button */
+.btn-primary {
+  padding:8px 18px; background:var(--accent); color:white; border:none; border-radius:6px;
+  font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; transition:opacity 0.15s;
+}
+.btn-primary:hover { opacity:0.88; }
+.btn-primary:disabled { opacity:0.5; cursor:wait; }
+.btn-secondary {
+  padding:8px 18px; background:#fff; color:var(--text); border:1px solid var(--border); border-radius:6px;
+  font-size:13px; font-weight:600; cursor:pointer; font-family:inherit;
+}
+.btn-secondary:hover { background:var(--bg); }
+
+/* Status message */
+.status-msg { font-size:12px; margin-top:8px; }
+.status-msg.ok { color:var(--green); }
+.status-msg.err { color:var(--red); }
+
+/* Loading */
+.loading-text { color:var(--text-muted); font-size:13px; padding:20px 16px; font-style:italic; }
+
+/* Access denied screen */
+.access-denied {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  min-height:60vh; text-align:center; gap:12px;
+}
+.access-denied h2 { font-size:22px; font-weight:700; color:var(--red); }
+.access-denied p { font-size:14px; color:var(--text-secondary); max-width:400px; line-height:1.6; }
+
+/* Construction gate */
+.construction-gate {
+  position:fixed; inset:0; z-index:99999; background:#f8f9fb;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Inter',system-ui,sans-serif;
+}
+.construction-card {
+  background:#fff; border-radius:16px; box-shadow:0 4px 24px rgba(0,0,0,0.08);
+  padding:48px 40px; text-align:center; max-width:440px; width:90%;
+}
+.construction-card h1 { font-size:24px; font-weight:700; margin:16px 0 8px; }
+.construction-card p { color:#5f6672; font-size:14px; line-height:1.6; margin:0 0 24px; }
+.construction-card .error { color:#dc2626; font-size:12px; margin-top:12px; display:none; }
+.construction-card .signout-link {
+  font-size:12px; color:#9098a4; cursor:pointer; margin-top:12px; display:none;
+}
+.construction-card .signout-link:hover { color:#2563eb; }
+
+/* Collapsed section */
+.collapsed-header {
+  padding:10px 16px; background:var(--bg); border-top:1px solid var(--border);
+  font-size:12px; font-weight:600; color:var(--text-muted); cursor:pointer;
+  display:flex; align-items:center; gap:6px; user-select:none;
+}
+.collapsed-header:hover { color:var(--text-secondary); }
+.collapsed-body { display:none; }
+.collapsed-body.open { display:block; }
+
+/* Truncate UA */
+.ua-cell { max-width:240px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:default; }
+
+@media(max-width:768px) {
+  .main { padding:12px; }
+  .header { padding:12px 16px; flex-direction:column; gap:8px; text-align:center; }
+  .header-right { justify-content:center; }
+  .tab-btn { font-size:12px; padding:10px 12px; }
+  .tab-btn .tab-desc { display:none; }
+  .filter-input { min-width:160px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ════ Auth Gate ════ -->
+<div class="construction-gate" id="constructionGate" style="display:flex;">
+  <div class="construction-card">
+    <div style="font-size:48px;">&#128272;</div>
+    <h1>Fiber Map Admin</h1>
+    <p id="gateBlurb">Sign in with your Sprocket Networks Google account. Admin access is required.</p>
+    <div id="gateGoogleBtn" style="display:flex; justify-content:center; margin-top:16px;"></div>
+    <div class="error" id="gateError" style="display:none; margin-top:12px;"></div>
+    <div class="signout-link" id="gateSignout" style="display:none; margin-top:14px;" onclick="resetAdminGate()">Use a different account</div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════════════════
+// Auth module — identical pattern to board.html
+// ════════════════════════════════════════════════════════════════════════════
+window.FWF_AUTH = (function () {
+  const GATEWAY   = 'https://db01.tailfca0e2.ts.net';
+  // Use the same Google client ID as auth.js so sign-in is shared with the map.
+  const CLIENT_ID = '432178814016-q4hdj3rncd53n4tklia21g7b66k872t2.apps.googleusercontent.com';
+  // Share localStorage with /auth.js so a user already signed into the map
+  // doesn't have to sign in again here.
+  const TOKEN_KEY = 'google_auth_token';
+  const USER_KEY  = 'google_user';
+
+  function getToken() { try { return localStorage.getItem(TOKEN_KEY) || null; } catch { return null; } }
+  function setToken(t) { try { localStorage.setItem(TOKEN_KEY, t); } catch {} }
+  function clearSession() { try { localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(USER_KEY); } catch {} }
+
+  function meSync(token) {
+    try {
+      const req = new XMLHttpRequest();
+      req.open('GET', GATEWAY + '/api/me?t=' + Date.now(), false);
+      req.setRequestHeader('Authorization', 'Bearer ' + token);
+      req.send();
+      if (req.status === 200) return { ok: true, user: JSON.parse(req.responseText) };
+      let body = {}; try { body = JSON.parse(req.responseText); } catch {}
+      return { ok: false, status: req.status, details: body.details };
+    } catch (e) {
+      return { ok: false, status: 0, details: String(e) };
+    }
+  }
+
+  function showGate() { const g = document.getElementById('constructionGate'); if (g) g.style.display = 'flex'; }
+  function hideGate() { const g = document.getElementById('constructionGate'); if (g) g.style.display = 'none'; }
+
+  function renderGoogleButton(onCredential) {
+    const start = Date.now();
+    (function tick() {
+      if (window.google && google.accounts && google.accounts.id) {
+        google.accounts.id.initialize({ client_id: CLIENT_ID, callback: (resp) => onCredential(resp.credential) });
+        google.accounts.id.renderButton(document.getElementById('gateGoogleBtn'),
+          { theme: 'filled_blue', size: 'large', text: 'signin_with', shape: 'rectangular' });
+      } else if (Date.now() - start < 8000) {
+        setTimeout(tick, 100);
+      } else {
+        const e = document.getElementById('gateError');
+        e.textContent = 'Google sign-in failed to load. Refresh the page.';
+        e.style.display = 'block';
+      }
+    })();
+  }
+
+  return { GATEWAY, getToken, setToken, clearSession, meSync, showGate, hideGate, renderGoogleButton };
+})();
+
+// ════════════════════════════════════════════════════════════════════════════
+// Gate decision — admin-specific: must have `admin` scope AND @sprocketnetworks.com
+// ════════════════════════════════════════════════════════════════════════════
+window.ADMIN_AUTHORIZED = false;
+
+function applyAdminGate() {
+  const token = window.FWF_AUTH.getToken();
+  if (!token) {
+    window.FWF_AUTH.showGate();
+    window.FWF_AUTH.renderGoogleButton(handleAdminCredential);
+    return;
+  }
+  const result = window.FWF_AUTH.meSync(token);
+  if (result.ok) {
+    const user = result.user;
+    const hasAdmin  = (user.scopes || []).includes('admin');
+    const hasDomain = (user.email || '').toLowerCase().endsWith('@sprocketnetworks.com');
+    if (hasAdmin && hasDomain) {
+      window.ADMIN_USER = user;
+      window.ADMIN_AUTHORIZED = true;
+      window.FWF_AUTH.hideGate();
+      return;
+    }
+    showAccessDenied(user.email);
+    return;
+  }
+  // Token expired / invalid.
+  window.FWF_AUTH.clearSession();
+  window.FWF_AUTH.showGate();
+  window.FWF_AUTH.renderGoogleButton(handleAdminCredential);
+}
+
+function handleAdminCredential(credential) {
+  if (!credential) return;
+  window.FWF_AUTH.setToken(credential);
+  const result = window.FWF_AUTH.meSync(credential);
+  if (result.ok) {
+    const user = result.user;
+    const hasAdmin  = (user.scopes || []).includes('admin');
+    const hasDomain = (user.email || '').toLowerCase().endsWith('@sprocketnetworks.com');
+    if (hasAdmin && hasDomain) {
+      window.ADMIN_USER = user;
+      window.ADMIN_AUTHORIZED = true;
+      window.FWF_AUTH.hideGate();
+      initAdmin();
+      return;
+    }
+    showAccessDenied(user.email);
+    return;
+  }
+  const e = document.getElementById('gateError');
+  e.textContent = result.details || 'Sign-in failed. Try again.';
+  e.style.display = 'block';
+}
+
+function showAccessDenied(email) {
+  window.FWF_AUTH.hideGate();
+  document.getElementById('pageContent').innerHTML =
+    '<div class="access-denied">' +
+    '<h2>Access Denied</h2>' +
+    '<p>The account <strong>' + escHtml(email || 'unknown') + '</strong> does not have admin access to this portal.' +
+    ' Admin access requires an <code>admin</code> scope and a <code>@sprocketnetworks.com</code> email address.</p>' +
+    '<button class="btn-secondary" style="margin-top:8px;" onclick="resetAdminGate()">Sign out</button>' +
+    '</div>';
+}
+
+function resetAdminGate() {
+  window.FWF_AUTH.clearSession();
+  location.reload();
+}
+
+// Run immediately.
+applyAdminGate();
+</script>
+
+<!-- ════ Page content (hidden until authorized) ════ -->
+<div id="pageContent" style="display:none;">
+
+<div class="header">
+  <div>
+    <h1>Fiber Map Admin</h1>
+    <div class="subtitle">Sprocket Networks, LLC — Internal Use Only</div>
+  </div>
+  <div class="header-right" style="flex-direction:column; align-items:flex-end; gap:6px;">
+    <div id="adminUserInfo" style="display:none; align-items:center; gap:8px; font-size:12px; color:var(--text-secondary);">
+      <span id="adminUserName" style="font-weight:600;"></span>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <a href="/" class="export-btn">&#8592; Fiber Map</a>
+      <button class="export-btn" onclick="resetAdminGate()">Sign out</button>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- Tab nav -->
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('users')" id="tab-btn-users">
+    Users
+    <span class="tab-desc">Manage authorized users</span>
+  </button>
+  <button class="tab-btn" onclick="switchTab('requests')" id="tab-btn-requests">
+    Access Requests
+    <span class="tab-desc">Pending and reviewed requests</span>
+  </button>
+  <button class="tab-btn" onclick="switchTab('logins')" id="tab-btn-logins">
+    Login Events
+    <span class="tab-desc">Recent sign-in activity</span>
+  </button>
+</div>
+
+<!-- ═══ USERS TAB ═══ -->
+<div id="tab-users">
+  <div class="card">
+    <div class="card-header">
+      <h3>Authorized Users</h3>
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <input type="text" class="filter-input" id="usersFilter" placeholder="Filter by email..." oninput="filterUsers()" />
+        <button class="btn-primary" onclick="openGrantModal()">+ Grant Access</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div id="usersBody"><div class="loading-text" style="padding:20px 16px;">Loading...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ACCESS REQUESTS TAB ═══ -->
+<div id="tab-requests" style="display:none;">
+  <div class="card">
+    <div class="card-header">
+      <h3>Access Requests</h3>
+      <button class="action-btn" onclick="loadRequests()">Refresh</button>
+    </div>
+    <div class="card-body">
+      <div id="requestsBody"><div class="loading-text">Loading...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ LOGIN EVENTS TAB ═══ -->
+<div id="tab-logins" style="display:none;">
+  <div class="card">
+    <div class="card-header">
+      <h3>Login Events</h3>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <input type="text" class="filter-input" id="loginsFilter" placeholder="Filter by email..." oninput="filterLogins()" />
+        <button class="action-btn" onclick="loadLogins()">Refresh</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div id="loginsBody"><div class="loading-text">Loading...</div></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- .main -->
+</div><!-- #pageContent -->
+
+<!-- ════ Grant Access Modal ════ -->
+<div class="modal-backdrop hidden" id="grantModal" onclick="if(event.target.id==='grantModal')closeGrantModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="grantModalTitle">Grant Access</h3>
+      <button class="modal-close" onclick="closeGrantModal()">&#215;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Email *</label>
+        <input type="email" class="form-input" id="grantEmail" placeholder="user@example.com" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Name</label>
+        <input type="text" class="form-input" id="grantName" placeholder="Full name" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Scopes</label>
+        <div class="scope-checkboxes">
+          <label class="scope-check"><input type="checkbox" id="scope-fwf-dashboard" value="fwf-dashboard" checked /> fwf-dashboard</label>
+          <label class="scope-check"><input type="checkbox" id="scope-willgibson-estimator" value="willgibson-estimator" /> willgibson-estimator</label>
+          <label class="scope-check"><input type="checkbox" id="scope-admin" value="admin" /> admin</label>
+        </div>
+        <div style="margin-top:8px;">
+          <input type="text" class="form-input" id="grantScopeExtra" placeholder="Additional scope (optional, press Enter to add)" style="font-size:12px;" onkeydown="if(event.key==='Enter'){event.preventDefault();addExtraScope();}" />
+        </div>
+        <div id="extraScopesList" style="display:flex; flex-wrap:wrap; gap:4px; margin-top:6px;"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        <textarea class="form-input" id="grantNotes" rows="2" placeholder="Optional notes"></textarea>
+      </div>
+      <div class="status-msg" id="grantMsg"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeGrantModal()">Cancel</button>
+      <button class="btn-primary" id="grantSubmitBtn" onclick="submitGrant()">Grant Access</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ Edit User Modal ════ -->
+<div class="modal-backdrop hidden" id="editModal" onclick="if(event.target.id==='editModal')closeEditModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Edit User</h3>
+      <button class="modal-close" onclick="closeEditModal()">&#215;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editUserId" />
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="text" class="form-input" id="editEmail" disabled style="opacity:0.6;" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Name</label>
+        <input type="text" class="form-input" id="editName" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Scopes</label>
+        <div class="scope-checkboxes">
+          <label class="scope-check"><input type="checkbox" id="edit-scope-fwf-dashboard" value="fwf-dashboard" /> fwf-dashboard</label>
+          <label class="scope-check"><input type="checkbox" id="edit-scope-willgibson-estimator" value="willgibson-estimator" /> willgibson-estimator</label>
+          <label class="scope-check"><input type="checkbox" id="edit-scope-admin" value="admin" /> admin</label>
+        </div>
+        <div style="margin-top:8px;">
+          <input type="text" class="form-input" id="editScopeExtra" placeholder="Additional scope (optional, press Enter to add)" style="font-size:12px;" onkeydown="if(event.key==='Enter'){event.preventDefault();addEditExtraScope();}" />
+        </div>
+        <div id="editExtraScopesList" style="display:flex; flex-wrap:wrap; gap:4px; margin-top:6px;"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        <textarea class="form-input" id="editNotes" rows="2"></textarea>
+      </div>
+      <div class="status-msg" id="editMsg"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeEditModal()">Cancel</button>
+      <button class="btn-primary" id="editSaveBtn" onclick="submitEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ Approve Request Modal ════ -->
+<div class="modal-backdrop hidden" id="approveModal" onclick="if(event.target.id==='approveModal')closeApproveModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Approve Access Request</h3>
+      <button class="modal-close" onclick="closeApproveModal()">&#215;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="approveRequestId" />
+      <p style="font-size:13px; color:var(--text-secondary); margin-bottom:14px;" id="approveFor"></p>
+      <div class="form-group">
+        <label class="form-label">Grant Scopes</label>
+        <div class="scope-checkboxes">
+          <label class="scope-check"><input type="checkbox" id="approve-scope-fwf-dashboard" value="fwf-dashboard" checked /> fwf-dashboard</label>
+          <label class="scope-check"><input type="checkbox" id="approve-scope-willgibson-estimator" value="willgibson-estimator" /> willgibson-estimator</label>
+          <label class="scope-check"><input type="checkbox" id="approve-scope-admin" value="admin" /> admin</label>
+        </div>
+      </div>
+      <div class="status-msg" id="approveMsg"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeApproveModal()">Cancel</button>
+      <button class="btn-primary" id="approveSubmitBtn" onclick="submitApprove()">Approve</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════════════════
+// Utilities
+// ════════════════════════════════════════════════════════════════════════════
+function escHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmtDate(s) {
+  if (!s) return '—';
+  try { return new Date(s).toLocaleString('en-US', { month:'short', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit' }); }
+  catch { return s; }
+}
+
+function scopePills(scopes) {
+  if (!Array.isArray(scopes) || !scopes.length) return '<span style="color:var(--text-muted);font-size:11px;">none</span>';
+  return scopes.map(s => {
+    const cls = s === 'admin' ? 'admin' : s === 'fwf-dashboard' ? 'fwf-dashboard' : s === 'willgibson-estimator' ? 'willgibson-estimator' : '';
+    return '<span class="scope-pill ' + cls + '">' + escHtml(s) + '</span>';
+  }).join('');
+}
+
+function authHeaders() {
+  return { 'Authorization': 'Bearer ' + window.FWF_AUTH.getToken(), 'Content-Type': 'application/json' };
+}
+
+async function apiCall(method, path, body) {
+  const opts = { method, headers: authHeaders() };
+  if (body !== undefined) opts.body = JSON.stringify(body);
+  const r = await fetch(window.FWF_AUTH.GATEWAY + path, opts);
+  const data = await r.json().catch(() => ({}));
+  return { ok: r.ok, status: r.status, data };
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Tab switching
+// ════════════════════════════════════════════════════════════════════════════
+function switchTab(name) {
+  ['users','requests','logins'].forEach(t => {
+    document.getElementById('tab-' + t).style.display = t === name ? '' : 'none';
+    document.getElementById('tab-btn-' + t).classList.toggle('active', t === name);
+  });
+  if (name === 'users' && !window._usersLoaded) loadUsers();
+  if (name === 'requests' && !window._requestsLoaded) loadRequests();
+  // Login events are time-sensitive — refresh every time the tab is opened
+  // rather than caching the first load for the session.
+  if (name === 'logins') loadLogins();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Users tab
+// ════════════════════════════════════════════════════════════════════════════
+window._allUsers = [];
+
+// ── Sort helpers ──
+// Per-tab sort state. Mutated by clickSort* handlers; read by render* funcs.
+window._usersSort    = { key: 'email',      dir: 'asc'  };
+window._requestsSort = { key: 'created_at', dir: 'desc' };
+window._loginsSort   = { key: 'created_at', dir: 'desc' };
+
+function sortRows(rows, key, dir) {
+  if (!key) return rows;
+  const mult = dir === 'desc' ? -1 : 1;
+  const isIso = (v) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(v);
+  return [...rows].sort((a, b) => {
+    let av = a[key], bv = b[key];
+    // ISO timestamp → compare as Date. Detect if *either* side is a date so
+    // null/missing timestamps don't slip into a string sort. Nulls always
+    // sort to the bottom regardless of direction.
+    if (isIso(av) || isIso(bv)) {
+      const aMissing = !isIso(av);
+      const bMissing = !isIso(bv);
+      if (aMissing && bMissing) return 0;
+      if (aMissing) return 1;   // nulls last
+      if (bMissing) return -1;
+      return (new Date(av) - new Date(bv)) * mult;
+    }
+    if (av == null) av = '';
+    if (bv == null) bv = '';
+    // Array (scopes) — compare joined string
+    if (Array.isArray(av) || Array.isArray(bv)) {
+      return ((Array.isArray(av) ? av.join(',') : '')
+        .localeCompare(Array.isArray(bv) ? bv.join(',') : '')) * mult;
+    }
+    if (typeof av === 'boolean' || typeof bv === 'boolean') {
+      return ((av === bv) ? 0 : (av ? -1 : 1)) * mult;
+    }
+    return String(av).toLowerCase().localeCompare(String(bv).toLowerCase()) * mult;
+  });
+}
+
+function sortHeader(label, key, state, handlerName) {
+  const active = state.key === key;
+  const arrow = active ? (state.dir === 'asc' ? '▲' : '▼') : '▲';
+  return '<th class="sortable' + (active ? ' active' : '') + '" '
+       + 'onclick="' + handlerName + '(\'' + key + '\')">'
+       + escHtml(label) + ' <span class="sort-arrow">' + arrow + '</span></th>';
+}
+
+function toggleSort(state, key) {
+  if (state.key === key) {
+    state.dir = state.dir === 'asc' ? 'desc' : 'asc';
+  } else {
+    state.key = key;
+    // Sensible default direction per data type — timestamps default desc
+    // (newest first), strings default asc.
+    state.dir = (key === 'created_at' || key === 'last_login_at' || key === 'granted_at')
+      ? 'desc' : 'asc';
+  }
+}
+
+// ── Users tab ──
+async function loadUsers() {
+  const el = document.getElementById('usersBody');
+  el.innerHTML = '<div class="loading-text">Loading...</div>';
+  const { ok, status, data } = await apiCall('GET', '/api/admin/users');
+  if (!ok) {
+    el.innerHTML = '<div class="loading-text" style="color:var(--red);">Error ' + status + ': ' + escHtml(data.error || 'Failed to load') + '</div>';
+    return;
+  }
+  window._allUsers = data;
+  window._usersLoaded = true;
+  renderUsersTable();
+}
+
+function filterUsers() { renderUsersTable(); }
+
+function clickSortUsers(key) {
+  toggleSort(window._usersSort, key);
+  renderUsersTable();
+}
+
+function renderUsersTable() {
+  const el = document.getElementById('usersBody');
+  const all = window._allUsers || [];
+  const q = (document.getElementById('usersFilter')?.value || '').toLowerCase();
+  const filtered = q ? all.filter(u => (u.email||'').toLowerCase().includes(q)) : all;
+  const users = sortRows(filtered, window._usersSort.key, window._usersSort.dir);
+  if (!users.length) {
+    el.innerHTML = '<table class="data-table"><tbody><tr class="no-data"><td colspan="7">No users found.</td></tr></tbody></table>';
+    return;
+  }
+  const s = window._usersSort;
+  let html = '<table class="data-table"><thead><tr>'
+    + sortHeader('Name',       'name',          s, 'clickSortUsers')
+    + sortHeader('Email',      'email',         s, 'clickSortUsers')
+    + sortHeader('Scopes',     'scopes',        s, 'clickSortUsers')
+    + sortHeader('Status',     'active',        s, 'clickSortUsers')
+    + sortHeader('Last Login', 'last_login_at', s, 'clickSortUsers')
+    + sortHeader('Granted By', 'granted_by',    s, 'clickSortUsers')
+    + '<th>Actions</th></tr></thead><tbody>';
+  users.forEach(u => {
+    const active = u.active !== false;
+    html += '<tr>' +
+      '<td>' + escHtml(u.name || '—') + '</td>' +
+      '<td style="font-family:monospace;font-size:12px;">' + escHtml(u.email) + '</td>' +
+      '<td>' + scopePills(u.scopes) + '</td>' +
+      '<td><span class="badge ' + (active ? 'active' : 'revoked') + '">' + (active ? 'Active' : 'Revoked') + '</span></td>' +
+      '<td style="white-space:nowrap;font-size:12px;">' + fmtDate(u.last_login_at) + '</td>' +
+      '<td style="font-size:12px;">' + escHtml(u.granted_by || '—') + '</td>' +
+      '<td><div class="btn-row">' +
+        '<button class="action-btn" onclick="openEditModal(' + JSON.stringify(u).replace(/"/g,'&quot;') + ')">Edit</button>' +
+        (active
+          ? '<button class="action-btn danger" onclick="revokeUser(' + escHtml(u.id) + ', ' + JSON.stringify(u.email) + ')">Revoke</button>'
+          : '<button class="action-btn success" onclick="reactivateUser(' + escHtml(u.id) + ')">Re-activate</button>') +
+      '</div></td>' +
+    '</tr>';
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+async function revokeUser(id, email) {
+  if (!confirm('Revoke access for ' + email + '?')) return;
+  const { ok, status, data } = await apiCall('PATCH', '/api/admin/users/' + id, { active: false });
+  if (!ok) { alert('Error ' + status + ': ' + (data.error || 'Failed')); return; }
+  await loadUsers();
+}
+
+async function reactivateUser(id) {
+  const { ok, status, data } = await apiCall('PATCH', '/api/admin/users/' + id, { active: true });
+  if (!ok) { alert('Error ' + status + ': ' + (data.error || 'Failed')); return; }
+  await loadUsers();
+}
+
+// ── Grant Modal ──
+window._extraScopes = [];
+
+function openGrantModal() {
+  window._extraScopes = [];
+  document.getElementById('grantEmail').value = '';
+  document.getElementById('grantName').value = '';
+  document.getElementById('grantNotes').value = '';
+  document.getElementById('grantMsg').textContent = '';
+  document.getElementById('grantScopeExtra').value = '';
+  document.getElementById('extraScopesList').innerHTML = '';
+  document.getElementById('scope-fwf-dashboard').checked = true;
+  document.getElementById('scope-willgibson-estimator').checked = false;
+  document.getElementById('scope-admin').checked = false;
+  document.getElementById('grantSubmitBtn').disabled = false;
+  document.getElementById('grantSubmitBtn').textContent = 'Grant Access';
+  document.getElementById('grantModal').classList.remove('hidden');
+}
+
+function closeGrantModal() { document.getElementById('grantModal').classList.add('hidden'); }
+
+function addExtraScope() {
+  const inp = document.getElementById('grantScopeExtra');
+  const val = inp.value.trim();
+  if (!val || window._extraScopes.includes(val)) { inp.value = ''; return; }
+  window._extraScopes.push(val);
+  renderExtraScopes();
+  inp.value = '';
+}
+
+function removeExtraScope(scope) {
+  window._extraScopes = window._extraScopes.filter(s => s !== scope);
+  renderExtraScopes();
+}
+
+function renderExtraScopes() {
+  document.getElementById('extraScopesList').innerHTML = window._extraScopes.map(s =>
+    '<span class="scope-pill" style="cursor:pointer;" onclick="removeExtraScope(' + JSON.stringify(s) + ')" title="Click to remove">' + escHtml(s) + ' &#215;</span>'
+  ).join('');
+}
+
+function collectScopes(prefix) {
+  const known = ['fwf-dashboard','willgibson-estimator','admin'];
+  const scopes = known.filter(s => document.getElementById(prefix + s)?.checked);
+  return [...new Set([...scopes, ...window._extraScopes])];
+}
+
+async function submitGrant() {
+  const email = document.getElementById('grantEmail').value.trim();
+  if (!email) { showMsg('grantMsg', 'Email is required.', true); return; }
+  const scopes = collectScopes('scope-');
+  const body = {
+    email,
+    name: document.getElementById('grantName').value.trim() || undefined,
+    scopes,
+    notes: document.getElementById('grantNotes').value.trim() || undefined,
+  };
+  const btn = document.getElementById('grantSubmitBtn');
+  btn.disabled = true; btn.textContent = 'Granting...';
+  const { ok, status, data } = await apiCall('POST', '/api/admin/users', body);
+  if (!ok) {
+    showMsg('grantMsg', 'Error ' + status + ': ' + (data.error || 'Failed'), true);
+    btn.disabled = false; btn.textContent = 'Grant Access';
+    return;
+  }
+  showMsg('grantMsg', 'Access granted.', false);
+  btn.textContent = 'Done';
+  await loadUsers();
+  setTimeout(closeGrantModal, 900);
+}
+
+// ── Edit Modal ──
+window._editExtraScopes = [];
+
+function openEditModal(user) {
+  const known = ['fwf-dashboard','willgibson-estimator','admin'];
+  window._editExtraScopes = (user.scopes || []).filter(s => !known.includes(s));
+  document.getElementById('editUserId').value = user.id;
+  document.getElementById('editEmail').value = user.email;
+  document.getElementById('editName').value = user.name || '';
+  document.getElementById('editNotes').value = user.notes || '';
+  document.getElementById('editMsg').textContent = '';
+  document.getElementById('editScopeExtra').value = '';
+  known.forEach(s => { document.getElementById('edit-scope-' + s).checked = (user.scopes || []).includes(s); });
+  renderEditExtraScopes();
+  document.getElementById('editSaveBtn').disabled = false;
+  document.getElementById('editSaveBtn').textContent = 'Save Changes';
+  document.getElementById('editModal').classList.remove('hidden');
+}
+
+function closeEditModal() { document.getElementById('editModal').classList.add('hidden'); }
+
+function addEditExtraScope() {
+  const inp = document.getElementById('editScopeExtra');
+  const val = inp.value.trim();
+  if (!val || window._editExtraScopes.includes(val)) { inp.value = ''; return; }
+  window._editExtraScopes.push(val);
+  renderEditExtraScopes();
+  inp.value = '';
+}
+
+function removeEditExtraScope(scope) {
+  window._editExtraScopes = window._editExtraScopes.filter(s => s !== scope);
+  renderEditExtraScopes();
+}
+
+function renderEditExtraScopes() {
+  document.getElementById('editExtraScopesList').innerHTML = window._editExtraScopes.map(s =>
+    '<span class="scope-pill" style="cursor:pointer;" onclick="removeEditExtraScope(' + JSON.stringify(s) + ')" title="Click to remove">' + escHtml(s) + ' &#215;</span>'
+  ).join('');
+}
+
+async function submitEdit() {
+  const id = document.getElementById('editUserId').value;
+  const known = ['fwf-dashboard','willgibson-estimator','admin'];
+  const scopes = [...known.filter(s => document.getElementById('edit-scope-' + s)?.checked), ...window._editExtraScopes];
+  const body = {
+    name: document.getElementById('editName').value.trim(),
+    scopes: [...new Set(scopes)],
+    notes: document.getElementById('editNotes').value.trim(),
+  };
+  const btn = document.getElementById('editSaveBtn');
+  btn.disabled = true; btn.textContent = 'Saving...';
+  const { ok, status, data } = await apiCall('PATCH', '/api/admin/users/' + id, body);
+  if (!ok) {
+    showMsg('editMsg', 'Error ' + status + ': ' + (data.error || 'Failed'), true);
+    btn.disabled = false; btn.textContent = 'Save Changes';
+    return;
+  }
+  showMsg('editMsg', 'Saved.', false);
+  btn.textContent = 'Done';
+  await loadUsers();
+  setTimeout(closeEditModal, 800);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Access Requests tab
+// ════════════════════════════════════════════════════════════════════════════
+window._allRequests = [];
+
+async function loadRequests() {
+  const el = document.getElementById('requestsBody');
+  el.innerHTML = '<div class="loading-text">Loading...</div>';
+  const { ok, status, data } = await apiCall('GET', '/api/access-requests');
+  if (!ok) {
+    el.innerHTML = '<div class="loading-text" style="color:var(--red);">Error ' + status + ': ' + escHtml(data.error || 'Failed to load') + '</div>';
+    return;
+  }
+  window._allRequests = data;
+  window._requestsLoaded = true;
+  renderRequestsTable(data);
+}
+
+function clickSortRequests(key) {
+  toggleSort(window._requestsSort, key);
+  renderRequestsTable(window._allRequests);
+}
+
+function renderRequestsTable(rows) {
+  const el = document.getElementById('requestsBody');
+  const pending = rows.filter(r => r.status === 'pending');
+  const reviewed = rows.filter(r => r.status !== 'pending');
+  const s = window._requestsSort;
+  // Sort pending + reviewed independently using the same sort state, so a
+  // single click affects both sections consistently.
+  const sortedPending  = sortRows(pending,  s.key, s.dir);
+  const sortedReviewed = sortRows(reviewed, s.key, s.dir);
+
+  function buildTable(items, showActions) {
+    if (!items.length) return '<div style="padding:14px 16px; font-size:13px; color:var(--text-muted); font-style:italic;">None.</div>';
+    let html = '<table class="data-table"><thead><tr>'
+      + sortHeader('Submitted',   'created_at',   s, 'clickSortRequests')
+      + sortHeader('Email',       'email',        s, 'clickSortRequests')
+      + sortHeader('Name',        'name',         s, 'clickSortRequests')
+      + sortHeader('Domain',      'domain',       s, 'clickSortRequests')
+      + sortHeader('Organization','organization', s, 'clickSortRequests')
+      + sortHeader('Referred By', 'referred_by',  s, 'clickSortRequests')
+      + sortHeader('Reason',      'reason',       s, 'clickSortRequests')
+      + sortHeader('Status',      'status',       s, 'clickSortRequests')
+      + (showActions ? '<th>Actions</th>' : '')
+      + '</tr></thead><tbody>';
+    items.forEach(r => {
+      html += '<tr>' +
+        '<td style="white-space:nowrap;font-size:12px;">' + fmtDate(r.created_at) + '</td>' +
+        '<td style="font-family:monospace;font-size:12px;">' + escHtml(r.email) + '</td>' +
+        '<td>' + escHtml(r.name || '—') + '</td>' +
+        '<td style="font-size:12px;">' + escHtml(r.domain || '—') + '</td>' +
+        '<td style="font-size:12px;">' + escHtml(r.organization || '—') + '</td>' +
+        '<td style="font-size:12px;">' + escHtml(r.referred_by || '—') + '</td>' +
+        '<td style="font-size:12px;max-width:200px;">' + escHtml(r.reason || '—') + '</td>' +
+        '<td><span class="badge ' + escHtml(r.status) + '">' + escHtml(r.status) + '</span></td>';
+      if (showActions) {
+        html += '<td><div class="btn-row">' +
+          '<button class="action-btn success" onclick="openApproveModal(' + r.id + ', ' + JSON.stringify(r.email) + ')">Approve</button>' +
+          '<button class="action-btn danger" onclick="denyRequest(' + r.id + ', ' + JSON.stringify(r.email) + ')">Deny</button>' +
+          '</div></td>';
+      }
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    return html;
+  }
+
+  let html = '';
+  if (!rows.length) {
+    html = '<div style="padding:20px 16px; text-align:center; color:var(--text-muted); font-style:italic;">No access requests found.</div>';
+  } else {
+    html += '<div style="padding:10px 16px 4px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted);">Pending</div>';
+    html += buildTable(sortedPending, true);
+    html += '<div class="collapsed-header" id="reviewedToggleBtn" onclick="toggleReviewed()">' +
+      '<span id="reviewedChevron">&#9658;</span> Reviewed (' + sortedReviewed.length + ')' +
+      '</div>';
+    html += '<div class="collapsed-body" id="reviewedBody">' + buildTable(sortedReviewed, false) + '</div>';
+  }
+  el.innerHTML = html;
+}
+
+function toggleReviewed() {
+  const body = document.getElementById('reviewedBody');
+  const chevron = document.getElementById('reviewedChevron');
+  const open = body.classList.toggle('open');
+  chevron.innerHTML = open ? '&#9660;' : '&#9658;';
+}
+
+function openApproveModal(id, email) {
+  document.getElementById('approveRequestId').value = id;
+  document.getElementById('approveFor').textContent = 'Approving access for: ' + email;
+  document.getElementById('approveMsg').textContent = '';
+  document.getElementById('approve-scope-fwf-dashboard').checked = true;
+  document.getElementById('approve-scope-willgibson-estimator').checked = false;
+  document.getElementById('approve-scope-admin').checked = false;
+  document.getElementById('approveSubmitBtn').disabled = false;
+  document.getElementById('approveSubmitBtn').textContent = 'Approve';
+  document.getElementById('approveModal').classList.remove('hidden');
+}
+
+function closeApproveModal() { document.getElementById('approveModal').classList.add('hidden'); }
+
+async function submitApprove() {
+  const id = document.getElementById('approveRequestId').value;
+  const scopes = ['fwf-dashboard','willgibson-estimator','admin']
+    .filter(s => document.getElementById('approve-scope-' + s)?.checked);
+  const btn = document.getElementById('approveSubmitBtn');
+  btn.disabled = true; btn.textContent = 'Approving...';
+  const { ok, status, data } = await apiCall('POST', '/api/admin/access-requests/' + id + '/approve', { scopes });
+  if (!ok) {
+    showMsg('approveMsg', 'Error ' + status + ': ' + (data.error || 'Failed'), true);
+    btn.disabled = false; btn.textContent = 'Approve';
+    return;
+  }
+  showMsg('approveMsg', 'Approved.', false);
+  btn.textContent = 'Done';
+  await loadRequests();
+  setTimeout(closeApproveModal, 800);
+}
+
+async function denyRequest(id, email) {
+  if (!confirm('Deny access request from ' + email + '?')) return;
+  const { ok, status, data } = await apiCall('PATCH', '/api/access-requests/' + id, { status: 'denied' });
+  if (!ok) { alert('Error ' + status + ': ' + (data.error || 'Failed')); return; }
+  await loadRequests();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Login Events tab
+// ════════════════════════════════════════════════════════════════════════════
+window._allLogins = [];
+
+async function loadLogins() {
+  const el = document.getElementById('loginsBody');
+  el.innerHTML = '<div class="loading-text">Loading...</div>';
+  const { ok, status, data } = await apiCall('GET', '/api/login-events');
+  if (!ok) {
+    el.innerHTML = '<div class="loading-text" style="color:var(--red);">Error ' + status + ': ' + escHtml(data.error || 'Failed to load') + '</div>';
+    return;
+  }
+  window._allLogins = data;
+  window._loginsLoaded = true;
+  renderLoginsTable();
+}
+
+function filterLogins() { renderLoginsTable(); }
+
+function clickSortLogins(key) {
+  toggleSort(window._loginsSort, key);
+  renderLoginsTable();
+}
+
+function renderLoginsTable() {
+  const el = document.getElementById('loginsBody');
+  const all = window._allLogins || [];
+  const q = (document.getElementById('loginsFilter')?.value || '').toLowerCase();
+  const filtered = q ? all.filter(l => (l.email||'').toLowerCase().includes(q)) : all;
+  const rows = sortRows(filtered, window._loginsSort.key, window._loginsSort.dir);
+  const note = all.length >= 500
+    ? '<div style="padding:8px 16px; font-size:11px; color:var(--text-muted);">Showing most recent 500 events.</div>'
+    : '';
+  if (!rows.length) {
+    el.innerHTML = note + '<div style="padding:20px 16px; text-align:center; color:var(--text-muted); font-style:italic;">No login events found.</div>';
+    return;
+  }
+  const s = window._loginsSort;
+  let html = note + '<table class="data-table"><thead><tr>'
+    + sortHeader('Timestamp',  'created_at', s, 'clickSortLogins')
+    + sortHeader('Email',      'email',      s, 'clickSortLogins')
+    + sortHeader('Name',       'name',       s, 'clickSortLogins')
+    + sortHeader('Domain',     'domain',     s, 'clickSortLogins')
+    + sortHeader('IP',         'ip',         s, 'clickSortLogins')
+    + sortHeader('User Agent', 'user_agent', s, 'clickSortLogins')
+    + '</tr></thead><tbody>';
+  rows.forEach(r => {
+    const ua = r.user_agent || '';
+    const uaShort = ua.length > 40 ? ua.slice(0, 40) + '...' : ua;
+    html += '<tr>' +
+      '<td style="white-space:nowrap;font-size:12px;">' + fmtDate(r.created_at) + '</td>' +
+      '<td style="font-family:monospace;font-size:12px;">' + escHtml(r.email) + '</td>' +
+      '<td style="font-size:12px;">' + escHtml(r.name || '—') + '</td>' +
+      '<td style="font-size:12px;">' + escHtml(r.domain || '—') + '</td>' +
+      '<td style="font-size:12px;font-family:monospace;">' + escHtml(r.ip || '—') + '</td>' +
+      '<td><span class="ua-cell" title="' + escHtml(ua) + '">' + escHtml(uaShort) + '</span></td>' +
+    '</tr>';
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Shared helpers
+// ════════════════════════════════════════════════════════════════════════════
+function showMsg(id, msg, isErr) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'status-msg ' + (isErr ? 'err' : 'ok');
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Init — called after gate passes
+// ════════════════════════════════════════════════════════════════════════════
+function initAdmin() {
+  document.getElementById('pageContent').style.display = '';
+  // Show logged-in user in header
+  const userInfo = document.getElementById('adminUserInfo');
+  const nameSpan = document.getElementById('adminUserName');
+  if (userInfo && nameSpan && window.ADMIN_USER) {
+    nameSpan.textContent = window.ADMIN_USER.name || window.ADMIN_USER.email;
+    userInfo.style.display = 'flex';
+  }
+  loadUsers();
+  window._usersLoaded = true;
+}
+
+// If gate already passed synchronously, show content and load data.
+if (window.ADMIN_AUTHORIZED) initAdmin();
+</script>
+</body>
+</html>

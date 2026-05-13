@@ -101,8 +101,39 @@
       <div class="wg-box">WG</div>
       <span class="brand-name">Sprocket Networks</span>
     </div>
-    <span class="map-label">Fiber Map</span>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <a id="admin-link" href="/admin.html"
+         style="display:none;color:#cbd5e1;font-size:12px;text-decoration:none;
+                padding:4px 10px;border:1px solid rgba(255,255,255,0.15);border-radius:6px;">
+        Admin
+      </a>
+      <span class="map-label">Fiber Map</span>
+    </div>
   </div>
+
+  <script>
+    // Reveal Admin link if the signed-in user has the 'admin' scope.
+    // auth.js writes google_user to localStorage after /api/me validates,
+    // which may happen async after this script runs — so poll briefly.
+    (function () {
+      var attempts = 0;
+      function check() {
+        try {
+          var raw = localStorage.getItem('google_user');
+          if (raw) {
+            var user = JSON.parse(raw);
+            if (user && Array.isArray(user.scopes) && user.scopes.indexOf('admin') !== -1) {
+              var el = document.getElementById('admin-link');
+              if (el) el.style.display = 'inline-block';
+              return;
+            }
+          }
+        } catch (e) { /* best-effort */ }
+        if (++attempts < 30) setTimeout(check, 250); // 7.5 s max
+      }
+      check();
+    })();
+  </script>
 
   <div id="map"></div>
 
