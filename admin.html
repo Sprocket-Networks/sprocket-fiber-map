@@ -100,7 +100,6 @@ body { font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var
 }
 .scope-pill.admin { background:#fce7f3; color:#9d174d; border-color:#fbcfe8; }
 .scope-pill.fwf-dashboard { background:#d1fae5; color:#065f46; border-color:#a7f3d0; }
-.scope-pill.willgibson-estimator { background:#fef3c7; color:#92400e; border-color:#fde68a; }
 
 /* Status badge */
 .badge {
@@ -488,8 +487,7 @@ applyAdminGate();
       <div class="form-group">
         <label class="form-label">Scopes</label>
         <div class="scope-checkboxes">
-          <label class="scope-check"><input type="checkbox" id="scope-fwf-dashboard" value="fwf-dashboard" checked /> fwf-dashboard</label>
-          <label class="scope-check"><input type="checkbox" id="scope-willgibson-estimator" value="willgibson-estimator" /> willgibson-estimator</label>
+          <label class="scope-check"><input type="checkbox" id="scope-fwf-dashboard" value="fwf-dashboard" /> fwf-dashboard</label>
           <label class="scope-check"><input type="checkbox" id="scope-admin" value="admin" /> admin</label>
         </div>
         <div style="margin-top:8px;">
@@ -531,7 +529,6 @@ applyAdminGate();
         <label class="form-label">Scopes</label>
         <div class="scope-checkboxes">
           <label class="scope-check"><input type="checkbox" id="edit-scope-fwf-dashboard" value="fwf-dashboard" /> fwf-dashboard</label>
-          <label class="scope-check"><input type="checkbox" id="edit-scope-willgibson-estimator" value="willgibson-estimator" /> willgibson-estimator</label>
           <label class="scope-check"><input type="checkbox" id="edit-scope-admin" value="admin" /> admin</label>
         </div>
         <div style="margin-top:8px;">
@@ -565,8 +562,7 @@ applyAdminGate();
       <div class="form-group">
         <label class="form-label">Grant Scopes</label>
         <div class="scope-checkboxes">
-          <label class="scope-check"><input type="checkbox" id="approve-scope-fwf-dashboard" value="fwf-dashboard" checked /> fwf-dashboard</label>
-          <label class="scope-check"><input type="checkbox" id="approve-scope-willgibson-estimator" value="willgibson-estimator" /> willgibson-estimator</label>
+          <label class="scope-check"><input type="checkbox" id="approve-scope-fwf-dashboard" value="fwf-dashboard" /> fwf-dashboard</label>
           <label class="scope-check"><input type="checkbox" id="approve-scope-admin" value="admin" /> admin</label>
         </div>
       </div>
@@ -596,7 +592,7 @@ function fmtDate(s) {
 function scopePills(scopes) {
   if (!Array.isArray(scopes) || !scopes.length) return '<span style="color:var(--text-muted);font-size:11px;">none</span>';
   return scopes.map(s => {
-    const cls = s === 'admin' ? 'admin' : s === 'fwf-dashboard' ? 'fwf-dashboard' : s === 'willgibson-estimator' ? 'willgibson-estimator' : '';
+    const cls = s === 'admin' ? 'admin' : s === 'fwf-dashboard' ? 'fwf-dashboard' : '';
     return '<span class="scope-pill ' + cls + '">' + escHtml(s) + '</span>';
   }).join('');
 }
@@ -775,8 +771,7 @@ function openGrantModal() {
   document.getElementById('grantMsg').textContent = '';
   document.getElementById('grantScopeExtra').value = '';
   document.getElementById('extraScopesList').innerHTML = '';
-  document.getElementById('scope-fwf-dashboard').checked = true;
-  document.getElementById('scope-willgibson-estimator').checked = false;
+  document.getElementById('scope-fwf-dashboard').checked = false;
   document.getElementById('scope-admin').checked = false;
   document.getElementById('grantSubmitBtn').disabled = false;
   document.getElementById('grantSubmitBtn').textContent = 'Grant Access';
@@ -806,7 +801,7 @@ function renderExtraScopes() {
 }
 
 function collectScopes(prefix) {
-  const known = ['fwf-dashboard','willgibson-estimator','admin'];
+  const known = ['fwf-dashboard','admin'];
   const scopes = known.filter(s => document.getElementById(prefix + s)?.checked);
   return [...new Set([...scopes, ...window._extraScopes])];
 }
@@ -839,7 +834,7 @@ async function submitGrant() {
 window._editExtraScopes = [];
 
 function openEditModal(user) {
-  const known = ['fwf-dashboard','willgibson-estimator','admin'];
+  const known = ['fwf-dashboard','admin'];
   window._editExtraScopes = (user.scopes || []).filter(s => !known.includes(s));
   document.getElementById('editUserId').value = user.id;
   document.getElementById('editEmail').value = user.email;
@@ -878,7 +873,7 @@ function renderEditExtraScopes() {
 
 async function submitEdit() {
   const id = document.getElementById('editUserId').value;
-  const known = ['fwf-dashboard','willgibson-estimator','admin'];
+  const known = ['fwf-dashboard','admin'];
   const scopes = [...known.filter(s => document.getElementById('edit-scope-' + s)?.checked), ...window._editExtraScopes];
   const body = {
     name: document.getElementById('editName').value.trim(),
@@ -992,8 +987,7 @@ function openApproveModal(id, email) {
   document.getElementById('approveRequestId').value = id;
   document.getElementById('approveFor').textContent = 'Approving access for: ' + email;
   document.getElementById('approveMsg').textContent = '';
-  document.getElementById('approve-scope-fwf-dashboard').checked = true;
-  document.getElementById('approve-scope-willgibson-estimator').checked = false;
+  document.getElementById('approve-scope-fwf-dashboard').checked = false;
   document.getElementById('approve-scope-admin').checked = false;
   document.getElementById('approveSubmitBtn').disabled = false;
   document.getElementById('approveSubmitBtn').textContent = 'Approve';
@@ -1004,7 +998,7 @@ function closeApproveModal() { document.getElementById('approveModal').classList
 
 async function submitApprove() {
   const id = document.getElementById('approveRequestId').value;
-  const scopes = ['fwf-dashboard','willgibson-estimator','admin']
+  const scopes = ['fwf-dashboard','admin']
     .filter(s => document.getElementById('approve-scope-' + s)?.checked);
   const btn = document.getElementById('approveSubmitBtn');
   btn.disabled = true; btn.textContent = 'Approving...';
