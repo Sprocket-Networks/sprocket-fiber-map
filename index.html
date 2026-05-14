@@ -343,8 +343,43 @@
     </details>
 
     <details class="lyr-group">
-      <summary><span class="lyr-dot" style="background:#737373"></span>Other CoStar categories <span class="lyr-badge">CS</span></summary>
-      <div class="lyr-pending">Office, Retail, Industrial, Data Centers, Education, Government, Medical Tenants, Flex — CSVs not geocoded. Need to run geocoder against addresses (~10k records).</div>
+      <summary><span class="lyr-dot" style="background:#0ea5e9"></span>Office tenants <span class="lyr-badge">CS</span></summary>
+      <label class="lyr-item"><input type="checkbox" data-layer="costar_office"> 2,816 office locations</label>
+    </details>
+
+    <details class="lyr-group">
+      <summary><span class="lyr-dot" style="background:#ec4899"></span>Retail <span class="lyr-badge">CS</span></summary>
+      <label class="lyr-item"><input type="checkbox" data-layer="costar_retail"> 2,725 retail properties</label>
+    </details>
+
+    <details class="lyr-group">
+      <summary><span class="lyr-dot" style="background:#737373"></span>Industrial <span class="lyr-badge">CS</span></summary>
+      <label class="lyr-item"><input type="checkbox" data-layer="costar_industrial"> 2,197 industrial buildings</label>
+    </details>
+
+    <details class="lyr-group">
+      <summary><span class="lyr-dot" style="background:#06b6d4"></span>Medical Tenants <span class="lyr-badge">CS</span></summary>
+      <label class="lyr-item"><input type="checkbox" data-layer="costar_medical"> 453 medical-tenant locations</label>
+    </details>
+
+    <details class="lyr-group">
+      <summary><span class="lyr-dot" style="background:#84cc16"></span>Flex Space <span class="lyr-badge">CS</span></summary>
+      <label class="lyr-item"><input type="checkbox" data-layer="costar_flex"> 441 flex-space buildings</label>
+    </details>
+
+    <details class="lyr-group">
+      <summary><span class="lyr-dot" style="background:#16a34a"></span>Education <span class="lyr-badge">CS</span></summary>
+      <label class="lyr-item"><input type="checkbox" data-layer="costar_education"> 258 education facilities</label>
+    </details>
+
+    <details class="lyr-group">
+      <summary><span class="lyr-dot" style="background:#7c3aed"></span>Government <span class="lyr-badge">CS</span></summary>
+      <label class="lyr-item"><input type="checkbox" data-layer="costar_government"> 129 government facilities</label>
+    </details>
+
+    <details class="lyr-group">
+      <summary><span class="lyr-dot" style="background:#dc2626"></span>Data Centers <span class="lyr-badge">CS</span></summary>
+      <label class="lyr-item"><input type="checkbox" data-layer="costar_datacenters"> 6 data centers (12 known; 6 unmatched in Census geocoder)</label>
     </details>
   </div>
 
@@ -439,6 +474,14 @@
       costar_hospitality:     { layer: null, loaded: false, url: 'data/costar_hospitality.geojson',     color: '#f59e0b', kind: 'costar' },
       costar_student_housing: { layer: null, loaded: false, url: 'data/costar_student_housing.geojson', color: '#a78bfa', kind: 'costar' },
       costar_sports:          { layer: null, loaded: false, url: 'data/costar_sports.geojson',          color: '#f97316', kind: 'costar' },
+      costar_office:          { layer: null, loaded: false, url: 'data/costar_office.geojson',          color: '#0ea5e9', kind: 'costar' },
+      costar_retail:          { layer: null, loaded: false, url: 'data/costar_retail.geojson',          color: '#ec4899', kind: 'costar' },
+      costar_industrial:      { layer: null, loaded: false, url: 'data/costar_industrial.geojson',      color: '#737373', kind: 'costar' },
+      costar_medical:         { layer: null, loaded: false, url: 'data/costar_medical.geojson',         color: '#06b6d4', kind: 'costar' },
+      costar_flex:            { layer: null, loaded: false, url: 'data/costar_flex.geojson',            color: '#84cc16', kind: 'costar' },
+      costar_education:       { layer: null, loaded: false, url: 'data/costar_education.geojson',       color: '#16a34a', kind: 'costar' },
+      costar_government:      { layer: null, loaded: false, url: 'data/costar_government.geojson',      color: '#7c3aed', kind: 'costar' },
+      costar_datacenters:     { layer: null, loaded: false, url: 'data/costar_datacenters.geojson',     color: '#dc2626', kind: 'costar' },
 
       // VCTI Tarrant build plans (hollow / dashed styling — these are PROPOSED, not built)
       vcti_zones:        { layer: null, loaded: false, url: 'data/vcti_build_zones.geojson',    color: '#22d3ee', kind: 'polygon' },
@@ -643,6 +686,14 @@
       costar_hospitality:     { loc: 474,  units: 474    },
       costar_student_housing: { loc: 56,   units: 5142   },
       costar_sports:          { loc: 76,   units: 76     },
+      costar_office:          { loc: 2816, units: 2816   },
+      costar_retail:          { loc: 2725, units: 2725   },
+      costar_industrial:      { loc: 2197, units: 2197   },
+      costar_medical:         { loc: 453,  units: 453    },
+      costar_flex:            { loc: 441,  units: 441    },
+      costar_education:       { loc: 258,  units: 258    },
+      costar_government:      { loc: 129,  units: 129    },
+      costar_datacenters:     { loc: 6,    units: 6      },
       vcti_zones:        { loc: 14,    units: 0 },
       vcti_distribution: { loc: 14,    units: 0 },
       vcti_transport:    { loc: 55,    units: 0 },
