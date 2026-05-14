@@ -283,11 +283,14 @@
       <summary><span class="lyr-dot" style="background:#16a34a"></span>Aristotle BEAD <span class="lyr-badge">TGT</span></summary>
       <label class="lyr-item"><input type="checkbox" data-layer="aristotle_collin_fiber"> Collin — proposed fiber (13k segments)</label>
       <label class="lyr-item"><input type="checkbox" data-layer="aristotle_collin_buffer"> Collin — 1000ft buffer</label>
-      <label class="lyr-item"><input type="checkbox" data-layer="aristotle_collin_passings"> Collin — BSL within 1000ft (16,187 loc / 20,785 units)</label>
+      <label class="lyr-item"><input type="checkbox" data-layer="aristotle_collin_passings"> Collin — all BSL within 1000ft (16,187 loc / 20,785 units)</label>
+      <label class="lyr-item"><input type="checkbox" data-layer="aristotle_collin_nonfiber"> ◆ Collin — <strong>non-fiber</strong> BSL within 1000ft (11,747 loc / 12,419 units)</label>
       <label class="lyr-item"><input type="checkbox" data-layer="aristotle_harrison_fiber"> Harrison — proposed fiber (5.5k segments)</label>
-      <label class="lyr-item"><input type="checkbox" data-layer="aristotle_harrison_passings"> Harrison — blocks within 1000ft (383 blocks / 2,331 HU)</label>
+      <label class="lyr-item"><input type="checkbox" data-layer="aristotle_harrison_passings"> Harrison — all blocks within 1000ft (383 blocks / 2,331 HU)</label>
+      <label class="lyr-item"><input type="checkbox" data-layer="aristotle_harrison_nonfiber"> ◆ Harrison — <strong>non-fiber</strong> blocks within 1000ft (273 blocks / 1,535 HU)</label>
       <label class="lyr-item"><input type="checkbox" data-layer="aristotle_upshur_fiber"> Upshur — proposed fiber (9.5k segments)</label>
-      <label class="lyr-item"><input type="checkbox" data-layer="aristotle_upshur_passings"> Upshur — blocks within 1000ft (663 blocks / 6,111 HU)</label>
+      <label class="lyr-item"><input type="checkbox" data-layer="aristotle_upshur_passings"> Upshur — all blocks within 1000ft (663 blocks / 6,111 HU)</label>
+      <label class="lyr-item"><input type="checkbox" data-layer="aristotle_upshur_nonfiber"> ◆ Upshur — <strong>non-fiber</strong> blocks within 1000ft (213 blocks / 914 HU)</label>
     </details>
 
     <details class="lyr-group" open>
@@ -401,10 +404,13 @@
       aristotle_collin_fiber:    { layer: null, loaded: false, url: 'data/aristotle_collin_fiber.geojson',          color: '#16a34a', kind: 'line', dashed: true },
       aristotle_collin_buffer:   { layer: null, loaded: false, url: 'data/aristotle_collin_1000ft_buffer.geojson',  color: '#16a34a', kind: 'polygon' },
       aristotle_collin_passings: { layer: null, loaded: false, url: 'data/aristotle_collin_passings.geojson',       color: '#16a34a', kind: 'hollow-dot' },
+      aristotle_collin_nonfiber: { layer: null, loaded: false, url: 'data/aristotle_collin_nonfiber.geojson',       color: '#ef4444', kind: 'nonfiber' },
       aristotle_harrison_fiber:    { layer: null, loaded: false, url: 'data/aristotle_harrison_fiber.geojson',      color: '#15803d', kind: 'line', dashed: true },
       aristotle_harrison_passings: { layer: null, loaded: false, url: 'data/aristotle_harrison_passings.geojson',   color: '#15803d', kind: 'hollow-dot' },
+      aristotle_harrison_nonfiber: { layer: null, loaded: false, url: 'data/aristotle_harrison_nonfiber.geojson',   color: '#dc2626', kind: 'nonfiber' },
       aristotle_upshur_fiber:      { layer: null, loaded: false, url: 'data/aristotle_upshur_fiber.geojson',        color: '#166534', kind: 'line', dashed: true },
       aristotle_upshur_passings:   { layer: null, loaded: false, url: 'data/aristotle_upshur_passings.geojson',     color: '#166534', kind: 'hollow-dot' },
+      aristotle_upshur_nonfiber:   { layer: null, loaded: false, url: 'data/aristotle_upshur_nonfiber.geojson',     color: '#dc2626', kind: 'nonfiber' },
 
       // Plains Internet — Angelina & Nacogdoches (East TX)
       plains_angelina_ducts:        { layer: null, loaded: false, url: 'data/plains_angelina_ducts.geojson',        color: '#0891b2', kind: 'line', dashed: true },
@@ -468,6 +474,19 @@
           onEachFeature: function (f, layer) {
             var n = f.properties && f.properties.name;
             if (n) layer.bindTooltip(n, { direction: 'top', offset: [0, -12] });
+          }
+        });
+      }
+      if (kind === 'nonfiber') {
+        // Non-fiber-served locations near fiber routes — red filled diamonds
+        // to signal "expansion opportunity"
+        return L.geoJSON(data, {
+          pointToLayer: function (_, latlng) {
+            return L.circleMarker(latlng, {
+              renderer: DOT_CANVAS,
+              radius: 3, color: color, fillColor: color,
+              fillOpacity: 0.7, weight: 0
+            });
           }
         });
       }
@@ -554,10 +573,13 @@
       aristotle_collin_fiber:      { loc: 13171, units: 0 },
       aristotle_collin_buffer:     { loc: 1,     units: 0 },
       aristotle_collin_passings:   { loc: 16187, units: 20785 },
+      aristotle_collin_nonfiber:   { loc: 11747, units: 12419 },
       aristotle_harrison_fiber:    { loc: 5541,  units: 0 },
       aristotle_harrison_passings: { loc: 383,   units: 2331 },
+      aristotle_harrison_nonfiber: { loc: 273,   units: 1535 },
       aristotle_upshur_fiber:      { loc: 9477,  units: 0 },
       aristotle_upshur_passings:   { loc: 663,   units: 6111 },
+      aristotle_upshur_nonfiber:   { loc: 213,   units: 914  },
       plains_angelina_ducts:        { loc: 1061, units: 0 },
       plains_angelina_endpoints:    { loc: 7502, units: 7502 },
       plains_nacogdoches_ducts:     { loc: 968,  units: 0 },
