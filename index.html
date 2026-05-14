@@ -82,6 +82,15 @@
     .lyr-pending {
       padding: 4px 0 4px 22px; font-size: 11px; color: #94a3b8; font-style: italic;
     }
+    .lyr-section {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; color: #475569;
+      padding: 10px 0 4px; margin-top: 4px;
+      border-top: 1px solid #e2e8f0;
+    }
+    .lyr-section:first-of-type { border-top: none; padding-top: 4px; margin-top: 0; }
+    .lyr-item input[type=checkbox]:disabled + * { color: #94a3b8; }
+    .lyr-item:has(input:disabled) { opacity: 0.55; cursor: not-allowed; }
     .leaflet-popup-content h3 {
       margin: 0 0 4px; font-size: 14px; color: #0f172a;
     }
@@ -179,18 +188,36 @@
   <div id="layers-panel">
     <div class="layers-title">Layers</div>
 
+    <!-- ═══ 1. Current Network ═══ -->
+    <div class="lyr-section">Current network</div>
+
     <details class="lyr-group" open>
       <summary><span class="lyr-dot" style="background:#3b82f6"></span>Sprocket Networks</summary>
-      <label class="lyr-item"><input type="checkbox" data-layer="fwf" checked> Fort Worth Fiber</label>
-      <label class="lyr-item"><input type="checkbox" data-layer="dal" checked> Dallas Backbone</label>
+      <label class="lyr-item"><input type="checkbox" data-layer="fwf" checked> Fort Worth Fiber (routes)</label>
+      <label class="lyr-item"><input type="checkbox" data-layer="dal" checked> Dallas Backbone (routes)</label>
     </details>
 
     <details class="lyr-group" open>
       <summary><span class="lyr-dot" style="background:#0ea5e9"></span>Lasso Broadband</summary>
-      <label class="lyr-item"><input type="checkbox" data-layer="ellum_fcc"> EllumNet — FCC reported (250 loc)</label>
       <label class="lyr-item"><a href="/E8_Crowley_FTTH_Plan.html" class="lyr-link">↗ Crowley FTTH plan</a></label>
       <label class="lyr-item"><a href="/E8_Lakeside_FTTH_Plan.html" class="lyr-link">↗ Lakeside FTTH plan</a></label>
     </details>
+
+    <details class="lyr-group">
+      <summary><span class="lyr-dot" style="background:#06b6d4"></span>EllumNet</summary>
+      <label class="lyr-item"><input type="checkbox" data-layer="ellum_fcc"> FCC reported (250 loc, TX)</label>
+    </details>
+
+    <!-- ═══ 2. VCTI Potential Builds ═══ -->
+    <div class="lyr-section">Potential builds (VCTI)</div>
+
+    <details class="lyr-group">
+      <summary><span class="lyr-dot" style="background:#22d3ee" style2="border:1px dashed #22d3ee"></span>VCTI FTTH expansion</summary>
+      <div class="lyr-pending">Awaiting VCTI data file. Will be styled as hollow dots to distinguish from existing network.</div>
+    </details>
+
+    <!-- ═══ 3. DA Partner Providers ═══ -->
+    <div class="lyr-section">DA partner providers</div>
 
     <details class="lyr-group">
       <summary><span class="lyr-dot" style="background:#10b981"></span>Element8 <span class="lyr-badge">DA</span></summary>
@@ -199,22 +226,45 @@
 
     <details class="lyr-group">
       <summary><span class="lyr-dot" style="background:#f59e0b"></span>WeLink <span class="lyr-badge">DA</span></summary>
-      <label class="lyr-item"><input type="checkbox" data-layer="wl_fcc"> FCC coverage — TX (15k loc)</label>
+      <label class="lyr-item"><input type="checkbox" data-layer="wl_fcc"> FCC coverage — TX (15k loc; +220k pending BSL load)</label>
     </details>
 
     <details class="lyr-group">
       <summary><span class="lyr-dot" style="background:#ec4899"></span>AtLink <span class="lyr-badge">DA</span></summary>
-      <div class="lyr-pending">FCC coverage — pending nationwide data load</div>
+      <label class="lyr-item"><input type="checkbox" data-layer="atlink_fcc" disabled> FCC coverage — pending BSL load (134k OK locations)</label>
     </details>
 
     <details class="lyr-group">
       <summary><span class="lyr-dot" style="background:#8b5cf6"></span>Wisper <span class="lyr-badge">DA</span></summary>
-      <div class="lyr-pending">FCC coverage — pending nationwide data load</div>
+      <label class="lyr-item"><input type="checkbox" data-layer="wisper_fcc" disabled> FCC coverage — pending BSL load (137k MO/IL/KS locations)</label>
+    </details>
+
+    <!-- ═══ 4. Acquisition Targets ═══ -->
+    <div class="lyr-section">Acquisition targets</div>
+
+    <details class="lyr-group">
+      <summary><span class="lyr-dot" style="background:#dc2626"></span>Pavlov Media <span class="lyr-badge">TGT</span></summary>
+      <label class="lyr-item"><input type="checkbox" data-layer="pavlov_fcc"> FCC fiber — TX (18k loc; +96k IL/FL pending BSL)</label>
     </details>
 
     <details class="lyr-group">
-      <summary><span class="lyr-dot" style="background:#64748b"></span>Potential acquisitions</summary>
-      <div class="lyr-pending">Pending target list</div>
+      <summary><span class="lyr-dot" style="background:#ea580c"></span>Open Infra <span class="lyr-badge">TGT</span></summary>
+      <label class="lyr-item"><input type="checkbox" data-layer="openinfra_fcc"> FCC fiber — TX (33k loc; +54k pending BSL)</label>
+    </details>
+
+    <details class="lyr-group">
+      <summary><span class="lyr-dot" style="background:#eab308"></span>Novos Fiber <span class="lyr-badge">TGT</span></summary>
+      <label class="lyr-item"><input type="checkbox" data-layer="novos_fcc"> FCC fiber — TX (27k loc)</label>
+    </details>
+
+    <details class="lyr-group">
+      <summary><span class="lyr-dot" style="background:#84cc16"></span>Ubiquity Generate <span class="lyr-badge">TGT</span></summary>
+      <div class="lyr-pending">FCC coverage — provider name not yet matched in FCC tables; investigating overnight</div>
+    </details>
+
+    <details class="lyr-group">
+      <summary><span class="lyr-dot" style="background:#a3a3a3"></span>Texacomm <span class="lyr-badge">TGT</span></summary>
+      <div class="lyr-pending">No FCC BDC filings under this name — separate sourcing needed</div>
     </details>
   </div>
 
@@ -275,9 +325,14 @@
     var LAYERS = {
       fwf:    { layer: fwfLayer,    loaded: true },
       dal:    { layer: dalLayer,    loaded: true },
-      e8_fcc:    { layer: null, loaded: false, url: 'data/element8_tx.geojson', color: '#10b981' },
-      wl_fcc:    { layer: null, loaded: false, url: 'data/welink_tx.geojson',   color: '#f59e0b' },
-      ellum_fcc: { layer: null, loaded: false, url: 'data/ellumnet_tx.geojson', color: '#0ea5e9' }
+      e8_fcc:         { layer: null, loaded: false, url: 'data/element8_tx.geojson',   color: '#10b981' },
+      wl_fcc:         { layer: null, loaded: false, url: 'data/welink_tx.geojson',     color: '#f59e0b' },
+      ellum_fcc:      { layer: null, loaded: false, url: 'data/ellumnet_tx.geojson',   color: '#06b6d4' },
+      pavlov_fcc:     { layer: null, loaded: false, url: 'data/pavlov_tx.geojson',     color: '#dc2626' },
+      openinfra_fcc:  { layer: null, loaded: false, url: 'data/open_infra_tx.geojson', color: '#ea580c' },
+      novos_fcc:      { layer: null, loaded: false, url: 'data/novos_tx.geojson',      color: '#eab308' },
+      atlink_fcc:     { layer: null, loaded: false, url: 'data/atlink_tx.geojson',     color: '#ec4899' },
+      wisper_fcc:     { layer: null, loaded: false, url: 'data/wisper_tx.geojson',     color: '#8b5cf6' }
     };
 
     // Shared canvas renderer — handles hundreds of thousands of points smoothly
