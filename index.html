@@ -313,6 +313,39 @@
       <summary><span class="lyr-dot" style="background:#a3a3a3"></span>Texacom Networks <span class="lyr-badge">TGT</span></summary>
       <div class="lyr-pending">Texacom Networks (texacomnetworks.com) — open-access fiber. No FCC BDC filings under this name. Need their retail-tenant ISP names to map coverage.</div>
     </details>
+
+    <!-- ═══ 5. CoStar Revenue Targets (FW) ═══ -->
+    <div class="lyr-section">CoStar revenue targets (Fort Worth)</div>
+
+    <details class="lyr-group">
+      <summary><span class="lyr-dot" style="background:#9333ea"></span>MDU buildings <span class="lyr-badge">CS</span></summary>
+      <label class="lyr-item"><input type="checkbox" data-layer="costar_mdu"> 2,905 buildings / 560k units</label>
+    </details>
+
+    <details class="lyr-group">
+      <summary><span class="lyr-dot" style="background:#0891b2"></span>Healthcare <span class="lyr-badge">CS</span></summary>
+      <label class="lyr-item"><input type="checkbox" data-layer="costar_healthcare"> 288 facilities</label>
+    </details>
+
+    <details class="lyr-group">
+      <summary><span class="lyr-dot" style="background:#f59e0b"></span>Hospitality <span class="lyr-badge">CS</span></summary>
+      <label class="lyr-item"><input type="checkbox" data-layer="costar_hospitality"> 474 properties (hotels)</label>
+    </details>
+
+    <details class="lyr-group">
+      <summary><span class="lyr-dot" style="background:#a78bfa"></span>Student Housing <span class="lyr-badge">CS</span></summary>
+      <label class="lyr-item"><input type="checkbox" data-layer="costar_student_housing"> 56 properties / 5,142 beds</label>
+    </details>
+
+    <details class="lyr-group">
+      <summary><span class="lyr-dot" style="background:#f97316"></span>Sports & Entertainment <span class="lyr-badge">CS</span></summary>
+      <label class="lyr-item"><input type="checkbox" data-layer="costar_sports"> 76 venues</label>
+    </details>
+
+    <details class="lyr-group">
+      <summary><span class="lyr-dot" style="background:#737373"></span>Other CoStar categories <span class="lyr-badge">CS</span></summary>
+      <div class="lyr-pending">Office, Retail, Industrial, Data Centers, Education, Government, Medical Tenants, Flex — CSVs not geocoded. Need to run geocoder against addresses (~10k records).</div>
+    </details>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
@@ -391,7 +424,7 @@
 
       // FWA tower locations (active sites)
       atlink_towers:  { layer: null, loaded: false, url: 'data/atlink_towers.geojson', color: '#ec4899', kind: 'tower' },
-      e8_towers:      { layer: null, loaded: false, url: 'data/element8_towers.geojson', color: '#10b981', kind: 'tower' },
+      e8_towers:      { layer: null, loaded: false, url: 'data/element8_towers.geojson', color: '#dc2626', kind: 'tower' },
 
       // CFW Build Sites — 191 city locations Sprocket is building to (Sept 2025)
       cfw_sites:      { layer: null, loaded: false, url: 'data/cfw_sites.geojson', color: '#3b82f6', kind: 'site' },
@@ -399,6 +432,13 @@
       // Sprocket non-fiber-served BSLs within 1000ft of route (expansion targets)
       fwf_nonfiber:   { layer: null, loaded: false, url: 'data/sprocket_fwf_nonfiber.geojson', color: '#ef4444', kind: 'nonfiber' },
       dal_nonfiber:   { layer: null, loaded: false, url: 'data/sprocket_dal_nonfiber.geojson', color: '#ef4444', kind: 'nonfiber' },
+
+      // CoStar revenue-target buildings (Fort Worth area)
+      costar_mdu:             { layer: null, loaded: false, url: 'data/costar_mdu.geojson',             color: '#9333ea', kind: 'costar' },
+      costar_healthcare:      { layer: null, loaded: false, url: 'data/costar_healthcare.geojson',      color: '#0891b2', kind: 'costar' },
+      costar_hospitality:     { layer: null, loaded: false, url: 'data/costar_hospitality.geojson',     color: '#f59e0b', kind: 'costar' },
+      costar_student_housing: { layer: null, loaded: false, url: 'data/costar_student_housing.geojson', color: '#a78bfa', kind: 'costar' },
+      costar_sports:          { layer: null, loaded: false, url: 'data/costar_sports.geojson',          color: '#f97316', kind: 'costar' },
 
       // VCTI Tarrant build plans (hollow / dashed styling — these are PROPOSED, not built)
       vcti_zones:        { layer: null, loaded: false, url: 'data/vcti_build_zones.geojson',    color: '#22d3ee', kind: 'polygon' },
@@ -496,6 +536,29 @@
           }
         });
       }
+      if (kind === 'costar') {
+        // CoStar revenue-target buildings — small rotated-square (diamond)
+        // marker. Popup shows name, address, and units (for MDUs).
+        return L.geoJSON(data, {
+          pointToLayer: function (_, latlng) {
+            var icon = L.divIcon({
+              className: '',
+              html: '<div style="width:8px;height:8px;background:' + color + ';transform:rotate(45deg);border:1.5px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.4);"></div>',
+              iconSize: [12, 12], iconAnchor: [6, 6]
+            });
+            return L.marker(latlng, { icon: icon });
+          },
+          onEachFeature: function (f, layer) {
+            var p = f.properties || {};
+            var html = '';
+            if (p.name) html += '<strong>' + escapeHtml(p.name) + '</strong>';
+            if (p.addr) html += '<br><span style="color:#475569;font-size:12px">' + escapeHtml(p.addr) + '</span>';
+            if (p.units) html += '<br><span style="color:#94a3b8;font-size:11px">' + p.units + ' units</span>';
+            if (html) layer.bindPopup(html);
+            if (p.name) layer.bindTooltip(p.name, { direction: 'top', offset: [0, -6] });
+          }
+        });
+      }
       if (kind === 'site') {
         // CFW Build Sites — solid filled circle with white halo so they stand out
         return L.geoJSON(data, {
@@ -574,6 +637,12 @@
       cfw_sites:      { loc: 191, units: 0 },
       fwf_nonfiber:   { loc: 14101, units: 42847 },
       dal_nonfiber:   { loc: 1950,  units: 11759 },
+      // CoStar Fort Worth revenue targets
+      costar_mdu:             { loc: 2905, units: 560326 },
+      costar_healthcare:      { loc: 288,  units: 288    },
+      costar_hospitality:     { loc: 474,  units: 474    },
+      costar_student_housing: { loc: 56,   units: 5142   },
+      costar_sports:          { loc: 76,   units: 76     },
       vcti_zones:        { loc: 14,    units: 0 },
       vcti_distribution: { loc: 14,    units: 0 },
       vcti_transport:    { loc: 55,    units: 0 },
