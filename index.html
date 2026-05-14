@@ -238,22 +238,22 @@
 
     <details class="lyr-group">
       <summary><span class="lyr-dot" style="background:#10b981"></span>Element8 <span class="lyr-badge">DA</span></summary>
-      <label class="lyr-item"><input type="checkbox" data-layer="e8_fcc"> FCC coverage — 220k loc (TX)</label>
+      <label class="lyr-item"><input type="checkbox" data-layer="e8_fcc"> FCC coverage — 218k TX (BSL-precise)</label>
     </details>
 
     <details class="lyr-group">
       <summary><span class="lyr-dot" style="background:#f59e0b"></span>WeLink <span class="lyr-badge">DA</span></summary>
-      <label class="lyr-item"><input type="checkbox" data-layer="wl_fcc"> FCC coverage — 236k loc (UT/TX)</label>
+      <label class="lyr-item"><input type="checkbox" data-layer="wl_fcc"> FCC coverage — 15k TX (BSL-precise; +221k UT approx)</label>
     </details>
 
     <details class="lyr-group">
       <summary><span class="lyr-dot" style="background:#ec4899"></span>AtLink <span class="lyr-badge">DA</span></summary>
-      <label class="lyr-item"><input type="checkbox" data-layer="atlink_fcc"> FCC coverage — 134k loc (OK)</label>
+      <label class="lyr-item"><input type="checkbox" data-layer="atlink_fcc"> FCC coverage — 134k OK (h3 cell approx)</label>
     </details>
 
     <details class="lyr-group">
       <summary><span class="lyr-dot" style="background:#8b5cf6"></span>Wisper <span class="lyr-badge">DA</span></summary>
-      <label class="lyr-item"><input type="checkbox" data-layer="wisper_fcc"> FCC coverage — 137k loc (MO/IL/KS)</label>
+      <label class="lyr-item"><input type="checkbox" data-layer="wisper_fcc"> FCC coverage — 137k MO/IL/KS (h3 cell approx)</label>
     </details>
 
     <!-- ═══ 4. Acquisition Targets ═══ -->
@@ -261,17 +261,17 @@
 
     <details class="lyr-group">
       <summary><span class="lyr-dot" style="background:#dc2626"></span>Pavlov Media <span class="lyr-badge">TGT</span></summary>
-      <label class="lyr-item"><input type="checkbox" data-layer="pavlov_fcc"> FCC fiber — 114k loc (IL/TX/FL)</label>
+      <label class="lyr-item"><input type="checkbox" data-layer="pavlov_fcc"> FCC fiber — 18k TX (BSL-precise; +96k IL/FL not shown)</label>
     </details>
 
     <details class="lyr-group">
       <summary><span class="lyr-dot" style="background:#ea580c"></span>Open Infra <span class="lyr-badge">TGT</span></summary>
-      <label class="lyr-item"><input type="checkbox" data-layer="openinfra_fcc"> FCC fiber — 87k loc (TX)</label>
+      <label class="lyr-item"><input type="checkbox" data-layer="openinfra_fcc"> FCC fiber — 33k TX (BSL-precise; +54k non-TX not shown)</label>
     </details>
 
     <details class="lyr-group">
       <summary><span class="lyr-dot" style="background:#eab308"></span>Novos Fiber <span class="lyr-badge">TGT</span></summary>
-      <label class="lyr-item"><input type="checkbox" data-layer="novos_fcc"> FCC fiber — 27k loc (TX)</label>
+      <label class="lyr-item"><input type="checkbox" data-layer="novos_fcc"> FCC fiber — 27k TX (BSL-precise)</label>
     </details>
 
     <details class="lyr-group" open>
@@ -295,7 +295,7 @@
 
     <details class="lyr-group">
       <summary><span class="lyr-dot" style="background:#84cc16"></span>Ubiquity Generate <span class="lyr-badge">TGT</span></summary>
-      <label class="lyr-item"><input type="checkbox" data-layer="ubiquity_fcc"> Ubiquity (via FiberFirst) — 178k loc (TX/NE/AZ/CA)</label>
+      <label class="lyr-item"><input type="checkbox" data-layer="ubiquity_fcc"> Ubiquity (via FiberFirst) — 57k TX (BSL-precise; +59k AZ/CA/NE not shown)</label>
       <div class="lyr-pending">Ubiquity is open-access wholesale; FiberFirst is the FCC-filed retail tenant. Other tenants (Ting, etc.) overlap.</div>
     </details>
 
@@ -362,18 +362,22 @@
     var LAYERS = {
       fwf:    { layer: fwfLayer,    loaded: true },
       dal:    { layer: dalLayer,    loaded: true },
-      // FCC coverage layers — '_us' files are nationwide h3-cell centroids
-      // (~600m precision per cell, sized by FCC location density). EllumNet
-      // stays TX-only because it's a TX-only company at BSL fidelity.
-      e8_fcc:         { layer: null, loaded: false, url: 'data/element8_us.geojson',   color: '#10b981' },
-      wl_fcc:         { layer: null, loaded: false, url: 'data/welink_us.geojson',     color: '#f59e0b' },
+      // FCC coverage layers. For TX we have BSL fabric (building-precise lat/lon).
+      // For states outside TX we only have h3-res8 cell IDs from the BDC tables,
+      // which give ~600m approximate locations — useful at zoom 8-10 but show as
+      // hex-center artifacts when zoomed in. Keep BSL-precise TX where we have it,
+      // and only fall back to h3 for providers that don't operate in TX (AtLink OK,
+      // Wisper MO/IL/KS).
+      e8_fcc:         { layer: null, loaded: false, url: 'data/element8_tx.geojson',   color: '#10b981' },
+      wl_fcc:         { layer: null, loaded: false, url: 'data/welink_tx.geojson',     color: '#f59e0b' },
       ellum_fcc:      { layer: null, loaded: false, url: 'data/ellumnet_tx.geojson',   color: '#06b6d4' },
-      pavlov_fcc:     { layer: null, loaded: false, url: 'data/pavlov_us.geojson',     color: '#dc2626' },
-      openinfra_fcc:  { layer: null, loaded: false, url: 'data/open_infra_us.geojson', color: '#ea580c' },
-      novos_fcc:      { layer: null, loaded: false, url: 'data/novos_us.geojson',      color: '#eab308' },
+      pavlov_fcc:     { layer: null, loaded: false, url: 'data/pavlov_tx.geojson',     color: '#dc2626' },
+      openinfra_fcc:  { layer: null, loaded: false, url: 'data/open_infra_tx.geojson', color: '#ea580c' },
+      novos_fcc:      { layer: null, loaded: false, url: 'data/novos_tx.geojson',      color: '#eab308' },
+      ubiquity_fcc:   { layer: null, loaded: false, url: 'data/ubiquity_tx.geojson',   color: '#84cc16' },
+      // h3-approximate (no BSL fabric for these states):
       atlink_fcc:     { layer: null, loaded: false, url: 'data/atlink_us.geojson',     color: '#ec4899' },
       wisper_fcc:     { layer: null, loaded: false, url: 'data/wisper_us.geojson',     color: '#8b5cf6' },
-      ubiquity_fcc:   { layer: null, loaded: false, url: 'data/ubiquity_us.geojson',   color: '#84cc16' },
 
       // VCTI Tarrant build plans (hollow / dashed styling — these are PROPOSED, not built)
       vcti_zones:        { layer: null, loaded: false, url: 'data/vcti_build_zones.geojson',    color: '#22d3ee', kind: 'polygon' },
@@ -476,15 +480,17 @@
     var LAYER_COUNTS = {
       fwf:    { loc: 239,    units: 0 },
       dal:    { loc: 8,      units: 0 },
-      e8_fcc:         { loc: 220442, units: 220442 },
-      wl_fcc:         { loc: 236449, units: 236449 },
+      // Counts: 'loc' is BSL locations (or h3 cells for non-TX providers).
+      // 'units' is MDU-aware passings where unit_count is known; otherwise == loc.
+      e8_fcc:         { loc: 217982, units: 217982 },
+      wl_fcc:         { loc: 14878,  units: 14878  },
       ellum_fcc:      { loc: 255,    units: 2475   },
-      pavlov_fcc:     { loc: 113729, units: 113729 },
-      openinfra_fcc:  { loc: 87195,  units: 87195  },
+      pavlov_fcc:     { loc: 17880,  units: 17880  },
+      openinfra_fcc:  { loc: 33019,  units: 33019  },
       novos_fcc:      { loc: 26994,  units: 26994  },
+      ubiquity_fcc:   { loc: 56840,  units: 56840  },
       atlink_fcc:     { loc: 133732, units: 133732 },
       wisper_fcc:     { loc: 136775, units: 136775 },
-      ubiquity_fcc:   { loc: 178275, units: 178275 },
       vcti_zones:        { loc: 14,    units: 0 },
       vcti_distribution: { loc: 14,    units: 0 },
       vcti_transport:    { loc: 55,    units: 0 },
