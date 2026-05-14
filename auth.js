@@ -35,8 +35,32 @@
     } catch (e) { /* best-effort */ }
   })();
 
-  // Home bar removed — sprocketnetworks.net will replace willgibson.com soon.
-  function injectHomeBar() { /* no-op */ }
+  // "← Fiber Map" badge — appears on every sub-page so you can always get
+  // back to the top-level overview. Skipped on the root index itself.
+  function injectHomeBar() {
+    if (document.getElementById(HOME_BAR_ID)) return;
+    var path = window.location.pathname;
+    if (path === '/' || path === '/index.html') return; // already at top
+    var bar = document.createElement('a');
+    bar.id = HOME_BAR_ID;
+    bar.href = '/';
+    bar.textContent = '← Fiber Map';
+    bar.setAttribute('style', [
+      'position:fixed', 'top:10px', 'left:10px',
+      'z-index:9999',
+      'background:rgba(15,23,42,0.92)', 'color:#cbd5e1',
+      'padding:6px 12px', 'border-radius:6px',
+      'font-family:system-ui,-apple-system,sans-serif',
+      'font-size:12px', 'font-weight:500',
+      'text-decoration:none',
+      'border:1px solid rgba(255,255,255,0.1)',
+      'box-shadow:0 2px 8px rgba(0,0,0,0.25)',
+      'backdrop-filter:blur(6px)'
+    ].join(';'));
+    bar.addEventListener('mouseenter', function () { bar.style.background = 'rgba(15,23,42,1)'; bar.style.color = '#fff'; });
+    bar.addEventListener('mouseleave', function () { bar.style.background = 'rgba(15,23,42,0.92)'; bar.style.color = '#cbd5e1'; });
+    document.body.appendChild(bar);
+  }
 
   // App-specific scope. Admins bypass.
   var REQUIRED_SCOPE = 'fiber-map';
