@@ -292,12 +292,13 @@
 
     <details class="lyr-group">
       <summary><span class="lyr-dot" style="background:#84cc16"></span>Ubiquity Generate <span class="lyr-badge">TGT</span></summary>
-      <div class="lyr-pending">FCC coverage — provider name not yet matched in FCC tables; investigating overnight</div>
+      <label class="lyr-item"><input type="checkbox" data-layer="ubiquity_fcc"> Ubiquity (via FiberFirst) — TX (57k loc; +59k AZ/CA/NE pending BSL)</label>
+      <div class="lyr-pending">Ubiquity is open-access wholesale; FiberFirst is the FCC-filed retail tenant. Other tenants (Ting, etc.) overlap.</div>
     </details>
 
     <details class="lyr-group">
-      <summary><span class="lyr-dot" style="background:#a3a3a3"></span>Texacomm <span class="lyr-badge">TGT</span></summary>
-      <div class="lyr-pending">No FCC BDC filings under this name — separate sourcing needed</div>
+      <summary><span class="lyr-dot" style="background:#a3a3a3"></span>Texacom Networks <span class="lyr-badge">TGT</span></summary>
+      <div class="lyr-pending">Texacom Networks (texacomnetworks.com) — open-access fiber. No FCC BDC filings under this name. Need their retail-tenant ISP names to map coverage.</div>
     </details>
   </div>
 
@@ -366,6 +367,7 @@
       novos_fcc:      { layer: null, loaded: false, url: 'data/novos_tx.geojson',      color: '#eab308' },
       atlink_fcc:     { layer: null, loaded: false, url: 'data/atlink_tx.geojson',     color: '#ec4899' },
       wisper_fcc:     { layer: null, loaded: false, url: 'data/wisper_tx.geojson',     color: '#8b5cf6' },
+      ubiquity_fcc:   { layer: null, loaded: false, url: 'data/ubiquity_tx.geojson',   color: '#84cc16' },
 
       // VCTI Tarrant build plans (hollow / dashed styling — these are PROPOSED, not built)
       vcti_zones:        { layer: null, loaded: false, url: 'data/vcti_build_zones.geojson',    color: '#22d3ee', kind: 'polygon' },
@@ -472,6 +474,7 @@
       novos_fcc:      { loc: 26994,  units: 26994 },
       atlink_fcc:     { loc: 0,      units: 0 },
       wisper_fcc:     { loc: 0,      units: 0 },
+      ubiquity_fcc:   { loc: 56840,  units: 56840 },
       vcti_zones:        { loc: 14,    units: 0 },
       vcti_distribution: { loc: 14,    units: 0 },
       vcti_transport:    { loc: 55,    units: 0 },
