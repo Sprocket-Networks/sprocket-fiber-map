@@ -103,6 +103,15 @@
         to clear due diligence with a comfortable margin.
       </p>
 
+      <div class="verdict warn">
+        <strong>Bottom line for CanAM $40M facility:</strong>
+        Of Neil's $130M Sources &amp; Uses (CFW + Aristotle), only
+        <strong>≈ $14M</strong> of capex falls inside a TEA via either
+        rural or high-unemployment pathway. <strong>Cannot support a $40M
+        EB-5 loan</strong> without folding in Plains Internet's East-TX
+        build (100% rural, ~$X capex) or another rural-heavy project.
+      </div>
+
       <h2>Sources & Uses (Neil, May 13)</h2>
       <div class="uses">
         <div class="row"><span>Uses</span><strong>$130M</strong></div>
@@ -151,18 +160,57 @@
       </div>
 
       <h2>TEA test #2: High-unemployment area (HUA)</h2>
-      <div class="verdict warn">
-        <strong>Pending data load.</strong> HUA = census tract or contiguous
-        tracts where weighted-avg unemployment ≥ 150% of the national average,
-        per most recent BLS LAUS data. Need ACS 5-year tract-level unemployment
-        for Tarrant / Collin / Harrison / Upshur counties to render the HUA
-        overlay. Without this, FWF + Aristotle can't qualify for EB-5 via
-        either pathway.
+      <p class="help">
+        HUA = census tract (or contiguous group of tracts) with unemployment
+        rate ≥ 150% of the national average, per most recent ACS 5-year data.
+        National rate (ACS 2020–2024): <strong>5.23%</strong>. HUA threshold:
+        <strong>≥ 7.85%</strong>. <strong>1,537</strong> of 6,842 TX tracts
+        qualify, covering <strong>17.2%</strong> of state land area.
+      </p>
+      <table class="coverage">
+        <thead><tr><th>Network</th><th class="num">Mi</th><th class="num">TEA mi</th><th class="num">%</th></tr></thead>
+        <tbody>
+          <tr><td>Sprocket FWF (CFW)</td><td class="num">274</td><td class="num">37.0</td><td class="num pct-bad">13.5%</td></tr>
+          <tr><td>Sprocket Dallas</td><td class="num">17</td><td class="num">2.2</td><td class="num pct-bad">13.4%</td></tr>
+          <tr><td>Aristotle Collin</td><td class="num">507</td><td class="num">48.1</td><td class="num pct-bad">9.5%</td></tr>
+          <tr><td>Aristotle Harrison</td><td class="num">261</td><td class="num">13.0</td><td class="num pct-bad">5.0%</td></tr>
+          <tr><td>Aristotle Upshur</td><td class="num">453</td><td class="num">65.5</td><td class="num pct-bad">14.5%</td></tr>
+          <tr><td>Plains Angelina</td><td class="num">966</td><td class="num">966</td><td class="num pct-good">100%</td></tr>
+          <tr><td>Plains Nacogdoches</td><td class="num">873</td><td class="num">872</td><td class="num pct-good">100%</td></tr>
+          <tr class="total"><td>Combined (rural ∪ HUA)</td><td class="num">3,350</td><td class="num">2,004</td><td class="num">59.8%</td></tr>
+        </tbody>
+      </table>
+      <p class="help" style="margin-top:-6px;">
+        TEA mi column = miles inside the combined rural ∪ HUA polygon.
+        Plains routes are already 100% rural, so the HUA pathway adds little
+        for them. For Sprocket + Aristotle, HUA is the only available pathway —
+        all of their build is inside DFW or Longview MSAs, but ~5–15% of
+        each MSA build passes through high-unemployment tracts.
+      </p>
+
+      <div class="verdict warn" style="margin-top:10px;">
+        <strong>HUA verdict for Neil's $130M Sources &amp; Uses:</strong><br>
+        ~$50M CFW × 13.5% ≈ <strong>$6.8M</strong> TEA-eligible.<br>
+        ~$80M Aristotle (weighted across Collin/Harrison/Upshur) × ~10% ≈
+        <strong>$7.5M</strong> TEA-eligible.<br>
+        Combined CFW + Aristotle TEA capex: <strong>≈ $14M</strong> —
+        well short of the $60M BOM cushion CanAM wants for a $40M EB-5
+        facility. <strong>Sprocket + Aristotle alone cannot support the
+        $40M loan</strong> through either rural or HUA pathway as currently
+        scoped.
+      </div>
+      <div class="verdict good">
+        <strong>Adding Plains gets you there.</strong> Plains Angelina +
+        Nacogdoches = $X capex, 100% TEA (rural). Folding Plains into the
+        CanAM borrower group — or running a separate EB-5 facility against
+        Plains capex — clears the BOM coverage test with room to spare.
       </div>
 
       <h2>Map layers</h2>
       <div class="layer-toggles">
-        <label><input type="checkbox" id="layer-rural" checked><span class="swatch" style="background:#86efac"></span>TX rural area (TEA-eligible by rural test)</label>
+        <label><input type="checkbox" id="layer-rural" checked><span class="swatch" style="background:#86efac"></span>TX rural area (TEA test #1)</label>
+        <label><input type="checkbox" id="layer-hua"><span class="swatch" style="background:#fb923c"></span>TX high-unemployment tracts (TEA test #2)</label>
+        <label><input type="checkbox" id="layer-tea"><span class="swatch" style="background:#a78bfa"></span>Combined TEA-eligible (rural ∪ HUA)</label>
         <label><input type="checkbox" id="layer-msas" checked><span class="swatch" style="background:#ef4444"></span>TX MSA boundaries (rural-disqualifying)</label>
         <label><input type="checkbox" id="layer-fwf" checked><span class="swatch" style="background:#3b82f6"></span>Sprocket FWF routes</label>
         <label><input type="checkbox" id="layer-dal" checked><span class="swatch" style="background:#3b82f6"></span>Sprocket Dallas routes</label>
@@ -178,7 +226,9 @@
         TEA criteria per <a href="https://www.uscis.gov/policy-manual/volume-6-part-g-chapter-5" target="_blank" rel="noopener">USCIS Policy Manual, Vol 6 G Ch 5</a>
         and the <a href="https://www.uscis.gov/sites/default/files/document/policy-manual-updates/20220324-EB5.pdf" target="_blank" rel="noopener">EB-5 RIA 2022</a>.
         IIUSA's reference map: <a href="https://iiusa.org/resources-data/targeted-employment-areas/" target="_blank" rel="noopener">iiusa.org TEA Mapping Tool</a>.
-        Boundary data: Census TIGER/Line 2024 (CBSA shapefile).
+        Boundary data: Census TIGER/Line 2024 (CBSA + tract shapefiles).
+        Unemployment data: ACS 2020–2024 5-year estimates (table B23025)
+        via Census Reporter.
         Last updated: <span id="updated"></span>.
       </p>
     </aside>
@@ -221,6 +271,12 @@
     // Polygon layers
     addLayer('rural', 'data/eb5_tx_rural.geojson', function (d) {
       return L.geoJSON(d, { style: { color: '#16a34a', weight: 1, opacity: 0.4, fillColor: '#86efac', fillOpacity: 0.32 } });
+    });
+    addLayer('hua', 'data/eb5_tx_hua.geojson', function (d) {
+      return L.geoJSON(d, { style: { color: '#c2410c', weight: 0.5, opacity: 0.5, fillColor: '#fb923c', fillOpacity: 0.4 } });
+    });
+    addLayer('tea', 'data/eb5_tx_tea.geojson', function (d) {
+      return L.geoJSON(d, { style: { color: '#7c3aed', weight: 1, opacity: 0.5, fillColor: '#a78bfa', fillOpacity: 0.25 } });
     });
     addLayer('msas', 'data/eb5_tx_msas.geojson', function (d) {
       return L.geoJSON(d, {
