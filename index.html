@@ -185,11 +185,16 @@
       <label class="lyr-item"><input type="checkbox" data-layer="dal" checked> Dallas Backbone</label>
     </details>
 
+    <details class="lyr-group" open>
+      <summary><span class="lyr-dot" style="background:#0ea5e9"></span>Lasso Broadband</summary>
+      <label class="lyr-item"><input type="checkbox" data-layer="ellum_fcc"> EllumNet — FCC reported (250 loc)</label>
+      <label class="lyr-item"><a href="/E8_Crowley_FTTH_Plan.html" class="lyr-link">↗ Crowley FTTH plan</a></label>
+      <label class="lyr-item"><a href="/E8_Lakeside_FTTH_Plan.html" class="lyr-link">↗ Lakeside FTTH plan</a></label>
+    </details>
+
     <details class="lyr-group">
       <summary><span class="lyr-dot" style="background:#10b981"></span>Element8 <span class="lyr-badge">DA</span></summary>
       <label class="lyr-item"><input type="checkbox" data-layer="e8_fcc"> FCC coverage — TX (218k loc)</label>
-      <label class="lyr-item"><a href="/E8_Crowley_FTTH_Plan.html" class="lyr-link">↗ Crowley FTTH plan</a></label>
-      <label class="lyr-item"><a href="/E8_Lakeside_FTTH_Plan.html" class="lyr-link">↗ Lakeside FTTH plan</a></label>
     </details>
 
     <details class="lyr-group">
@@ -270,8 +275,9 @@
     var LAYERS = {
       fwf:    { layer: fwfLayer,    loaded: true },
       dal:    { layer: dalLayer,    loaded: true },
-      e8_fcc: { layer: null, loaded: false, url: 'data/element8_tx.geojson', color: '#10b981' },
-      wl_fcc: { layer: null, loaded: false, url: 'data/welink_tx.geojson',   color: '#f59e0b' }
+      e8_fcc:    { layer: null, loaded: false, url: 'data/element8_tx.geojson', color: '#10b981' },
+      wl_fcc:    { layer: null, loaded: false, url: 'data/welink_tx.geojson',   color: '#f59e0b' },
+      ellum_fcc: { layer: null, loaded: false, url: 'data/ellumnet_tx.geojson', color: '#0ea5e9' }
     };
 
     // Shared canvas renderer — handles hundreds of thousands of points smoothly
