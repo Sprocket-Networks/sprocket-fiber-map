@@ -214,9 +214,6 @@
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
-  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
   <script>
     var map = L.map('map').setView([32.82, -97.08], 11);
 
@@ -277,25 +274,23 @@
       wl_fcc: { layer: null, loaded: false, url: 'data/welink_tx.geojson',   color: '#f59e0b' }
     };
 
-    function makeClusterLayer(geojson, color) {
-      var cluster = L.markerClusterGroup({
-        chunkedLoading: true,
-        maxClusterRadius: 60,
-        iconCreateFunction: function (c) {
-          var n = c.getChildCount();
-          return L.divIcon({
-            html: '<div style="background:' + color + ';opacity:0.85;color:white;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.3)">' +
-                  (n >= 1000 ? Math.round(n/100)/10 + 'k' : n) + '</div>',
-            className: '', iconSize: [36, 36]
+    // Shared canvas renderer — handles hundreds of thousands of points smoothly
+    // by rendering to a single <canvas> instead of one DOM node per point.
+    var DOT_CANVAS = L.canvas({ padding: 0.25 });
+
+    function makeDotLayer(geojson, color) {
+      return L.geoJSON(geojson, {
+        pointToLayer: function (_, latlng) {
+          return L.circleMarker(latlng, {
+            renderer: DOT_CANVAS,
+            radius: 2,
+            color: color,
+            fillColor: color,
+            fillOpacity: 0.55,
+            weight: 0
           });
         }
       });
-      L.geoJSON(geojson, {
-        pointToLayer: function (_, latlng) {
-          return L.circleMarker(latlng, { radius: 3, color: color, fillColor: color, fillOpacity: 0.7, weight: 1 });
-        }
-      }).eachLayer(function (l) { cluster.addLayer(l); });
-      return cluster;
     }
 
     function setLayer(key, on) {
@@ -309,7 +304,7 @@
           fetch(entry.url)
             .then(function (r) { return r.json(); })
             .then(function (data) {
-              entry.layer = makeClusterLayer(data, entry.color);
+              entry.layer = makeDotLayer(data, entry.color);
               entry.loaded = true;
               entry.layer.addTo(map);
               if (cb) cb.disabled = false;
