@@ -387,8 +387,30 @@
       <label class="lyr-item"><input type="checkbox" data-layer="costar_datacenters"> 6 data centers (12 known; 6 unmatched in Census geocoder)</label>
     </details>
 
-    <!-- ═══ 6. EB-5 TEA mapping ═══ -->
-    <div class="lyr-section">EB-5 TEA mapping</div>
+    <!-- ═══ 6. FCC Broadband Data (county drill-down) ═══ -->
+    <div class="lyr-section">FCC broadband data</div>
+
+    <div style="padding:6px 0 8px 0;font-size:12px;">
+      <div style="font-weight:600;color:#475569;margin-bottom:4px;">Non-fiber BSL by county</div>
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
+        <select id="fcc-state" style="flex:0 0 50px;font-size:12px;padding:3px 4px;border:1px solid #cbd5e1;border-radius:4px;">
+          <option value="tx">TX</option>
+        </select>
+        <select id="fcc-county" style="flex:1;font-size:12px;padding:3px 4px;border:1px solid #cbd5e1;border-radius:4px;">
+          <option value="">Loading…</option>
+        </select>
+      </div>
+      <label class="lyr-item" style="padding-left:0;">
+        <input type="checkbox" id="fcc-county-show"> Show selected county
+      </label>
+      <div id="fcc-county-stats" style="padding-left:22px;font-size:11px;color:#64748b;margin-top:2px;"></div>
+      <div class="lyr-pending" style="margin-top:6px;">
+        BSL-precise non-fiber locations for 25 NTX counties (CostQuest fabric). Other states/counties need additional NTIA licensing. Total available: 750k+ non-fiber BSL / 1.3M+ unit passings.
+      </div>
+    </div>
+
+    <!-- ═══ 7. EB-5 TEA mapping ═══ -->
+    <div class="lyr-section">EB-5 TEA mapping <a href="/eb5.html" style="float:right;font-weight:400;text-transform:none;letter-spacing:0;color:#2563eb;text-decoration:none;">↗ full page</a></div>
 
     <details class="lyr-group">
       <summary><span class="lyr-dot" style="background:#22c55e"></span>Rural area (outside any TX MSA)</summary>
@@ -773,6 +795,8 @@
         var c = LAYER_COUNTS[cb.dataset.layer];
         if (c) { totLoc += (c.loc||0); totUnits += (c.units||0); anyOn = true; }
       });
+      // Add FCC county drill-down to totals if active
+      if (window.__fccExtraLoc) { totLoc += window.__fccExtraLoc; totUnits += window.__fccExtraUnits || 0; anyOn = true; }
       var banner = document.getElementById('totals-banner');
       var kmzBtn = document.getElementById('kmz-export');
       if (anyOn) {
@@ -790,6 +814,84 @@
       cb.addEventListener('change', function () { setLayer(this.dataset.layer, this.checked); updateTotals(); });
     });
     updateTotals(); // initial state — FWF + Dallas are default on
+
+    // ---- FCC Broadband Data: state/county drill-down ----
+    var FCC_COUNTY = { layer: null, geoid: null, count: 0, units: 0 };
+    var fccStateSel  = document.getElementById('fcc-state');
+    var fccCountySel = document.getElementById('fcc-county');
+    var fccShowCb    = document.getElementById('fcc-county-show');
+    var fccStatsEl   = document.getElementById('fcc-county-stats');
+
+    function loadFccManifest(state) {
+      fetch('data/fcc/' + state + '/manifest.json')
+        .then(function (r) { return r.json(); })
+        .then(function (m) {
+          fccCountySel.innerHTML = '<option value="">Select a county…</option>';
+          m.counties.forEach(function (c) {
+            var opt = document.createElement('option');
+            opt.value = c.geoid;
+            opt.textContent = (c.name || c.geoid) + ' — ' + c.nonfiber.toLocaleString() + ' non-fiber';
+            opt.dataset.count = c.nonfiber;
+            opt.dataset.units = c.units;
+            opt.dataset.name = c.name || '';
+            fccCountySel.appendChild(opt);
+          });
+        }).catch(function (e) {
+          fccCountySel.innerHTML = '<option value="">Load failed</option>';
+          console.error(e);
+        });
+    }
+
+    function fccUpdateStats() {
+      var opt = fccCountySel.selectedOptions[0];
+      if (!opt || !opt.value) { fccStatsEl.textContent = ''; return; }
+      fccStatsEl.textContent = (+opt.dataset.count).toLocaleString() + ' BSL / ' +
+                               (+opt.dataset.units).toLocaleString() + ' unit passings';
+    }
+
+    function fccShowCounty(state, geoid, on) {
+      // Remove current layer if any
+      if (FCC_COUNTY.layer) { map.removeLayer(FCC_COUNTY.layer); FCC_COUNTY.layer = null; }
+      if (!on || !geoid) { recomputeFccTotals(); return; }
+      var opt = fccCountySel.selectedOptions[0];
+      FCC_COUNTY.geoid = geoid;
+      FCC_COUNTY.count = opt ? +opt.dataset.count : 0;
+      FCC_COUNTY.units = opt ? +opt.dataset.units : 0;
+      fetch('data/fcc/' + state + '/' + geoid + '.geojson')
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          FCC_COUNTY.layer = L.geoJSON(data, {
+            pointToLayer: function (_, latlng) {
+              return L.circleMarker(latlng, {
+                renderer: DOT_CANVAS,
+                radius: 2, color: '#ef4444', fillColor: '#ef4444',
+                fillOpacity: 0.6, weight: 0
+              });
+            }
+          }).addTo(map);
+          recomputeFccTotals();
+        });
+    }
+
+    function recomputeFccTotals() {
+      // Add FCC county count to totals banner manually
+      // (we want to keep county count separate from layer-toggle counts so it shows even though it's not a LAYERS-map entry)
+      // Simplest path: include in updateTotals via a stash variable
+      window.__fccExtraLoc = FCC_COUNTY.layer ? FCC_COUNTY.count : 0;
+      window.__fccExtraUnits = FCC_COUNTY.layer ? FCC_COUNTY.units : 0;
+      updateTotals();
+    }
+
+    fccStateSel.addEventListener('change', function () { loadFccManifest(this.value); });
+    fccCountySel.addEventListener('change', function () {
+      fccUpdateStats();
+      if (fccShowCb.checked) fccShowCounty(fccStateSel.value, this.value, true);
+    });
+    fccShowCb.addEventListener('change', function () {
+      fccShowCounty(fccStateSel.value, fccCountySel.value, this.checked);
+    });
+    // Boot
+    loadFccManifest('tx');
 
     // ---- KMZ export ----
     document.getElementById('kmz-export').addEventListener('click', exportVisibleAsKmz);
