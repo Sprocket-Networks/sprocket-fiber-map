@@ -1,0 +1,12 @@
+{
+"type": "FeatureCollection",
+"name": "atlink_e8_towers_2025_11__atlink__element8_towers",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"xy_coordinate_resolution": 1e-05,
+"features": [
+{ "type": "Feature", "properties": { "name": "Avondale", "folders": "E8 Wireless Network; Towers", "description": "", "altitude": 0.0, "alt_mode": "", "time_begin": "", "time_end": "", "time_when": "" }, "geometry": { "type": "Point", "coordinates": [ -97.41002, 32.96897 ] } },
+{ "type": "Feature", "properties": { "name": "Crowley", "folders": "E8 Wireless Network; Towers", "description": "", "altitude": 0.0, "alt_mode": "", "time_begin": "", "time_end": "", "time_when": "" }, "geometry": { "type": "Point", "coordinates": [ -97.41303, 32.53663 ] } },
+{ "type": "Feature", "properties": { "name": "Lakeside", "folders": "E8 Wireless Network; Towers", "description": "", "altitude": 0.0, "alt_mode": "", "time_begin": "", "time_end": "", "time_when": "" }, "geometry": { "type": "Point", "coordinates": [ -97.48598, 32.82776 ] } },
+{ "type": "Feature", "properties": { "name": "Rhome", "folders": "E8 Wireless Network; Towers", "description": "", "altitude": 0.0, "alt_mode": "", "time_begin": "", "time_end": "", "time_when": "" }, "geometry": { "type": "Point", "coordinates": [ -97.46606, 33.05775 ] } }
+]
+}

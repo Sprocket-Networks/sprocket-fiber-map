@@ -239,21 +239,25 @@
     <details class="lyr-group">
       <summary><span class="lyr-dot" style="background:#10b981"></span>Element8 <span class="lyr-badge">DA</span></summary>
       <label class="lyr-item"><input type="checkbox" data-layer="e8_fcc"> FCC coverage — 218k TX (BSL-precise)</label>
+      <label class="lyr-item"><input type="checkbox" data-layer="e8_towers"> ▲ Towers — 21 active sites</label>
     </details>
 
     <details class="lyr-group">
       <summary><span class="lyr-dot" style="background:#f59e0b"></span>WeLink <span class="lyr-badge">DA</span></summary>
       <label class="lyr-item"><input type="checkbox" data-layer="wl_fcc"> FCC coverage — 15k TX (BSL-precise; +221k UT approx)</label>
+      <div class="lyr-pending">▲ Towers — pending source file (try FCC ASR by FRN or WeLink-provided)</div>
     </details>
 
     <details class="lyr-group">
       <summary><span class="lyr-dot" style="background:#ec4899"></span>AtLink <span class="lyr-badge">DA</span></summary>
       <label class="lyr-item"><input type="checkbox" data-layer="atlink_fcc"> FCC coverage — 134k OK (h3 cell approx)</label>
+      <label class="lyr-item"><input type="checkbox" data-layer="atlink_towers"> ▲ Towers — 137 active sites (incl. Osage + Otoe-Missouria tribal)</label>
     </details>
 
     <details class="lyr-group">
       <summary><span class="lyr-dot" style="background:#8b5cf6"></span>Wisper <span class="lyr-badge">DA</span></summary>
       <label class="lyr-item"><input type="checkbox" data-layer="wisper_fcc"> FCC coverage — 137k MO/IL/KS (h3 cell approx)</label>
+      <div class="lyr-pending">▲ Towers — pending source file (try FCC ASR by FRN or Wisper-provided)</div>
     </details>
 
     <!-- ═══ 4. Acquisition Targets ═══ -->
@@ -379,6 +383,10 @@
       atlink_fcc:     { layer: null, loaded: false, url: 'data/atlink_us.geojson',     color: '#ec4899' },
       wisper_fcc:     { layer: null, loaded: false, url: 'data/wisper_us.geojson',     color: '#8b5cf6' },
 
+      // FWA tower locations (active sites)
+      atlink_towers:  { layer: null, loaded: false, url: 'data/atlink_towers.geojson', color: '#ec4899', kind: 'tower' },
+      e8_towers:      { layer: null, loaded: false, url: 'data/element8_towers.geojson', color: '#10b981', kind: 'tower' },
+
       // VCTI Tarrant build plans (hollow / dashed styling — these are PROPOSED, not built)
       vcti_zones:        { layer: null, loaded: false, url: 'data/vcti_build_zones.geojson',    color: '#22d3ee', kind: 'polygon' },
       vcti_distribution: { layer: null, loaded: false, url: 'data/vcti_distribution.geojson',   color: '#22d3ee', kind: 'line', dashed: true },
@@ -442,6 +450,23 @@
           }
         });
       }
+      if (kind === 'tower') {
+        // FWA tower sites — chunky triangle marker so they pop above BSL dots
+        return L.geoJSON(data, {
+          pointToLayer: function (_, latlng) {
+            var icon = L.divIcon({
+              className: '',
+              html: '<div style="width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:12px solid ' + color + ';filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4));"></div>',
+              iconSize: [14, 12], iconAnchor: [7, 12]
+            });
+            return L.marker(latlng, { icon: icon, title: (_.properties && _.properties.name) || '' });
+          },
+          onEachFeature: function (f, layer) {
+            var n = f.properties && f.properties.name;
+            if (n) layer.bindTooltip(n, { direction: 'top', offset: [0, -12] });
+          }
+        });
+      }
       // default: solid dot (existing FCC coverage)
       return makeDotLayer(data, color);
     }
@@ -491,6 +516,9 @@
       ubiquity_fcc:   { loc: 56840,  units: 56840  },
       atlink_fcc:     { loc: 133732, units: 133732 },
       wisper_fcc:     { loc: 136775, units: 136775 },
+      // Towers — count towers as 'loc' but no passings (they're infrastructure)
+      atlink_towers:  { loc: 137, units: 0 },
+      e8_towers:      { loc: 21,  units: 0 },
       vcti_zones:        { loc: 14,    units: 0 },
       vcti_distribution: { loc: 14,    units: 0 },
       vcti_transport:    { loc: 55,    units: 0 },
