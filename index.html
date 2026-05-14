@@ -41,54 +41,77 @@
     }
     #layers-panel {
       position: fixed; top: 60px; left: 16px; z-index: 1000;
-      background: white; border-radius: 8px;
-      padding: 12px 14px 10px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+      background: white; border-radius: 10px;
+      box-shadow: 0 2px 14px rgba(0,0,0,0.15);
       font-size: 12px; color: #1e293b;
-      width: 260px; max-height: calc(100vh - 80px); overflow-y: auto;
+      width: 280px; max-height: calc(100vh - 80px); display: flex; flex-direction: column;
     }
-    .layers-title {
-      font-weight: 600; font-size: 11px; text-transform: uppercase;
-      letter-spacing: 0.06em; color: #94a3b8; margin-bottom: 9px;
+    #presets {
+      padding: 12px 14px 10px; border-bottom: 1px solid #e2e8f0;
     }
-    .lyr-group { margin-bottom: 4px; }
+    #presets .ttl {
+      font-weight: 600; font-size: 10px; text-transform: uppercase;
+      letter-spacing: 0.08em; color: #94a3b8; margin-bottom: 6px;
+    }
+    #presets .pgrid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 5px;
+    }
+    #presets button {
+      font-family: inherit; font-size: 11.5px; font-weight: 500;
+      padding: 7px 8px; border: 1px solid #e2e8f0; border-radius: 6px;
+      background: white; cursor: pointer; color: #334155;
+      text-align: left; line-height: 1.2;
+      transition: all 0.12s;
+    }
+    #presets button:hover { background: #f1f5f9; border-color: #cbd5e1; }
+    #presets button.active { background: #1d4ed8; border-color: #1d4ed8; color: white; }
+    #presets button.clear {
+      grid-column: 1 / -1; color: #94a3b8; text-align: center; padding: 5px;
+      font-size: 11px;
+    }
+    #layers-scroll {
+      flex: 1; overflow-y: auto; padding: 8px 14px 12px;
+    }
+    .layers-title { display: none; }
+    .lyr-group { margin-bottom: 1px; }
     .lyr-group summary {
-      cursor: pointer; padding: 5px 0; font-weight: 600; font-size: 12.5px;
-      display: flex; align-items: center; gap: 8px; list-style: none;
+      cursor: pointer; padding: 4px 0; font-weight: 600; font-size: 12px;
+      display: flex; align-items: center; gap: 6px; list-style: none;
     }
     .lyr-group summary::-webkit-details-marker { display: none; }
     .lyr-group summary::before {
-      content: '▸'; color: #94a3b8; font-size: 10px; transition: transform 0.15s;
-      display: inline-block; width: 10px;
+      content: '▸'; color: #cbd5e1; font-size: 9px; transition: transform 0.15s;
+      display: inline-block; width: 8px;
     }
     .lyr-group[open] summary::before { transform: rotate(90deg); }
     .lyr-dot {
-      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+      width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
       display: inline-block;
     }
     .lyr-badge {
-      font-size: 9px; font-weight: 700; color: #64748b; background: #f1f5f9;
-      padding: 1px 6px; border-radius: 999px; margin-left: 4px; letter-spacing: 0.02em;
+      font-size: 8.5px; font-weight: 700; color: #64748b; background: #f1f5f9;
+      padding: 1px 5px; border-radius: 999px; margin-left: 3px; letter-spacing: 0.02em;
     }
     .lyr-item {
-      display: flex; align-items: center; gap: 7px; padding: 4px 0 4px 22px;
-      font-size: 12px; cursor: pointer;
+      display: flex; align-items: center; gap: 6px; padding: 2px 0 2px 18px;
+      font-size: 11.5px; cursor: pointer; line-height: 1.35;
     }
-    .lyr-item input[type=checkbox] { cursor: pointer; margin: 0; }
-    .lyr-item .lyr-link {
-      color: #2563eb; text-decoration: none; font-size: 12px;
-    }
+    .lyr-item input[type=checkbox] { cursor: pointer; margin: 0; flex-shrink: 0; }
+    .lyr-item .lyr-link { color: #2563eb; text-decoration: none; font-size: 11.5px; }
     .lyr-item .lyr-link:hover { text-decoration: underline; }
     .lyr-pending {
-      padding: 4px 0 4px 22px; font-size: 11px; color: #94a3b8; font-style: italic;
+      padding: 3px 0 3px 18px; font-size: 10.5px; color: #94a3b8; font-style: italic;
+      line-height: 1.4;
     }
     .lyr-section {
-      font-size: 10px; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 0.1em; color: #475569;
-      padding: 10px 0 4px; margin-top: 4px;
+      font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.09em; color: #64748b;
+      padding: 9px 0 3px; margin-top: 4px;
       border-top: 1px solid #e2e8f0;
+      position: sticky; top: -8px; background: white; z-index: 2;
     }
-    .lyr-section:first-of-type { border-top: none; padding-top: 4px; margin-top: 0; }
+    .lyr-section:first-of-type { border-top: none; padding-top: 2px; margin-top: 0; }
+    .lyr-section a { font-weight: 400; text-transform: none; letter-spacing: 0; }
     .lyr-item input[type=checkbox]:disabled + * { color: #94a3b8; }
     .lyr-item:has(input:disabled) { opacity: 0.55; cursor: not-allowed; }
     .leaflet-popup-content h3 {
@@ -205,7 +228,19 @@
   </div>
 
   <div id="layers-panel">
-    <div class="layers-title">Layers</div>
+    <div id="presets">
+      <div class="ttl">Quick views</div>
+      <div class="pgrid">
+        <button data-preset="today">Today's network<br><span style="font-size:10px;opacity:0.7;">Sprocket + Lasso + sites</span></button>
+        <button data-preset="build">Tarrant build plan<br><span style="font-size:10px;opacity:0.7;">FWF + CFW + VCTI</span></button>
+        <button data-preset="expand">Expansion targets<br><span style="font-size:10px;opacity:0.7;">Non-fiber near routes</span></button>
+        <button data-preset="da">DA portfolio<br><span style="font-size:10px;opacity:0.7;">Element8/AtLink/WeLink/Wisper</span></button>
+        <button data-preset="acquire">Acquisition targets<br><span style="font-size:10px;opacity:0.7;">Pavlov/Open Infra/Novos/Aristotle/Plains</span></button>
+        <button data-preset="costar">CoStar revenue<br><span style="font-size:10px;opacity:0.7;">MDU + commercial properties</span></button>
+        <button class="clear" data-preset="clear">Clear all layers</button>
+      </div>
+    </div>
+    <div id="layers-scroll">
 
     <!-- ═══ 1. Current Network ═══ -->
     <div class="lyr-section">Current network</div>
@@ -432,6 +467,7 @@
       <summary><span class="lyr-dot" style="background:#ef4444"></span>TX MSA boundaries</summary>
       <label class="lyr-item"><input type="checkbox" data-layer="eb5_msas"> 26 metro statistical areas (urbanized exclusion)</label>
     </details>
+    </div>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
@@ -814,6 +850,51 @@
       cb.addEventListener('change', function () { setLayer(this.dataset.layer, this.checked); updateTotals(); });
     });
     updateTotals(); // initial state — FWF + Dallas are default on
+
+    // ---- Quick view presets ----
+    var PRESETS = {
+      today:   ['fwf','dal','ellum_fcc','cfw_sites'],
+      build:   ['fwf','cfw_sites','vcti_zones','vcti_distribution','vcti_transport','vcti_passings'],
+      expand:  ['fwf','dal','fwf_nonfiber','dal_nonfiber','costar_mdu'],
+      da:      ['e8_fcc','e8_towers','wl_fcc','atlink_fcc','atlink_towers','wisper_fcc'],
+      acquire: ['pavlov_fcc','openinfra_fcc','novos_fcc','ubiquity_fcc',
+                'aristotle_collin_fiber','aristotle_collin_passings',
+                'aristotle_harrison_fiber','aristotle_harrison_passings',
+                'aristotle_upshur_fiber','aristotle_upshur_passings',
+                'plains_angelina_ducts','plains_angelina_endpoints',
+                'plains_nacogdoches_ducts','plains_nacogdoches_endpoints'],
+      costar:  ['costar_mdu','costar_office','costar_retail','costar_healthcare',
+                'costar_hospitality','costar_industrial','costar_medical',
+                'costar_education','costar_government','costar_sports',
+                'costar_student_housing','costar_flex','costar_datacenters'],
+    };
+
+    function applyPreset(name) {
+      var wanted = name === 'clear' ? [] : (PRESETS[name] || []);
+      var wantedSet = new Set(wanted);
+      // Toggle every layer checkbox to match preset
+      document.querySelectorAll('#layers-panel input[type=checkbox][data-layer]').forEach(function (cb) {
+        var should = wantedSet.has(cb.dataset.layer);
+        if (cb.checked !== should) {
+          cb.checked = should;
+          setLayer(cb.dataset.layer, should);
+        }
+      });
+      updateTotals();
+      // Highlight which preset is active
+      document.querySelectorAll('#presets button[data-preset]').forEach(function (b) {
+        b.classList.toggle('active', b.dataset.preset === name && name !== 'clear');
+      });
+    }
+    document.querySelectorAll('#presets button[data-preset]').forEach(function (b) {
+      b.addEventListener('click', function () { applyPreset(this.dataset.preset); });
+    });
+    // Manual toggle clears the active-preset highlight
+    document.querySelectorAll('#layers-panel input[type=checkbox][data-layer]').forEach(function (cb) {
+      cb.addEventListener('change', function () {
+        document.querySelectorAll('#presets button.active').forEach(function (b) { b.classList.remove('active'); });
+      });
+    });
 
     // ---- FCC Broadband Data: state/county drill-down ----
     var FCC_COUNTY = { layer: null, geoid: null, count: 0, units: 0 };
