@@ -135,7 +135,21 @@
       <div class="wg-box">WG</div>
       <span class="brand-name">Sprocket Networks</span>
     </div>
-    <div style="display:flex;align-items:center;gap:14px;">
+
+    <div id="totals-banner" style="display:none;flex:1;text-align:center;font-size:13px;color:#e2e8f0;">
+      <span style="color:#94a3b8;">Selected:</span>
+      <strong id="totals-locations" style="color:#f8fafc;margin:0 4px;">0</strong>
+      <span style="color:#94a3b8;">properties &middot;</span>
+      <strong id="totals-passings" style="color:#f8fafc;margin:0 4px;">0</strong>
+      <span style="color:#94a3b8;">unit passings</span>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:10px;">
+      <button id="kmz-export" type="button"
+              style="display:none;background:#1d4ed8;color:#fff;font-size:12px;font-weight:500;
+                     padding:5px 11px;border:none;border-radius:6px;cursor:pointer;">
+        Export KMZ
+      </button>
       <a id="admin-link" href="/admin.html"
          style="display:none;color:#cbd5e1;font-size:12px;text-decoration:none;
                 padding:4px 10px;border:1px solid rgba(255,255,255,0.15);border-radius:6px;">
@@ -206,10 +220,17 @@
     <div class="lyr-section">VCTI FTTH build plans</div>
 
     <details class="lyr-group" open>
-      <summary><span class="lyr-dot" style="background:#22d3ee"></span>Build plans</summary>
+      <summary><span class="lyr-dot" style="background:#22d3ee"></span>Tarrant County (FWF Phase 1)</summary>
+      <label class="lyr-item"><input type="checkbox" data-layer="vcti_zones"> Build plan zones (14 AOIs)</label>
+      <label class="lyr-item"><input type="checkbox" data-layer="vcti_distribution"> Distribution fiber (proposed)</label>
+      <label class="lyr-item"><input type="checkbox" data-layer="vcti_transport"> Transport routes (proposed)</label>
+      <label class="lyr-item"><input type="checkbox" data-layer="vcti_passings"> Planned passings — 10,736 (FCC-valid + VCTI-added)</label>
+    </details>
+
+    <details class="lyr-group">
+      <summary><span class="lyr-dot" style="background:#22d3ee"></span>Other plans</summary>
       <label class="lyr-item"><a href="/E8_Crowley_FTTH_Plan.html" class="lyr-link">↗ Crowley FTTH plan</a></label>
       <label class="lyr-item"><a href="/E8_Lakeside_FTTH_Plan.html" class="lyr-link">↗ Lakeside FTTH plan</a></label>
-      <div class="lyr-pending">Additional VCTI-provided planned FTTH locations pending source file from Will</div>
     </details>
 
     <!-- ═══ 3. DA Partner Providers ═══ -->
@@ -251,6 +272,22 @@
     <details class="lyr-group">
       <summary><span class="lyr-dot" style="background:#eab308"></span>Novos Fiber <span class="lyr-badge">TGT</span></summary>
       <label class="lyr-item"><input type="checkbox" data-layer="novos_fcc"> FCC fiber — TX (27k loc)</label>
+    </details>
+
+    <details class="lyr-group" open>
+      <summary><span class="lyr-dot" style="background:#16a34a"></span>Aristotle BEAD <span class="lyr-badge">TGT</span></summary>
+      <label class="lyr-item"><input type="checkbox" data-layer="aristotle_collin_fiber"> Collin — proposed access fiber (13k segments)</label>
+      <label class="lyr-item"><input type="checkbox" data-layer="aristotle_collin_buffer"> Collin — 1000ft buffer</label>
+      <label class="lyr-item"><input type="checkbox" data-layer="aristotle_collin_passings"> Collin — BSL within 1000ft (16,187 loc)</label>
+      <div class="lyr-pending">Harrison + Upshur: rendering overnight</div>
+    </details>
+
+    <details class="lyr-group" open>
+      <summary><span class="lyr-dot" style="background:#0891b2"></span>Plains Internet <span class="lyr-badge">TGT</span></summary>
+      <label class="lyr-item"><input type="checkbox" data-layer="plains_angelina_ducts"> Angelina — fiber ducts (1,061 segments)</label>
+      <label class="lyr-item"><input type="checkbox" data-layer="plains_angelina_endpoints"> Angelina — planned endpoints (7,502)</label>
+      <label class="lyr-item"><input type="checkbox" data-layer="plains_nacogdoches_ducts"> Nacogdoches — fiber ducts (968 segments)</label>
+      <label class="lyr-item"><input type="checkbox" data-layer="plains_nacogdoches_endpoints"> Nacogdoches — planned endpoints (5,657)</label>
     </details>
 
     <details class="lyr-group">
@@ -328,7 +365,24 @@
       openinfra_fcc:  { layer: null, loaded: false, url: 'data/open_infra_tx.geojson', color: '#ea580c' },
       novos_fcc:      { layer: null, loaded: false, url: 'data/novos_tx.geojson',      color: '#eab308' },
       atlink_fcc:     { layer: null, loaded: false, url: 'data/atlink_tx.geojson',     color: '#ec4899' },
-      wisper_fcc:     { layer: null, loaded: false, url: 'data/wisper_tx.geojson',     color: '#8b5cf6' }
+      wisper_fcc:     { layer: null, loaded: false, url: 'data/wisper_tx.geojson',     color: '#8b5cf6' },
+
+      // VCTI Tarrant build plans (hollow / dashed styling — these are PROPOSED, not built)
+      vcti_zones:        { layer: null, loaded: false, url: 'data/vcti_build_zones.geojson',    color: '#22d3ee', kind: 'polygon' },
+      vcti_distribution: { layer: null, loaded: false, url: 'data/vcti_distribution.geojson',   color: '#22d3ee', kind: 'line', dashed: true },
+      vcti_transport:    { layer: null, loaded: false, url: 'data/vcti_transport_routes.geojson', color: '#0e7490', kind: 'line', dashed: true },
+      vcti_passings:     { layer: null, loaded: false, url: 'data/vcti_fcc_valid.geojson',      color: '#22d3ee', kind: 'hollow-dot' },
+
+      // Aristotle BEAD — Collin County
+      aristotle_collin_fiber:    { layer: null, loaded: false, url: 'data/aristotle_collin_fiber.geojson',          color: '#16a34a', kind: 'line', dashed: true },
+      aristotle_collin_buffer:   { layer: null, loaded: false, url: 'data/aristotle_collin_1000ft_buffer.geojson',  color: '#16a34a', kind: 'polygon' },
+      aristotle_collin_passings: { layer: null, loaded: false, url: 'data/aristotle_collin_passings.geojson',       color: '#16a34a', kind: 'hollow-dot' },
+
+      // Plains Internet — Angelina & Nacogdoches (East TX)
+      plains_angelina_ducts:        { layer: null, loaded: false, url: 'data/plains_angelina_ducts.geojson',        color: '#0891b2', kind: 'line', dashed: true },
+      plains_angelina_endpoints:    { layer: null, loaded: false, url: 'data/plains_angelina_endpoints.geojson',    color: '#0891b2', kind: 'hollow-dot' },
+      plains_nacogdoches_ducts:     { layer: null, loaded: false, url: 'data/plains_nacogdoches_ducts.geojson',     color: '#0891b2', kind: 'line', dashed: true },
+      plains_nacogdoches_endpoints: { layer: null, loaded: false, url: 'data/plains_nacogdoches_endpoints.geojson', color: '#0891b2', kind: 'hollow-dot' }
     };
 
     // Shared canvas renderer — handles hundreds of thousands of points smoothly
@@ -350,6 +404,32 @@
       });
     }
 
+    // Build a layer based on entry.kind — handles dot/hollow-dot/line/polygon
+    function makeLayer(data, entry) {
+      var kind = entry.kind || 'dot';
+      var color = entry.color || '#3b82f6';
+      if (kind === 'polygon') {
+        return L.geoJSON(data, { style: { color: color, weight: 1.5, fillColor: color, fillOpacity: 0.08, dashArray: '4 3' } });
+      }
+      if (kind === 'line') {
+        return L.geoJSON(data, { style: { color: color, weight: 2, opacity: 0.85, dashArray: entry.dashed ? '6 4' : null } });
+      }
+      if (kind === 'hollow-dot') {
+        // PROPOSED / planned locations — visually distinct from solid existing-network dots
+        return L.geoJSON(data, {
+          pointToLayer: function (_, latlng) {
+            return L.circleMarker(latlng, {
+              renderer: DOT_CANVAS,
+              radius: 3, color: color, fillColor: color,
+              fillOpacity: 0, weight: 1, opacity: 0.85
+            });
+          }
+        });
+      }
+      // default: solid dot (existing FCC coverage)
+      return makeDotLayer(data, color);
+    }
+
     function setLayer(key, on) {
       var entry = LAYERS[key];
       if (!entry) return;
@@ -361,7 +441,7 @@
           fetch(entry.url)
             .then(function (r) { return r.json(); })
             .then(function (data) {
-              entry.layer = makeDotLayer(data, entry.color);
+              entry.layer = makeLayer(data, entry);
               entry.loaded = true;
               entry.layer.addTo(map);
               if (cb) cb.disabled = false;
@@ -378,9 +458,125 @@
       }
     }
 
+    // ---- Layer counts (locations + unit passings) ----
+    // Numbers sourced from upstream FCC + BSL queries / GeoJSON feature counts.
+    // null = not applicable (routes don't have passings). Updated nightly as data lands.
+    var LAYER_COUNTS = {
+      fwf:    { loc: 239,    units: 0 },
+      dal:    { loc: 8,      units: 0 },
+      e8_fcc:         { loc: 217982, units: 217982 },
+      wl_fcc:         { loc: 14878,  units: 14878 },
+      ellum_fcc:      { loc: 255,    units: 2475 },
+      pavlov_fcc:     { loc: 17880,  units: 17880 },
+      openinfra_fcc:  { loc: 33019,  units: 33019 },
+      novos_fcc:      { loc: 26994,  units: 26994 },
+      atlink_fcc:     { loc: 0,      units: 0 },
+      wisper_fcc:     { loc: 0,      units: 0 },
+      vcti_zones:        { loc: 14,    units: 0 },
+      vcti_distribution: { loc: 14,    units: 0 },
+      vcti_transport:    { loc: 55,    units: 0 },
+      vcti_passings:     { loc: 10682, units: 10682 },
+      aristotle_collin_fiber:    { loc: 13171, units: 0 },
+      aristotle_collin_buffer:   { loc: 1,     units: 0 },
+      aristotle_collin_passings: { loc: 16187, units: 20785 },
+      plains_angelina_ducts:        { loc: 1061, units: 0 },
+      plains_angelina_endpoints:    { loc: 7502, units: 7502 },
+      plains_nacogdoches_ducts:     { loc: 968,  units: 0 },
+      plains_nacogdoches_endpoints: { loc: 5657, units: 5657 }
+    };
+
+    function fmt(n) {
+      if (n == null) return '—';
+      if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
+      if (n >= 1e3) return (n/1e3).toFixed(n >= 1e4 ? 0 : 1) + 'k';
+      return String(n);
+    }
+
+    function updateTotals() {
+      var totLoc = 0, totUnits = 0, anyOn = false;
+      document.querySelectorAll('#layers-panel input[type=checkbox][data-layer]:checked').forEach(function (cb) {
+        var c = LAYER_COUNTS[cb.dataset.layer];
+        if (c) { totLoc += (c.loc||0); totUnits += (c.units||0); anyOn = true; }
+      });
+      var banner = document.getElementById('totals-banner');
+      var kmzBtn = document.getElementById('kmz-export');
+      if (anyOn) {
+        banner.style.display = '';
+        kmzBtn.style.display = '';
+        document.getElementById('totals-locations').textContent = fmt(totLoc);
+        document.getElementById('totals-passings').textContent = fmt(totUnits);
+      } else {
+        banner.style.display = 'none';
+        kmzBtn.style.display = 'none';
+      }
+    }
+
     document.querySelectorAll('#layers-panel input[type=checkbox][data-layer]').forEach(function (cb) {
-      cb.addEventListener('change', function () { setLayer(this.dataset.layer, this.checked); });
+      cb.addEventListener('change', function () { setLayer(this.dataset.layer, this.checked); updateTotals(); });
     });
+    updateTotals(); // initial state — FWF + Dallas are default on
+
+    // ---- KMZ export ----
+    document.getElementById('kmz-export').addEventListener('click', exportVisibleAsKmz);
+
+    function exportVisibleAsKmz() {
+      var btn = document.getElementById('kmz-export');
+      btn.textContent = 'Building KMZ…'; btn.disabled = true;
+      Promise.all([
+        loadScriptOnce('https://cdn.jsdelivr.net/npm/@maphubs/tokml@0.5.1/tokml.js'),
+        loadScriptOnce('https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js')
+      ]).then(function () {
+        // For each visible layer that has GeoJSON data loaded, build a folder
+        var folders = [];
+        Object.keys(LAYERS).forEach(function (key) {
+          var entry = LAYERS[key];
+          if (!entry.loaded || !entry.layer) return;
+          if (!map.hasLayer(entry.layer)) return;
+          var gj = entry.layer.toGeoJSON();
+          if (!gj || !gj.features || !gj.features.length) return;
+          // Use the checkbox label as folder name, else the key
+          var labelEl = document.querySelector('input[data-layer="' + key + '"]');
+          var name = labelEl && labelEl.parentElement ? labelEl.parentElement.textContent.trim() : key;
+          folders.push({ name: name, gj: gj });
+        });
+        if (!folders.length) { btn.textContent = 'Nothing visible'; setTimeout(reset, 1500); return; }
+        // tokml works on a single FeatureCollection — generate one KML per folder, then wrap
+        var bodyKml = folders.map(function (f) {
+          var kml = tokml(f.gj, { documentName: f.name, documentDescription: '', name: 'name', description: 'description' });
+          // Extract the inner Document children to nest under a Folder
+          var m = kml.match(/<Document[^>]*>([\s\S]*?)<\/Document>/);
+          var inner = m ? m[1] : kml;
+          // Strip the doc-level <name> from inner so the folder name takes precedence
+          inner = inner.replace(/<name>[^<]*<\/name>\s*/, '');
+          return '<Folder><name>' + escapeXml(f.name) + '</name>' + inner + '</Folder>';
+        }).join('\n');
+        var fullKml = '<?xml version="1.0" encoding="UTF-8"?>\n' +
+          '<kml xmlns="http://www.opengis.net/kml/2.2"><Document>' +
+          '<name>Sprocket Fiber Map export</name>' + bodyKml + '</Document></kml>';
+        var zip = new JSZip();
+        zip.file('doc.kml', fullKml);
+        zip.generateAsync({ type: 'blob', compression: 'DEFLATE' }).then(function (blob) {
+          var a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = 'sprocket-fiber-map-' + new Date().toISOString().slice(0,10) + '.kmz';
+          document.body.appendChild(a); a.click(); document.body.removeChild(a);
+          reset();
+        });
+      }).catch(function (e) {
+        console.error(e); btn.textContent = 'Export failed'; setTimeout(reset, 1500);
+      });
+      function reset() { btn.textContent = 'Export KMZ'; btn.disabled = false; }
+    }
+
+    function escapeXml(s) { return String(s).replace(/[<>&"']/g, function (c) { return ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'})[c]; }); }
+    function loadScriptOnce(src) {
+      return new Promise(function (resolve, reject) {
+        if (document.querySelector('script[src="' + src + '"]')) return resolve();
+        var s = document.createElement('script'); s.src = src;
+        s.onload = function () { resolve(); }; s.onerror = function () { reject(new Error('Failed: ' + src)); };
+        document.head.appendChild(s);
+      });
+    }
 
     // ---- County completeness choropleth ----
 
