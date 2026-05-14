@@ -210,6 +210,8 @@
       <label class="lyr-item"><input type="checkbox" data-layer="fwf" checked> Fort Worth Fiber (routes)</label>
       <label class="lyr-item"><input type="checkbox" data-layer="dal" checked> Dallas Backbone (routes)</label>
       <label class="lyr-item"><input type="checkbox" data-layer="cfw_sites"> ● CFW Build Sites — 191 active</label>
+      <label class="lyr-item"><input type="checkbox" data-layer="fwf_nonfiber"> ◆ FWF <strong>non-fiber</strong> within 1000ft (14,101 loc / 42,847 units)</label>
+      <label class="lyr-item"><input type="checkbox" data-layer="dal_nonfiber"> ◆ Dallas <strong>non-fiber</strong> within 1000ft (1,950 loc / 11,759 units)</label>
     </details>
 
     <details class="lyr-group" open>
@@ -394,6 +396,10 @@
       // CFW Build Sites — 191 city locations Sprocket is building to (Sept 2025)
       cfw_sites:      { layer: null, loaded: false, url: 'data/cfw_sites.geojson', color: '#3b82f6', kind: 'site' },
 
+      // Sprocket non-fiber-served BSLs within 1000ft of route (expansion targets)
+      fwf_nonfiber:   { layer: null, loaded: false, url: 'data/sprocket_fwf_nonfiber.geojson', color: '#ef4444', kind: 'nonfiber' },
+      dal_nonfiber:   { layer: null, loaded: false, url: 'data/sprocket_dal_nonfiber.geojson', color: '#ef4444', kind: 'nonfiber' },
+
       // VCTI Tarrant build plans (hollow / dashed styling — these are PROPOSED, not built)
       vcti_zones:        { layer: null, loaded: false, url: 'data/vcti_build_zones.geojson',    color: '#22d3ee', kind: 'polygon' },
       vcti_distribution: { layer: null, loaded: false, url: 'data/vcti_distribution.geojson',   color: '#22d3ee', kind: 'line', dashed: true },
@@ -566,6 +572,8 @@
       atlink_towers:  { loc: 137, units: 0 },
       e8_towers:      { loc: 21,  units: 0 },
       cfw_sites:      { loc: 191, units: 0 },
+      fwf_nonfiber:   { loc: 14101, units: 42847 },
+      dal_nonfiber:   { loc: 1950,  units: 11759 },
       vcti_zones:        { loc: 14,    units: 0 },
       vcti_distribution: { loc: 14,    units: 0 },
       vcti_transport:    { loc: 55,    units: 0 },
