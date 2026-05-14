@@ -4,7 +4,12 @@
   var TOKEN_KEY = 'google_auth_token';
   var USER_KEY = 'google_user';
   var REFERRER_KEY = 'sprocket_map_referrer';
-  var API_BASE = 'https://willgibson.com';
+  // Auth gateway lives on db01 (wgapi service). willgibson.com is a static
+  // portal SPA whose /api/me returns a hardcoded 2-scope stub for
+  // ALLOWED_DOMAINS — that loses scopes like 'fiber-map' / 'admin' that
+  // live in the authorized_users table on db01. Point at the real gateway.
+  // When sprocketnetworks.net DNS is fixed, migrate to that origin instead.
+  var API_BASE = 'https://db01.tailfca0e2.ts.net';
   var GOOGLE_CLIENT_ID = '432178814016-q4hdj3rncd53n4tklia21g7b66k872t2.apps.googleusercontent.com';
   var GATE_ID = 'sprocket-auth-gate';
   var HOME_BAR_ID = 'sprocket-home-bar';
