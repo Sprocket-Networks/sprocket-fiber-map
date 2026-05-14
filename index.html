@@ -276,10 +276,13 @@
 
     <details class="lyr-group" open>
       <summary><span class="lyr-dot" style="background:#16a34a"></span>Aristotle BEAD <span class="lyr-badge">TGT</span></summary>
-      <label class="lyr-item"><input type="checkbox" data-layer="aristotle_collin_fiber"> Collin — proposed access fiber (13k segments)</label>
+      <label class="lyr-item"><input type="checkbox" data-layer="aristotle_collin_fiber"> Collin — proposed fiber (13k segments)</label>
       <label class="lyr-item"><input type="checkbox" data-layer="aristotle_collin_buffer"> Collin — 1000ft buffer</label>
-      <label class="lyr-item"><input type="checkbox" data-layer="aristotle_collin_passings"> Collin — BSL within 1000ft (16,187 loc)</label>
-      <div class="lyr-pending">Harrison + Upshur: rendering overnight</div>
+      <label class="lyr-item"><input type="checkbox" data-layer="aristotle_collin_passings"> Collin — BSL within 1000ft (16,187 loc / 20,785 units)</label>
+      <label class="lyr-item"><input type="checkbox" data-layer="aristotle_harrison_fiber"> Harrison — proposed fiber (5.5k segments)</label>
+      <label class="lyr-item"><input type="checkbox" data-layer="aristotle_harrison_passings"> Harrison — blocks within 1000ft (383 blocks / 2,331 HU)</label>
+      <label class="lyr-item"><input type="checkbox" data-layer="aristotle_upshur_fiber"> Upshur — proposed fiber (9.5k segments)</label>
+      <label class="lyr-item"><input type="checkbox" data-layer="aristotle_upshur_passings"> Upshur — blocks within 1000ft (663 blocks / 6,111 HU)</label>
     </details>
 
     <details class="lyr-group" open>
@@ -375,10 +378,14 @@
       vcti_transport:    { layer: null, loaded: false, url: 'data/vcti_transport_routes.geojson', color: '#0e7490', kind: 'line', dashed: true },
       vcti_passings:     { layer: null, loaded: false, url: 'data/vcti_fcc_valid.geojson',      color: '#22d3ee', kind: 'hollow-dot' },
 
-      // Aristotle BEAD — Collin County
+      // Aristotle BEAD — Collin / Harrison / Upshur
       aristotle_collin_fiber:    { layer: null, loaded: false, url: 'data/aristotle_collin_fiber.geojson',          color: '#16a34a', kind: 'line', dashed: true },
       aristotle_collin_buffer:   { layer: null, loaded: false, url: 'data/aristotle_collin_1000ft_buffer.geojson',  color: '#16a34a', kind: 'polygon' },
       aristotle_collin_passings: { layer: null, loaded: false, url: 'data/aristotle_collin_passings.geojson',       color: '#16a34a', kind: 'hollow-dot' },
+      aristotle_harrison_fiber:    { layer: null, loaded: false, url: 'data/aristotle_harrison_fiber.geojson',      color: '#15803d', kind: 'line', dashed: true },
+      aristotle_harrison_passings: { layer: null, loaded: false, url: 'data/aristotle_harrison_passings.geojson',   color: '#15803d', kind: 'hollow-dot' },
+      aristotle_upshur_fiber:      { layer: null, loaded: false, url: 'data/aristotle_upshur_fiber.geojson',        color: '#166534', kind: 'line', dashed: true },
+      aristotle_upshur_passings:   { layer: null, loaded: false, url: 'data/aristotle_upshur_passings.geojson',     color: '#166534', kind: 'hollow-dot' },
 
       // Plains Internet — Angelina & Nacogdoches (East TX)
       plains_angelina_ducts:        { layer: null, loaded: false, url: 'data/plains_angelina_ducts.geojson',        color: '#0891b2', kind: 'line', dashed: true },
@@ -479,9 +486,13 @@
       vcti_distribution: { loc: 14,    units: 0 },
       vcti_transport:    { loc: 55,    units: 0 },
       vcti_passings:     { loc: 10682, units: 10682 },
-      aristotle_collin_fiber:    { loc: 13171, units: 0 },
-      aristotle_collin_buffer:   { loc: 1,     units: 0 },
-      aristotle_collin_passings: { loc: 16187, units: 20785 },
+      aristotle_collin_fiber:      { loc: 13171, units: 0 },
+      aristotle_collin_buffer:     { loc: 1,     units: 0 },
+      aristotle_collin_passings:   { loc: 16187, units: 20785 },
+      aristotle_harrison_fiber:    { loc: 5541,  units: 0 },
+      aristotle_harrison_passings: { loc: 383,   units: 2331 },
+      aristotle_upshur_fiber:      { loc: 9477,  units: 0 },
+      aristotle_upshur_passings:   { loc: 663,   units: 6111 },
       plains_angelina_ducts:        { loc: 1061, units: 0 },
       plains_angelina_endpoints:    { loc: 7502, units: 7502 },
       plains_nacogdoches_ducts:     { loc: 968,  units: 0 },
