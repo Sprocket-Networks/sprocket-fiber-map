@@ -540,7 +540,7 @@
       var btn = document.getElementById('kmz-export');
       btn.textContent = 'Building KMZ…'; btn.disabled = true;
       Promise.all([
-        loadScriptOnce('https://cdn.jsdelivr.net/npm/@maphubs/tokml@0.5.1/tokml.js'),
+        loadScriptOnce('https://cdn.jsdelivr.net/npm/@maphubs/tokml@0.6.1/tokml.js'),
         loadScriptOnce('https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js')
       ]).then(function () {
         // For each visible layer that has GeoJSON data loaded, build a folder
