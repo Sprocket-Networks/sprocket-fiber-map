@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Today's Network — Sprocket Networks</title>
+<script src="/auth.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+</head>
+<body>
+
+<header class="wg-navbar">
+  <div class="brand">
+    <div class="wg-box">WG</div>
+    <span class="brand-name">Sprocket Networks</span>
+    <span class="brand-sub">Today's network</span>
+  </div>
+  <nav>
+    <a href="/">Overview</a>
+    <a href="/network.html" class="active">Today</a>
+    <a href="/build.html">Build</a>
+    <a href="/expansion.html">Expansion</a>
+    <a href="/da.html">DA</a>
+    <a href="/targets.html">Targets</a>
+    <a href="/eb5.html">EB-5</a>
+    <a href="/map.html">All layers</a>
+    <a id="admin-link" href="/admin.html" class="admin" style="display:none;">Admin</a>
+  </nav>
+</header>
+
+<div class="focused-wrap">
+  <aside class="focused-side">
+    <div class="breadcrumb">Current network</div>
+    <h1>What we serve today</h1>
+    <p class="lead">Existing Sprocket fiber routes (Fort Worth + Dallas backbone), the 191 City of Fort Worth sites we're actively connecting, and EllumNet's FCC-reported coverage in N. Texas.</p>
+
+    <div class="kpi-strip">
+      <div class="kpi-cell"><span class="num">288 mi</span><span class="lbl">fiber routes</span></div>
+      <div class="kpi-cell"><span class="num">191</span><span class="lbl">CFW build sites</span></div>
+      <div class="kpi-cell"><span class="num">255</span><span class="lbl">EllumNet loc</span></div>
+      <div class="kpi-cell"><span class="num">2,475</span><span class="lbl">EllumNet passings</span></div>
+    </div>
+
+    <h2>Sprocket Networks</h2>
+    <div class="toggle-list">
+      <label class="toggle-row"><input type="checkbox" data-layer="fwf" checked>
+        <span class="swatch-line" style="background:#3b82f6"></span>
+        <span class="label">Fort Worth Fiber routes</span><span class="count">239 segments · 274 mi</span></label>
+      <label class="toggle-row"><input type="checkbox" data-layer="dal" checked>
+        <span class="swatch-line" style="background:#f97316"></span>
+        <span class="label">Dallas Backbone routes</span><span class="count">8 segments · 14 mi</span></label>
+      <label class="toggle-row"><input type="checkbox" data-layer="cfw_sites" checked>
+        <span class="swatch" style="background:#3b82f6;border:2px solid white;box-shadow:0 0 0 1px #94a3b8;width:8px;height:8px;"></span>
+        <span class="label">CFW Build Sites</span><span class="count">191</span></label>
+    </div>
+
+    <h2>Lasso Broadband</h2>
+    <div class="toggle-list">
+      <label class="toggle-row"><input type="checkbox" data-layer="ellum_fcc" checked>
+        <span class="swatch" style="background:#06b6d4"></span>
+        <span class="label">EllumNet FCC reported</span><span class="count">255 · 2,475 units</span></label>
+    </div>
+
+    <h2>Drill-downs</h2>
+    <div style="font-size:13px;line-height:1.7;">
+      <a href="/E8_Crowley_FTTH_Plan.html" style="color:#2563eb;text-decoration:none;display:block;padding:2px 0;">↗ Crowley FTTH plan (Element8/AtLink)</a>
+      <a href="/E8_Lakeside_FTTH_Plan.html" style="color:#2563eb;text-decoration:none;display:block;padding:2px 0;">↗ Lakeside FTTH plan (Element8/AtLink)</a>
+      <a href="/fwf.html" style="color:#2563eb;text-decoration:none;display:block;padding:2px 0;">↗ FWF Phase Overview (22-phase build)</a>
+    </div>
+  </aside>
+
+  <div class="focused-map" id="map"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="/wgmap.js"></script>
+<script>
+  WGMap.init({
+    mapId: 'map',
+    center: [32.82, -97.08], zoom: 10,
+    layers: [
+      { key: 'fwf',       url: 'data/eb5_fwf_routes.geojson', color: '#3b82f6', kind: 'line', defaultOn: true },
+      { key: 'dal',       url: 'data/eb5_dal_routes.geojson', color: '#f97316', kind: 'line', defaultOn: true },
+      { key: 'cfw_sites', url: 'data/cfw_sites.geojson',      color: '#3b82f6', kind: 'site', defaultOn: true },
+      { key: 'ellum_fcc', url: 'data/ellumnet_tx.geojson',    color: '#06b6d4', kind: 'dot',  defaultOn: true },
+    ]
+  });
+</script>
+</body>
+</html>

@@ -7,6 +7,7 @@
   <script src="/auth.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+  <link rel="stylesheet" href="/styles.css">
   <style>
     *, *::before, *::after { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; height: 100%; font-family: system-ui, -apple-system, sans-serif; color: #1e293b; }
@@ -30,7 +31,7 @@
     #navbar a.back-link:hover { color: #fff; border-color: rgba(255,255,255,0.3); }
 
     /* Layout: side panel on left, map on right */
-    #wrap { position: absolute; top: 44px; left: 0; right: 0; bottom: 0; display: flex; }
+    #wrap { position: absolute; top: 52px; left: 0; right: 0; bottom: 0; display: flex; }
     #panel {
       width: 420px; flex-shrink: 0; background: #f8fafc;
       border-right: 1px solid #e2e8f0; overflow-y: auto; padding: 20px 22px;
@@ -84,14 +85,24 @@
   </style>
 </head>
 <body>
-  <div id="navbar">
+  <header class="wg-navbar">
     <div class="brand">
       <div class="wg-box">WG</div>
       <span class="brand-name">Sprocket Networks</span>
+      <span class="brand-sub">EB-5 analysis</span>
     </div>
-    <span class="page-label">EB-5 TEA Analysis</span>
-    <a class="back-link" href="/">← Fiber Map</a>
-  </div>
+    <nav>
+      <a href="/">Overview</a>
+      <a href="/network.html">Today</a>
+      <a href="/build.html">Build</a>
+      <a href="/expansion.html">Expansion</a>
+      <a href="/da.html">DA</a>
+      <a href="/targets.html">Targets</a>
+      <a href="/eb5.html" class="active">EB-5</a>
+      <a href="/map.html">All layers</a>
+      <a id="admin-link" href="/admin.html" class="admin" style="display:none;">Admin</a>
+    </nav>
+  </header>
 
   <div id="wrap">
     <aside id="panel">
@@ -307,5 +318,24 @@
       if (cb.checked) loadAndShow(key);
     });
   </script>
+<script src="/wgmap.js"></script>
+<script>
+  // Reveal Admin link if signed in user has 'admin' scope
+  (function () {
+    var el = document.getElementById('admin-link');
+    if (!el) return;
+    function check() {
+      try {
+        var raw = localStorage.getItem('google_user');
+        if (raw) {
+          var u = JSON.parse(raw);
+          if (u && Array.isArray(u.scopes) && u.scopes.indexOf('admin') !== -1) { el.style.display = ''; return; }
+        }
+      } catch (e) {}
+      setTimeout(check, 1000);
+    }
+    check();
+  })();
+</script>
 </body>
 </html>

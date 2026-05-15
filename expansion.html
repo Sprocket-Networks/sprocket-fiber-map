@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Expansion Opportunities — Sprocket Networks</title>
+<script src="/auth.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+</head>
+<body>
+
+<header class="wg-navbar">
+  <div class="brand"><div class="wg-box">WG</div><span class="brand-name">Sprocket Networks</span><span class="brand-sub">Expansion opportunities</span></div>
+  <nav>
+    <a href="/">Overview</a>
+    <a href="/network.html">Today</a>
+    <a href="/build.html">Build</a>
+    <a href="/expansion.html" class="active">Expansion</a>
+    <a href="/da.html">DA</a>
+    <a href="/targets.html">Targets</a>
+    <a href="/eb5.html">EB-5</a>
+    <a href="/map.html">All layers</a>
+    <a id="admin-link" href="/admin.html" class="admin" style="display:none;">Admin</a>
+  </nav>
+</header>
+
+<div class="focused-wrap">
+  <aside class="focused-side">
+    <div class="breadcrumb">Near-route addressable market</div>
+    <h1>Expansion opportunities</h1>
+    <p class="lead">Two ways to find revenue near existing fiber: (1) non-fiber-served BSL locations within 1,000 ft of our routes, and (2) CoStar commercial properties (MDU, office, healthcare, etc.) in the same corridor.</p>
+
+    <div class="kpi-strip">
+      <div class="kpi-cell"><span class="num">16,051</span><span class="lbl">non-fiber BSL</span></div>
+      <div class="kpi-cell"><span class="num">54,606</span><span class="lbl">unit passings</span></div>
+      <div class="kpi-cell"><span class="num">11,824</span><span class="lbl">CoStar buildings</span></div>
+      <div class="kpi-cell"><span class="num">573k</span><span class="lbl">CoStar units</span></div>
+    </div>
+
+    <h2>Sprocket routes (context)</h2>
+    <div class="toggle-list">
+      <label class="toggle-row"><input type="checkbox" data-layer="fwf" checked>
+        <span class="swatch-line" style="background:#3b82f6"></span>
+        <span class="label">FWF fiber</span><span class="count">274 mi</span></label>
+      <label class="toggle-row"><input type="checkbox" data-layer="dal" checked>
+        <span class="swatch-line" style="background:#f97316"></span>
+        <span class="label">Dallas Backbone</span><span class="count">14 mi</span></label>
+    </div>
+
+    <h2>Non-fiber BSL within 1,000 ft</h2>
+    <div class="toggle-list">
+      <label class="toggle-row"><input type="checkbox" data-layer="fwf_nonfiber" checked>
+        <span class="swatch" style="background:#ef4444"></span>
+        <span class="label">FWF non-fiber expansion</span><span class="count">14,101 · 42,847 units</span></label>
+      <label class="toggle-row"><input type="checkbox" data-layer="dal_nonfiber" checked>
+        <span class="swatch" style="background:#ef4444"></span>
+        <span class="label">Dallas non-fiber expansion</span><span class="count">1,950 · 11,759 units</span></label>
+    </div>
+
+    <h2>CoStar revenue targets (Fort Worth)</h2>
+    <div class="toggle-list">
+      <label class="toggle-row"><input type="checkbox" data-layer="costar_mdu">
+        <span class="swatch-sq" style="background:#9333ea"></span>
+        <span class="label">MDU buildings</span><span class="count">2,905 · 560k units</span></label>
+      <label class="toggle-row"><input type="checkbox" data-layer="costar_office">
+        <span class="swatch-sq" style="background:#0ea5e9"></span>
+        <span class="label">Office tenants</span><span class="count">2,816</span></label>
+      <label class="toggle-row"><input type="checkbox" data-layer="costar_retail">
+        <span class="swatch-sq" style="background:#ec4899"></span>
+        <span class="label">Retail</span><span class="count">2,725</span></label>
+      <label class="toggle-row"><input type="checkbox" data-layer="costar_industrial">
+        <span class="swatch-sq" style="background:#737373"></span>
+        <span class="label">Industrial</span><span class="count">2,197</span></label>
+      <label class="toggle-row"><input type="checkbox" data-layer="costar_hospitality">
+        <span class="swatch-sq" style="background:#f59e0b"></span>
+        <span class="label">Hospitality</span><span class="count">474</span></label>
+      <label class="toggle-row"><input type="checkbox" data-layer="costar_medical">
+        <span class="swatch-sq" style="background:#06b6d4"></span>
+        <span class="label">Medical tenants</span><span class="count">453</span></label>
+      <label class="toggle-row"><input type="checkbox" data-layer="costar_flex">
+        <span class="swatch-sq" style="background:#84cc16"></span>
+        <span class="label">Flex space</span><span class="count">441</span></label>
+      <label class="toggle-row"><input type="checkbox" data-layer="costar_healthcare">
+        <span class="swatch-sq" style="background:#0891b2"></span>
+        <span class="label">Healthcare</span><span class="count">288</span></label>
+      <label class="toggle-row"><input type="checkbox" data-layer="costar_education">
+        <span class="swatch-sq" style="background:#16a34a"></span>
+        <span class="label">Education</span><span class="count">258</span></label>
+      <label class="toggle-row"><input type="checkbox" data-layer="costar_government">
+        <span class="swatch-sq" style="background:#7c3aed"></span>
+        <span class="label">Government</span><span class="count">129</span></label>
+      <label class="toggle-row"><input type="checkbox" data-layer="costar_sports">
+        <span class="swatch-sq" style="background:#f97316"></span>
+        <span class="label">Sports & entertainment</span><span class="count">76</span></label>
+      <label class="toggle-row"><input type="checkbox" data-layer="costar_student_housing">
+        <span class="swatch-sq" style="background:#a78bfa"></span>
+        <span class="label">Student housing</span><span class="count">56 · 5,142 beds</span></label>
+      <label class="toggle-row"><input type="checkbox" data-layer="costar_datacenters">
+        <span class="swatch-sq" style="background:#dc2626"></span>
+        <span class="label">Data centers</span><span class="count">6</span></label>
+    </div>
+  </aside>
+
+  <div class="focused-map" id="map"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="/wgmap.js"></script>
+<script>
+  WGMap.init({
+    mapId: 'map', center: [32.78, -97.05], zoom: 10,
+    layers: [
+      { key: 'fwf',          url: 'data/eb5_fwf_routes.geojson',          color: '#3b82f6', kind: 'line' },
+      { key: 'dal',          url: 'data/eb5_dal_routes.geojson',          color: '#f97316', kind: 'line' },
+      { key: 'fwf_nonfiber', url: 'data/sprocket_fwf_nonfiber.geojson',   color: '#ef4444', kind: 'nonfiber' },
+      { key: 'dal_nonfiber', url: 'data/sprocket_dal_nonfiber.geojson',   color: '#ef4444', kind: 'nonfiber' },
+      { key: 'costar_mdu',             url: 'data/costar_mdu.geojson',             color: '#9333ea', kind: 'costar' },
+      { key: 'costar_office',          url: 'data/costar_office.geojson',          color: '#0ea5e9', kind: 'costar' },
+      { key: 'costar_retail',          url: 'data/costar_retail.geojson',          color: '#ec4899', kind: 'costar' },
+      { key: 'costar_industrial',      url: 'data/costar_industrial.geojson',      color: '#737373', kind: 'costar' },
+      { key: 'costar_hospitality',     url: 'data/costar_hospitality.geojson',     color: '#f59e0b', kind: 'costar' },
+      { key: 'costar_medical',         url: 'data/costar_medical.geojson',         color: '#06b6d4', kind: 'costar' },
+      { key: 'costar_flex',            url: 'data/costar_flex.geojson',            color: '#84cc16', kind: 'costar' },
+      { key: 'costar_healthcare',      url: 'data/costar_healthcare.geojson',      color: '#0891b2', kind: 'costar' },
+      { key: 'costar_education',       url: 'data/costar_education.geojson',       color: '#16a34a', kind: 'costar' },
+      { key: 'costar_government',      url: 'data/costar_government.geojson',      color: '#7c3aed', kind: 'costar' },
+      { key: 'costar_sports',          url: 'data/costar_sports.geojson',          color: '#f97316', kind: 'costar' },
+      { key: 'costar_student_housing', url: 'data/costar_student_housing.geojson', color: '#a78bfa', kind: 'costar' },
+      { key: 'costar_datacenters',     url: 'data/costar_datacenters.geojson',     color: '#dc2626', kind: 'costar' },
+    ]
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CFW Phase 1 Build — Sprocket Networks</title>
+<script src="/auth.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+</head>
+<body>
+
+<header class="wg-navbar">
+  <div class="brand"><div class="wg-box">WG</div><span class="brand-name">Sprocket Networks</span><span class="brand-sub">CFW build plan</span></div>
+  <nav>
+    <a href="/">Overview</a>
+    <a href="/network.html">Today</a>
+    <a href="/build.html" class="active">Build</a>
+    <a href="/expansion.html">Expansion</a>
+    <a href="/da.html">DA</a>
+    <a href="/targets.html">Targets</a>
+    <a href="/eb5.html">EB-5</a>
+    <a href="/map.html">All layers</a>
+    <a id="admin-link" href="/admin.html" class="admin" style="display:none;">Admin</a>
+  </nav>
+</header>
+
+<div class="focused-wrap">
+  <aside class="focused-side">
+    <div class="breadcrumb">VCTI Phase 1</div>
+    <h1>Fort Worth fiber-to-the-premises</h1>
+    <p class="lead">Engineering plans from VCTI for the Sprocket Fort Worth Phase 1 FTTP build. 14 build zones across Tarrant County, distribution + transport routes, and every planned passing (FCC-valid + VCTI-added).</p>
+
+    <div class="kpi-strip">
+      <div class="kpi-cell"><span class="num">14</span><span class="lbl">build zones</span></div>
+      <div class="kpi-cell"><span class="num">10,736</span><span class="lbl">planned passings</span></div>
+      <div class="kpi-cell"><span class="num">287 mi</span><span class="lbl">proposed fiber</span></div>
+      <div class="kpi-cell"><span class="num">191</span><span class="lbl">city sites</span></div>
+    </div>
+
+    <h2>VCTI engineering plan</h2>
+    <div class="toggle-list">
+      <label class="toggle-row"><input type="checkbox" data-layer="vcti_zones" checked>
+        <span class="swatch" style="background:#22d3ee;border-radius:2px;"></span>
+        <span class="label">Build plan zones (AOIs)</span><span class="count">14</span></label>
+      <label class="toggle-row"><input type="checkbox" data-layer="vcti_distribution" checked>
+        <span class="swatch-line" style="background:#22d3ee"></span>
+        <span class="label">Distribution fiber</span><span class="count">14 · 10 mi</span></label>
+      <label class="toggle-row"><input type="checkbox" data-layer="vcti_transport" checked>
+        <span class="swatch-line" style="background:#0e7490"></span>
+        <span class="label">Transport routes</span><span class="count">55 · 277 mi</span></label>
+      <label class="toggle-row"><input type="checkbox" data-layer="vcti_passings" checked>
+        <span class="swatch" style="background:white;border:1.5px solid #22d3ee;"></span>
+        <span class="label">Planned passings (hollow)</span><span class="count">10,736</span></label>
+    </div>
+
+    <h2>Existing network for context</h2>
+    <div class="toggle-list">
+      <label class="toggle-row"><input type="checkbox" data-layer="fwf" checked>
+        <span class="swatch-line" style="background:#3b82f6"></span>
+        <span class="label">FWF fiber (existing)</span><span class="count">274 mi</span></label>
+      <label class="toggle-row"><input type="checkbox" data-layer="cfw_sites" checked>
+        <span class="swatch" style="background:#3b82f6;border:2px solid white;box-shadow:0 0 0 1px #94a3b8;width:8px;height:8px;"></span>
+        <span class="label">CFW Build Sites</span><span class="count">191</span></label>
+    </div>
+
+    <h2>Phase drill-downs</h2>
+    <div style="font-size:13px;line-height:1.7;">
+      <a href="/fwf.html" style="color:#2563eb;text-decoration:none;display:block;padding:2px 0;">↗ FWF Phase Overview (22 phases)</a>
+      <a href="/FWF-P01-Overview.html" style="color:#2563eb;text-decoration:none;display:block;padding:2px 0;">↗ Phase 1 Overview</a>
+      <a href="/FWF-P04-Overview.html" style="color:#2563eb;text-decoration:none;display:block;padding:2px 0;">↗ Phase 4 Overview</a>
+      <a href="/Phase9_Fiber_Map.html" style="color:#2563eb;text-decoration:none;display:block;padding:2px 0;">↗ Phase 9 detail map</a>
+    </div>
+  </aside>
+
+  <div class="focused-map" id="map"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="/wgmap.js"></script>
+<script>
+  WGMap.init({
+    mapId: 'map', center: [32.78, -97.35], zoom: 10,
+    layers: [
+      { key: 'vcti_zones',        url: 'data/vcti_build_zones.geojson',      color: '#22d3ee', kind: 'polygon' },
+      { key: 'vcti_distribution', url: 'data/vcti_distribution.geojson',     color: '#22d3ee', kind: 'line', dashed: true },
+      { key: 'vcti_transport',    url: 'data/vcti_transport_routes.geojson', color: '#0e7490', kind: 'line', dashed: true },
+      { key: 'vcti_passings',     url: 'data/vcti_fcc_valid.geojson',        color: '#22d3ee', kind: 'hollow-dot' },
+      { key: 'fwf',               url: 'data/eb5_fwf_routes.geojson',        color: '#3b82f6', kind: 'line' },
+      { key: 'cfw_sites',         url: 'data/cfw_sites.geojson',             color: '#3b82f6', kind: 'site' },
+    ]
+  });
+</script>
+</body>
+</html>

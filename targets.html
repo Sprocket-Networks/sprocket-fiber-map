@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acquisition Targets — Sprocket Networks</title>
+<script src="/auth.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+</head>
+<body>
+
+<header class="wg-navbar">
+  <div class="brand"><div class="wg-box">WG</div><span class="brand-name">Sprocket Networks</span><span class="brand-sub">Acquisition targets</span></div>
+  <nav>
+    <a href="/">Overview</a>
+    <a href="/network.html">Today</a>
+    <a href="/build.html">Build</a>
+    <a href="/expansion.html">Expansion</a>
+    <a href="/da.html">DA</a>
+    <a href="/targets.html" class="active">Targets</a>
+    <a href="/eb5.html">EB-5</a>
+    <a href="/map.html">All layers</a>
+    <a id="admin-link" href="/admin.html" class="admin" style="display:none;">Admin</a>
+  </nav>
+</header>
+
+<div class="focused-wrap">
+  <aside class="focused-side">
+    <div class="breadcrumb">N. Texas roll-up + BEAD pipeline</div>
+    <h1>Acquisition targets</h1>
+    <p class="lead">Companies Neil identified for the rollup, plus BEAD-pipeline projects we'd inherit through Aristotle and Plains Internet.</p>
+
+    <div class="kpi-strip">
+      <div class="kpi-cell"><span class="num">437k</span><span class="lbl">FCC locations</span></div>
+      <div class="kpi-cell"><span class="num">37,427</span><span class="lbl">BEAD passings</span></div>
+      <div class="kpi-cell"><span class="num">8</span><span class="lbl">targets</span></div>
+    </div>
+
+    <h2>N. Texas rollup</h2>
+    <div class="toggle-list">
+      <label class="toggle-row"><input type="checkbox" data-layer="pavlov_fcc" checked>
+        <span class="swatch" style="background:#dc2626"></span>
+        <span class="label">Pavlov Media (IL/TX/FL)</span><span class="count">114k</span></label>
+      <label class="toggle-row"><input type="checkbox" data-layer="openinfra_fcc" checked>
+        <span class="swatch" style="background:#ea580c"></span>
+        <span class="label">Open Infra</span><span class="count">87k</span></label>
+      <label class="toggle-row"><input type="checkbox" data-layer="novos_fcc" checked>
+        <span class="swatch" style="background:#eab308"></span>
+        <span class="label">Novos Fiber (TX)</span><span class="count">27k</span></label>
+      <label class="toggle-row"><input type="checkbox" data-layer="ubiquity_fcc" checked>
+        <span class="swatch" style="background:#84cc16"></span>
+        <span class="label">Ubiquity (via FiberFirst)</span><span class="count">178k</span></label>
+      <div class="muted" style="padding:6px 9px;font-style:italic;">Texacom Networks — no FCC BDC filings under that name (open-access wholesale).</div>
+    </div>
+
+    <h2>Aristotle BEAD <span style="font-weight:400;letter-spacing:0;text-transform:none;color:#94a3b8;font-size:11px;">(Lasso pipeline)</span></h2>
+    <div class="toggle-list">
+      <label class="toggle-row"><input type="checkbox" data-layer="aristotle_collin_fiber" checked>
+        <span class="swatch-line" style="background:#16a34a"></span>
+        <span class="label">Collin proposed fiber</span><span class="count">13k segments</span></label>
+      <label class="toggle-row"><input type="checkbox" data-layer="aristotle_collin_passings" checked>
+        <span class="swatch" style="background:white;border:1.5px solid #16a34a;"></span>
+        <span class="label">Collin BSL within 1,000 ft</span><span class="count">16,187 · 20,785 units</span></label>
+      <label class="toggle-row"><input type="checkbox" data-layer="aristotle_collin_nonfiber">
+        <span class="swatch" style="background:#ef4444"></span>
+        <span class="label">Collin non-fiber within 1,000 ft</span><span class="count">11,747 · 12,419 units</span></label>
+      <label class="toggle-row"><input type="checkbox" data-layer="aristotle_harrison_fiber" checked>
+        <span class="swatch-line" style="background:#15803d"></span>
+        <span class="label">Harrison proposed fiber</span><span class="count">5.5k segments</span></label>
+      <label class="toggle-row"><input type="checkbox" data-layer="aristotle_upshur_fiber" checked>
+        <span class="swatch-line" style="background:#166534"></span>
+        <span class="label">Upshur proposed fiber</span><span class="count">9.5k segments</span></label>
+    </div>
+
+    <h2>Plains Internet <span style="font-weight:400;letter-spacing:0;text-transform:none;color:#94a3b8;font-size:11px;">(East TX BEAD)</span></h2>
+    <div class="toggle-list">
+      <label class="toggle-row"><input type="checkbox" data-layer="plains_angelina_ducts" checked>
+        <span class="swatch-line" style="background:#0891b2"></span>
+        <span class="label">Angelina ducts</span><span class="count">1,061 · 767 mi</span></label>
+      <label class="toggle-row"><input type="checkbox" data-layer="plains_angelina_endpoints" checked>
+        <span class="swatch" style="background:white;border:1.5px solid #0891b2;"></span>
+        <span class="label">Angelina endpoints</span><span class="count">7,502</span></label>
+      <label class="toggle-row"><input type="checkbox" data-layer="plains_nacogdoches_ducts" checked>
+        <span class="swatch-line" style="background:#0e7490"></span>
+        <span class="label">Nacogdoches ducts</span><span class="count">968 · 705 mi</span></label>
+      <label class="toggle-row"><input type="checkbox" data-layer="plains_nacogdoches_endpoints" checked>
+        <span class="swatch" style="background:white;border:1.5px solid #0e7490;"></span>
+        <span class="label">Nacogdoches endpoints</span><span class="count">5,657</span></label>
+    </div>
+  </aside>
+
+  <div class="focused-map" id="map"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="/wgmap.js"></script>
+<script>
+  WGMap.init({
+    mapId: 'map', center: [32.4, -96.3], zoom: 7,
+    layers: [
+      { key: 'pavlov_fcc',                 url: 'data/pavlov_us.geojson',                color: '#dc2626', kind: 'dot' },
+      { key: 'openinfra_fcc',              url: 'data/open_infra_us.geojson',            color: '#ea580c', kind: 'dot' },
+      { key: 'novos_fcc',                  url: 'data/novos_us.geojson',                 color: '#eab308', kind: 'dot' },
+      { key: 'ubiquity_fcc',               url: 'data/ubiquity_us.geojson',              color: '#84cc16', kind: 'dot' },
+      { key: 'aristotle_collin_fiber',     url: 'data/aristotle_collin_fiber.geojson',   color: '#16a34a', kind: 'line', dashed: true },
+      { key: 'aristotle_collin_passings',  url: 'data/aristotle_collin_passings.geojson',color: '#16a34a', kind: 'hollow-dot' },
+      { key: 'aristotle_collin_nonfiber',  url: 'data/aristotle_collin_nonfiber.geojson',color: '#ef4444', kind: 'nonfiber' },
+      { key: 'aristotle_harrison_fiber',   url: 'data/aristotle_harrison_fiber.geojson', color: '#15803d', kind: 'line', dashed: true },
+      { key: 'aristotle_upshur_fiber',     url: 'data/aristotle_upshur_fiber.geojson',   color: '#166534', kind: 'line', dashed: true },
+      { key: 'plains_angelina_ducts',      url: 'data/plains_angelina_ducts.geojson',    color: '#0891b2', kind: 'line', dashed: true },
+      { key: 'plains_angelina_endpoints',  url: 'data/plains_angelina_endpoints.geojson',color: '#0891b2', kind: 'hollow-dot' },
+      { key: 'plains_nacogdoches_ducts',   url: 'data/plains_nacogdoches_ducts.geojson', color: '#0e7490', kind: 'line', dashed: true },
+      { key: 'plains_nacogdoches_endpoints',url:'data/plains_nacogdoches_endpoints.geojson',color: '#0e7490', kind: 'hollow-dot' },
+    ]
+  });
+</script>
+</body>
+</html>
