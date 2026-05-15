@@ -138,12 +138,17 @@
       <span class="brand-name">Sprocket Networks</span>
       <span class="brand-sub">All layers</span>
     </div>
-    <div id="totals-banner" style="display:none;flex:1;text-align:center;font-size:13px;color:#e2e8f0;">
-      <span style="color:#94a3b8;">Selected:</span>
-      <strong id="totals-locations" style="color:#f8fafc;margin:0 4px;">0</strong>
-      <span style="color:#94a3b8;">properties &middot;</span>
-      <strong id="totals-passings" style="color:#f8fafc;margin:0 4px;">0</strong>
-      <span style="color:#94a3b8;">unit passings</span>
+    <div id="totals-banner" style="display:none;flex:1;text-align:center;font-size:12.5px;color:#cbd5e1;line-height:1.3;">
+      <div>
+        <strong id="totals-props" style="color:#f8fafc;">0</strong> properties
+        <span style="opacity:0.5;margin:0 6px;">·</span>
+        <strong id="totals-sfr" style="color:#f8fafc;">0</strong> SFR
+      </div>
+      <div style="font-size:11.5px;color:#94a3b8;">
+        <strong id="totals-res" style="color:#bae6fd;">0</strong> residential units
+        <span style="opacity:0.5;margin:0 6px;">·</span>
+        <strong id="totals-com" style="color:#fde68a;">0</strong> commercial units
+      </div>
     </div>
     <nav>
       <a href="/">Overview</a>
@@ -734,84 +739,114 @@
     // ---- Layer counts (locations + unit passings) ----
     // Numbers sourced from upstream FCC + BSL queries / GeoJSON feature counts.
     // null = not applicable (routes don't have passings). Updated nightly as data lands.
+    // Schema per layer: { props, sfr, res, com }. Lines/polygons set all=0 (excluded).
+    //   props = total point count (buildings / locations)
+    //   sfr   = single-family-residential subset (R-type, unit_count <= 1)
+    //   res   = sum of unit_count for residential (R/X) buildings
+    //   com   = sum of unit_count for commercial (B) buildings
+    // For layers without building-type detail, we apportion sensibly.
     var LAYER_COUNTS = {
-      fwf:    { loc: 239,    units: 0 },
-      dal:    { loc: 8,      units: 0 },
-      // Counts: 'loc' is BSL locations (or h3 cells for non-TX providers).
-      // 'units' is MDU-aware passings where unit_count is known; otherwise == loc.
-      e8_fcc:         { loc: 217982, units: 217982 },
-      wl_fcc:         { loc: 14878,  units: 14878  },
-      ellum_fcc:      { loc: 255,    units: 2475   },
-      pavlov_fcc:     { loc: 17880,  units: 17880  },
-      openinfra_fcc:  { loc: 33019,  units: 33019  },
-      novos_fcc:      { loc: 26994,  units: 26994  },
-      ubiquity_fcc:   { loc: 56840,  units: 56840  },
-      atlink_fcc:     { loc: 133732, units: 133732 },
-      wisper_fcc:     { loc: 136775, units: 136775 },
-      // Towers — count towers as 'loc' but no passings (they're infrastructure)
-      atlink_towers:  { loc: 137, units: 0 },
-      e8_towers:      { loc: 21,  units: 0 },
-      cfw_sites:      { loc: 191, units: 0 },
-      fwf_nonfiber:   { loc: 14101, units: 42847 },
-      dal_nonfiber:   { loc: 1950,  units: 11759 },
-      // CoStar Fort Worth revenue targets
-      costar_mdu:             { loc: 2905, units: 560326 },
-      costar_healthcare:      { loc: 288,  units: 288    },
-      costar_hospitality:     { loc: 474,  units: 474    },
-      costar_student_housing: { loc: 56,   units: 5142   },
-      costar_sports:          { loc: 76,   units: 76     },
-      costar_office:          { loc: 2816, units: 2816   },
-      costar_retail:          { loc: 2725, units: 2725   },
-      costar_industrial:      { loc: 2197, units: 2197   },
-      costar_medical:         { loc: 453,  units: 453    },
-      costar_flex:            { loc: 441,  units: 441    },
-      costar_education:       { loc: 258,  units: 258    },
-      costar_government:      { loc: 129,  units: 129    },
-      costar_datacenters:     { loc: 6,    units: 6      },
-      eb5_rural: { loc: 0, units: 0 },
-      eb5_msas:  { loc: 0, units: 0 },
-      vcti_zones:        { loc: 14,    units: 0 },
-      vcti_distribution: { loc: 14,    units: 0 },
-      vcti_transport:    { loc: 55,    units: 0 },
-      vcti_passings:     { loc: 10682, units: 10682 },
-      aristotle_collin_fiber:      { loc: 13171, units: 0 },
-      aristotle_collin_buffer:     { loc: 1,     units: 0 },
-      aristotle_collin_passings:   { loc: 16187, units: 20785 },
-      aristotle_collin_nonfiber:   { loc: 11747, units: 12419 },
-      aristotle_harrison_fiber:    { loc: 5541,  units: 0 },
-      aristotle_harrison_passings: { loc: 383,   units: 2331 },
-      aristotle_harrison_nonfiber: { loc: 273,   units: 1535 },
-      aristotle_upshur_fiber:      { loc: 9477,  units: 0 },
-      aristotle_upshur_passings:   { loc: 663,   units: 6111 },
-      aristotle_upshur_nonfiber:   { loc: 213,   units: 914  },
-      plains_angelina_ducts:        { loc: 1061, units: 0 },
-      plains_angelina_endpoints:    { loc: 7502, units: 7502 },
-      plains_nacogdoches_ducts:     { loc: 968,  units: 0 },
-      plains_nacogdoches_endpoints: { loc: 5657, units: 5657 }
+      // Routes / polygons — excluded from totals (infrastructure, not properties)
+      fwf:               { props: 0, sfr: 0, res: 0, com: 0 },
+      dal:               { props: 0, sfr: 0, res: 0, com: 0 },
+      vcti_zones:        { props: 0, sfr: 0, res: 0, com: 0 },
+      vcti_distribution: { props: 0, sfr: 0, res: 0, com: 0 },
+      vcti_transport:    { props: 0, sfr: 0, res: 0, com: 0 },
+      aristotle_collin_fiber:    { props: 0, sfr: 0, res: 0, com: 0 },
+      aristotle_collin_buffer:   { props: 0, sfr: 0, res: 0, com: 0 },
+      aristotle_harrison_fiber:  { props: 0, sfr: 0, res: 0, com: 0 },
+      aristotle_upshur_fiber:    { props: 0, sfr: 0, res: 0, com: 0 },
+      plains_angelina_ducts:     { props: 0, sfr: 0, res: 0, com: 0 },
+      plains_nacogdoches_ducts:  { props: 0, sfr: 0, res: 0, com: 0 },
+      eb5_rural:  { props: 0, sfr: 0, res: 0, com: 0 },
+      eb5_msas:   { props: 0, sfr: 0, res: 0, com: 0 },
+
+      // Towers — infrastructure, not properties
+      atlink_towers: { props: 0, sfr: 0, res: 0, com: 0 },
+      e8_towers:     { props: 0, sfr: 0, res: 0, com: 0 },
+
+      // BSL-precise layers (joined with bsl_primary for building_type_code + unit_count)
+      ellum_fcc:                   { props: 255,   sfr: 31,    res: 2215,  com: 260  },
+      fwf_nonfiber:                { props: 14101, sfr: 7805,  res: 36733, com: 5008 },
+      dal_nonfiber:                { props: 1950,  sfr: 938,   res: 10486, com: 455  },
+      aristotle_collin_passings:   { props: 16187, sfr: 14189, res: 16063, com: 4722 },
+      aristotle_collin_nonfiber:   { props: 11747, sfr: 10153, res: 10901, com: 1518 },
+
+      // Census-block-derived (Aristotle Harrison + Upshur) — treat hu100 as residential, no SFR breakdown
+      aristotle_harrison_passings: { props: 383, sfr: 0, res: 2331, com: 0 },
+      aristotle_harrison_nonfiber: { props: 273, sfr: 0, res: 1535, com: 0 },
+      aristotle_upshur_passings:   { props: 663, sfr: 0, res: 6111, com: 0 },
+      aristotle_upshur_nonfiber:   { props: 213, sfr: 0, res:  914, com: 0 },
+
+      // Planned passings (no building-type detail yet) — assume residential
+      vcti_passings:                { props: 10682, sfr: 0, res: 10682, com: 0 },
+      plains_angelina_endpoints:    { props: 7502,  sfr: 0, res: 7502,  com: 0 },
+      plains_nacogdoches_endpoints: { props: 5657,  sfr: 0, res: 5657,  com: 0 },
+
+      // City sites — civic/commercial buildings (libraries, fire stations, etc.)
+      cfw_sites: { props: 191, sfr: 0, res: 0, com: 191 },
+
+      // FCC h3-cell layers — location count only. No building-type detail without BSL join.
+      // We treat each location as 1 residential unit (FWA + fiber-to-home is predominantly residential).
+      e8_fcc:        { props: 217982, sfr: 0, res: 217982, com: 0 },
+      wl_fcc:        { props: 14878,  sfr: 0, res: 14878,  com: 0 },
+      pavlov_fcc:    { props: 17880,  sfr: 0, res: 17880,  com: 0 },
+      openinfra_fcc: { props: 33019,  sfr: 0, res: 33019,  com: 0 },
+      novos_fcc:     { props: 26994,  sfr: 0, res: 26994,  com: 0 },
+      ubiquity_fcc:  { props: 56840,  sfr: 0, res: 56840,  com: 0 },
+      atlink_fcc:    { props: 133732, sfr: 0, res: 133732, com: 0 },
+      wisper_fcc:    { props: 136775, sfr: 0, res: 136775, com: 0 },
+
+      // CoStar (Fort Worth) — categorized by building type:
+      // Residential
+      costar_mdu:             { props: 2905, sfr: 0, res: 560326, com: 0 },
+      costar_student_housing: { props: 56,   sfr: 0, res: 5142,   com: 0 },
+      // Commercial
+      costar_office:          { props: 2816, sfr: 0, res: 0, com: 2816 },
+      costar_retail:          { props: 2725, sfr: 0, res: 0, com: 2725 },
+      costar_industrial:      { props: 2197, sfr: 0, res: 0, com: 2197 },
+      costar_hospitality:     { props: 474,  sfr: 0, res: 0, com: 474  },
+      costar_medical:         { props: 453,  sfr: 0, res: 0, com: 453  },
+      costar_flex:            { props: 441,  sfr: 0, res: 0, com: 441  },
+      costar_healthcare:      { props: 288,  sfr: 0, res: 0, com: 288  },
+      costar_education:       { props: 258,  sfr: 0, res: 0, com: 258  },
+      costar_government:      { props: 129,  sfr: 0, res: 0, com: 129  },
+      costar_sports:          { props: 76,   sfr: 0, res: 0, com: 76   },
+      costar_datacenters:     { props: 6,    sfr: 0, res: 0, com: 6    },
     };
 
     function fmt(n) {
-      if (n == null) return '—';
+      if (n == null || n === 0) return '0';
       if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
       if (n >= 1e3) return (n/1e3).toFixed(n >= 1e4 ? 0 : 1) + 'k';
       return String(n);
     }
 
     function updateTotals() {
-      var totLoc = 0, totUnits = 0, anyOn = false;
+      var sums = { props: 0, sfr: 0, res: 0, com: 0 }, anyOn = false;
       document.querySelectorAll('#layers-panel input[type=checkbox][data-layer]:checked').forEach(function (cb) {
         var c = LAYER_COUNTS[cb.dataset.layer];
-        if (c) { totLoc += (c.loc||0); totUnits += (c.units||0); anyOn = true; }
+        if (c && c.props > 0) {
+          sums.props += c.props||0; sums.sfr += c.sfr||0;
+          sums.res += c.res||0; sums.com += c.com||0;
+          anyOn = true;
+        }
       });
-      // Add FCC county drill-down to totals if active
-      if (window.__fccExtraLoc) { totLoc += window.__fccExtraLoc; totUnits += window.__fccExtraUnits || 0; anyOn = true; }
+      // FCC county drill-down (residential default — county-level non-fiber BSLs)
+      if (window.__fccExtraLoc) {
+        sums.props += window.__fccExtraLoc;
+        sums.res += window.__fccExtraUnits || window.__fccExtraLoc;
+        anyOn = true;
+      }
       var banner = document.getElementById('totals-banner');
       var kmzBtn = document.getElementById('kmz-export');
       if (anyOn) {
         banner.style.display = '';
         kmzBtn.style.display = '';
-        document.getElementById('totals-locations').textContent = fmt(totLoc);
-        document.getElementById('totals-passings').textContent = fmt(totUnits);
+        document.getElementById('totals-props').textContent = fmt(sums.props);
+        document.getElementById('totals-sfr').textContent   = fmt(sums.sfr);
+        document.getElementById('totals-res').textContent   = fmt(sums.res);
+        document.getElementById('totals-com').textContent   = fmt(sums.com);
       } else {
         banner.style.display = 'none';
         kmzBtn.style.display = 'none';
